@@ -25,10 +25,11 @@ from nikto.skills.base import SkillRuntime
 @click.option("--mode", "-m", type=click.Choice(["plan", "build"]), default="build")
 @click.option("--model", help="Model to use (e.g., gpt-4o, claude-3-opus)")
 @click.option("--provider", help="Provider (openai, anthropic, gemini, deepseek)")
+@click.option("--variant", help="Agent variant: nikto (heavyweight thinker), nikto-sonnet (fast all-rounder), nikto-mythos (cybersecurity specialist)")
 @click.option("--verbose", "-v", is_flag=True)
 @click.option("--version", is_flag=True)
 @click.pass_context
-def cli(ctx, config, mode, model, provider, verbose, version):
+def cli(ctx, config, mode, model, provider, variant, verbose, version):
     """NIKTO — The Ultimate AI Agent Platform"""
     if version:
         from nikto import __version__
@@ -59,20 +60,28 @@ def cli(ctx, config, mode, model, provider, verbose, version):
     memory = MemorySystem(nikto_config.memory)
     skill_runtime = SkillRuntime()
 
+    agent_variant = None
+    if variant:
+        from nikto.variants.base import create_variant
+        agent_variant = create_variant(variant)
+        click.echo(click.style(f"  Variant: {agent_variant.name}", fg="cyan"))
+
     ctx.ensure_object(dict)
     ctx.obj["config"] = nikto_config
     ctx.obj["tools"] = tool_registry
     ctx.obj["memory"] = memory
     ctx.obj["skills"] = skill_runtime
+    ctx.obj["variant"] = agent_variant
 
+    variant_name = agent_variant.name if agent_variant else "default"
     mode_label = click.style("BUILD", fg="green", bold=True) if mode == "build" else click.style("PLAN", fg="yellow", bold=True)
-    click.echo(click.style("╔═══════════════════════════════════════════╗", fg="cyan"))
-    click.echo(click.style("║       NIKTO - Ultimate AI Agent          ║", fg="cyan"))
-    click.echo(click.style("╠═══════════════════════════════════════════╣", fg="cyan"))
-    click.echo(f"║  Mode: {mode_label}                         ║")
-    click.echo(f"║  Model: {click.style(nikto_config.model.model, fg='blue'):<37}║")
+    click.echo(click.style("╔══════════════════════════════════════════════════╗", fg="cyan"))
+    click.echo(click.style("║       NIKTO - Ultimate AI Agent               ║", fg="cyan"))
+    click.echo(click.style("╠══════════════════════════════════════════════════╣", fg="cyan"))
+    click.echo(f"║  Mode: {mode_label}           Variant: {click.style(variant_name, fg='cyan'):<12} ║")
+    click.echo(f"║  Model: {click.style(nikto_config.model.model, fg='blue'):<37} ║")
     click.echo(f"║  Tools: {click.style(str(len(tool_registry.list_tools())), fg='magenta'):<4} loaded                   ║")
-    click.echo(click.style("╚═══════════════════════════════════════════╝", fg="cyan"))
+    click.echo(click.style("╚══════════════════════════════════════════════════╝", fg="cyan"))
 
     asyncio.run(run_interactive(ctx.obj))
 
@@ -91,16 +100,21 @@ async def run_interactive(ctx):
         stream=True,
     )
 
+    agent_variant = ctx.get("variant")
     agent = Agent(
         config=config,
         agent_config=agent_config,
         tool_registry=tools,
         memory=memory,
         skill_runtime=skills,
+        variant=agent_variant,
     )
 
     click.echo()
-    click.echo(click.style("NIKTO interactive session started. Type /help for commands.", fg="green"))
+    if agent_variant:
+        click.echo(click.style(f"NIKTO:{agent_variant.name} interactive session started. Type /help for commands.", fg="green"))
+    else:
+        click.echo(click.style("NIKTO interactive session started. Type /help for commands.", fg="green"))
     click.echo(click.style("Type 'exit' or Ctrl+C to quit.", fg="bright_black"))
 
     skills_dirs = config.skills_dirs
@@ -249,12 +263,14 @@ def run(ctx, task, mode):
         stream=not config.verbose,
     )
 
+    agent_variant = ctx.obj.get("variant")
     agent = Agent(
         config=config,
         agent_config=agent_config,
         tool_registry=tools,
         memory=memory,
         skill_runtime=skills,
+        variant=agent_variant,
     )
 
     async def _run():

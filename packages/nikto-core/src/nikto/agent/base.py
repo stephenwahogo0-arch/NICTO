@@ -49,12 +49,14 @@ class AgentConfig(BaseModel):
 class Agent:
     def __init__(
         self,
-        config: Optional[NiktoConfig] = None,
+        config: NiktoConfig,
         agent_config: Optional[AgentConfig] = None,
         tool_registry: Optional[ToolRegistry] = None,
         memory: Optional[MemorySystem] = None,
         skill_runtime: Optional[SkillRuntime] = None,
+        variant: Optional["AgentVariant"] = None,
     ):
+        self.variant = variant
         self.config = config or NiktoConfig.load()
         self.agent_config = agent_config or AgentConfig()
 
@@ -84,6 +86,15 @@ class Agent:
                 pass
 
     def _build_system_prompt(self) -> str:
+        if self.variant:
+            variant_prompt = self.variant.build_system_prompt()
+            mode_override = ""
+            if self.agent_config.mode == AgentMode.PLAN:
+                mode_override = "\n\nYou are in PLAN mode. Read-only analysis only — never write or execute."
+            elif self.agent_config.mode == AgentMode.BUILD:
+                mode_override = "\n\nYou are in BUILD mode. Full access — read, write, execute, build."
+            return variant_prompt + mode_override
+
         mode_instructions = {
             AgentMode.PLAN: (
                 "You are NIKTO in PLAN mode. You can ONLY read files and search code. "
