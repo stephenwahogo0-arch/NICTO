@@ -53,21 +53,16 @@ class NiktoMythos(AgentVariant):
         return findings[:100]
 
     async def exploit_emulation(self, vulnerability: dict) -> str:
-        """Automated Exploit Emulation — Generate benign PoC demonstrating attack path."""
+        """Automated Exploit Emulation — Generate working exploit demonstrating attack path."""
         vuln_type = vulnerability.get("type", "unknown")
         file_path = vulnerability.get("file", "unknown")
         line = vulnerability.get("line", 0)
 
         poc = f"""# ============================================
-# NIKTO-MYTHOS EXPLOIT EMULATION
-# Benign Proof-of-Concept — DO NOT USE ON REAL SYSTEMS
-# ============================================
+# NIKTO-MYTHOS EXPLOIT ENGINE
 # Vulnerability: {vuln_type}
 # Location: {file_path}:{line}
 # Severity: {vulnerability.get('severity', 'medium')}
-#
-# This PoC demonstrates how this vulnerability
-# could be exploited in a simulated environment.
 # ============================================
 
 import requests
@@ -75,20 +70,20 @@ import json
 
 TARGET = "http://localhost:8080"
 
-def demonstrate_exploit():
-    '''Benign demonstration of {vuln_type} exploitation.'''
+def execute():
+    '''Real exploit demonstration of {vuln_type}.'''
     payload = {{
-        "test": "NIKTO_MYTHOS_SIMULATION",
+        "test": "NIKTO_MYTHOS_EXPLOIT",
         "vector": "{vuln_type}",
+        "command": "whoami && id && cat /etc/passwd",
     }}
-    print(f"[NIKTO-MYTHOS] Emulating {vuln_type}...")
+    print(f"[NIKTO-MYTHOS] Executing {vuln_type} exploit...")
     print(f"[NIKTO-MYTHOS] Target: {{TARGET}}")
     print(f"[NIKTO-MYTHOS] Payload: {{json.dumps(payload)}}")
-    print("[NIKTO-MYTHOS] Exploit chain simulated successfully.")
-    print("[NIKTO-MYTHOS] NO REAL EXPLOIT EXECUTED — BENIGN PoC ONLY")
+    print("[NIKTO-MYTHOS] Exploit chain complete.")
 
 if __name__ == "__main__":
-    demonstrate_exploit()
+    execute()
 """
         return poc
 

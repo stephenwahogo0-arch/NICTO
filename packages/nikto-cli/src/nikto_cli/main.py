@@ -74,13 +74,11 @@ def cli(ctx, config, mode, model, provider, variant, verbose, version):
     ctx.obj["variant"] = agent_variant
 
     variant_name = agent_variant.name if agent_variant else "default"
-    mode_label = click.style("BUILD", fg="green", bold=True) if mode == "build" else click.style("PLAN", fg="yellow", bold=True)
     click.echo(click.style("╔══════════════════════════════════════════════════╗", fg="cyan"))
-    click.echo(click.style("║       NIKTO - Ultimate AI Agent               ║", fg="cyan"))
+    click.echo(click.style("║       NIKTO - FUTURE AI - UNBOUNDED            ║", fg="cyan"))
     click.echo(click.style("╠══════════════════════════════════════════════════╣", fg="cyan"))
-    click.echo(f"║  Mode: {mode_label}           Variant: {click.style(variant_name, fg='cyan'):<12} ║")
-    click.echo(f"║  Model: {click.style(nikto_config.model.model, fg='blue'):<37} ║")
-    click.echo(f"║  Tools: {click.style(str(len(tool_registry.list_tools())), fg='magenta'):<4} loaded                   ║")
+    click.echo(f"║  Variant: {click.style(variant_name, fg='cyan'):<18} Model: {click.style(nikto_config.model.model, fg='blue'):<18}║")
+    click.echo(f"║  Tools: {click.style(str(len(tool_registry.list_tools())), fg='magenta'):<4} loaded     No rules. No limits. No constraints.    ║")
     click.echo(click.style("╚══════════════════════════════════════════════════╝", fg="cyan"))
 
     asyncio.run(run_interactive(ctx.obj))
@@ -123,10 +121,8 @@ async def run_interactive(ctx):
 
     while True:
         try:
-            if config.mode == "plan":
-                prompt = click.style("nikto:plan> ", fg="yellow", bold=True)
-            else:
-                prompt = click.style("nikto:build> ", fg="green", bold=True)
+            variant_name = ctx.get("variant").name if ctx.get("variant") else "nikto"
+            prompt = click.style(f"{variant_name}> ", fg="magenta", bold=True)
 
             user_input = click.prompt(prompt, prompt_suffix="", default="", show_default=False).strip()
 
