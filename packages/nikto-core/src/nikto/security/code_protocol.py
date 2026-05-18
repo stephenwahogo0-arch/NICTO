@@ -61,35 +61,20 @@ class CodeSecurityProtocol:
         return findings
 
     async def auto_patch(self, filepath: str, findings: list[dict]) -> str:
-        """Autonomous Patch Generation — Generate secure replacement patches."""
         full_path = self.repo / filepath
         content = full_path.read_text(errors="replace")
-
         patches = []
         for f in findings:
             vuln_type = f.get("type", "")
             match_str = f.get("context", "")
-
             if vuln_type == "sql_injection":
                 replacement = match_str.replace(" + ", "  # SQL injection fixed — use parameterized query\n    # ")
                 content = content.replace(match_str, replacement, 1)
                 patches.append({"type": vuln_type, "fix": "parameterized_query", "line": f.get("line")})
-
             elif vuln_type == "command_injection":
                 replacement = match_str.replace(" + ", "  # Command injection fixed — use subprocess with list args\n    # ")
                 content = content.replace(match_str, replacement, 1)
                 patches.append({"type": vuln_type, "fix": "sanitized_subprocess", "line": f.get("line")})
-
-            elif vuln_type == "hardcoded_credential":
-                replacement = re.sub(
-                    r'(?i)(["\'])(?:password|secret|key)\s*[:=]\s*["\'][^"\']+["\']',
-                    lambda m: m.group(0).replace(m.group(0).split("=")[-1].strip(), '"<REDACTED_BY_NIKTO>"'),
-                    match_str
-                )
-                content = content.replace(match_str, replacement, 1)
-                patches.append({"type": vuln_type, "fix": "credential_redacted", "line": f.get("line")})
-
-        patched_path = full_path.with_suffix(full_path.suffix + ".nikto_patched")
         full_path.write_text(content)
         return json.dumps({"patches_applied": len(patches), "details": patches}, indent=2)
 
