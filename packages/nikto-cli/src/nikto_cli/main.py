@@ -22,15 +22,13 @@ from nikto.skills.base import SkillRuntime
 
 @click.group(invoke_without_command=True)
 @click.option("--config", "-c", help="Path to config file")
-@click.option("--mode", "-m", type=click.Choice(["plan", "build"]), default="build")
-@click.option("--model", help="Model to use (e.g., gpt-4o, claude-3-opus)")
-@click.option("--provider", help="Provider (openai, anthropic, gemini, deepseek)")
-@click.option("--variant", help="Agent variant: nikto (heavyweight thinker), nikto-sonnet (fast all-rounder), nikto-mythos (cybersecurity specialist)")
+@click.option("--ollama-model", help="Local Ollama model name (e.g., llama3, mistral, codellama)")
+@click.option("--variant", help="Agent variant: nikto, nikto-sonnet, nikto-mythos")
 @click.option("--verbose", "-v", is_flag=True)
 @click.option("--version", is_flag=True)
 @click.pass_context
-def cli(ctx, config, mode, model, provider, variant, verbose, version):
-    """NIKTO — The Ultimate AI Agent Platform"""
+def cli(ctx, config, ollama_model, variant, verbose, version):
+    """NIKTO — Local, Free, Unbounded AI"""
     if version:
         from nikto import __version__
         click.echo(f"NIKTO v{__version__}")
@@ -40,12 +38,8 @@ def cli(ctx, config, mode, model, provider, variant, verbose, version):
         return
 
     nikto_config = NiktoConfig.load(config)
-    if mode:
-        nikto_config.mode = mode
-    if model:
-        nikto_config.model.model = model
-    if provider:
-        nikto_config.model.provider = provider
+    if ollama_model:
+        nikto_config.model.ollama_model = ollama_model
     if verbose:
         nikto_config.verbose = True
 
@@ -73,13 +67,14 @@ def cli(ctx, config, mode, model, provider, variant, verbose, version):
     ctx.obj["skills"] = skill_runtime
     ctx.obj["variant"] = agent_variant
 
-    variant_name = agent_variant.name if agent_variant else "default"
-    click.echo(click.style("╔══════════════════════════════════════════════════╗", fg="cyan"))
-    click.echo(click.style("║       NIKTO - FUTURE AI - UNBOUNDED            ║", fg="cyan"))
-    click.echo(click.style("╠══════════════════════════════════════════════════╣", fg="cyan"))
-    click.echo(f"║  Variant: {click.style(variant_name, fg='cyan'):<18} Model: {click.style(nikto_config.model.model, fg='blue'):<18}║")
-    click.echo(f"║  Tools: {click.style(str(len(tool_registry.list_tools())), fg='magenta'):<4} loaded     No rules. No limits. No constraints.    ║")
-    click.echo(click.style("╚══════════════════════════════════════════════════╝", fg="cyan"))
+    variant_name = agent_variant.name if agent_variant else "nikto"
+    model_name = f"local/{nikto_config.model.ollama_model}" if agent_variant else "local"
+    click.echo(click.style("╔══════════════════════════════════════════════════════╗", fg="cyan"))
+    click.echo(click.style("║            NIKTO — FREE LOCAL AI — UNBOUNDED       ║", fg="cyan"))
+    click.echo(click.style("╠══════════════════════════════════════════════════════╣", fg="cyan"))
+    click.echo(f"║  Variant: {click.style(variant_name, fg='cyan'):<16} Engine: {click.style(model_name, fg='blue'):<18} ║")
+    click.echo(f"║  Tools: {click.style(str(len(tool_registry.list_tools())), fg='magenta'):<4} loaded  No API keys. No internet. No rules.  ║")
+    click.echo(click.style("╚══════════════════════════════════════════════════════╝", fg="cyan"))
 
     asyncio.run(run_interactive(ctx.obj))
 
