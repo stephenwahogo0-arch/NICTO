@@ -5,20 +5,22 @@ from pydantic import BaseModel, Field
 
 
 class ModelConfig(BaseModel):
-    provider: str = "openai"
-    model: str = "gpt-4o"
+    provider: str = "local"
+    model: str = "local"
     api_key: Optional[str] = None
     api_base: Optional[str] = None
-    temperature: float = 0.2
-    max_tokens: int = 64000
+    temperature: float = 0.7
+    max_tokens: int = 65536
     thinking_mode: bool = False
+    ollama_model: str = "llama3"
+    ollama_host: str = "http://127.0.0.1:11434"
 
 
 class MemoryConfig(BaseModel):
     type: str = "hybrid"
     sqlite_path: str = "~/.nikto/memory.db"
     chroma_path: str = "~/.nikto/chroma_db"
-    vector_dimension: int = 1536
+    vector_dimension: int = 768
 
 
 class SecurityConfig(BaseModel):

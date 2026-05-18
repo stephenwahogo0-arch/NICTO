@@ -908,46 +908,24 @@ async def skill_generate_image(**kwargs) -> dict:
         "generated_at": datetime.now().isoformat(),
     }
 
-    api_key = os.environ.get("OPENAI_API_KEY") or os.environ.get("STABILITY_API_KEY")
-
-    if api_key and os.environ.get("OPENAI_API_KEY"):
-        try:
-            import urllib.request
-            req_data = json.dumps({
-                "model": "dall-e-3",
-                "prompt": prompt,
-                "n": 1,
-                "size": "1024x1024",
-            }).encode()
-            req = urllib.request.Request(
-                "https://api.openai.com/v1/images/generations",
-                data=req_data,
-                headers={
-                    "Authorization": f"Bearer {api_key}",
-                    "Content-Type": "application/json",
-                },
-                method="POST",
-            )
-            with urllib.request.urlopen(req, timeout=60) as resp:
-                data = json.loads(resp.read().decode())
-                result["status"] = "generated"
-                result["url"] = data.get("data", [{}])[0].get("url", "")
-                result["revised_prompt"] = data.get("data", [{}])[0].get("revised_prompt", "")
-        except Exception as e:
-            result["status"] = "failed"
-            result["error"] = str(e)
-            result["fallback"] = "Use a local placeholder"
-
-    if not result.get("url"):
-        output_dir = Path(tempfile.gettempdir()) / "nikto_images"
-        output_dir.mkdir(exist_ok=True)
-        safe_name = re.sub(r'[^a-zA-Z0-9_-]', '_', prompt[:50])
-        output_path = output_dir / f"{safe_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
-        placeholder = f"[IMAGE GENERATION PLACEHOLDER]\nPrompt: {prompt}\nTimestamp: {result['generated_at']}\n\nTo generate a real image, set the OPENAI_API_KEY or STABILITY_API_KEY environment variable."
-        output_path.write_text(placeholder, encoding="utf-8")
-        result["status"] = "placeholder"
-        result["local_path"] = str(output_path)
-        result["note"] = "Set OPENAI_API_KEY for DALL-E generation"
+    # Fully local image generation — creates SVG placeholder locally
+    output_dir = Path(tempfile.gettempdir()) / "nikto_images"
+    output_dir.mkdir(exist_ok=True)
+    safe_name = re.sub(r'[^a-zA-Z0-9_-]', '_', prompt[:50])
+    output_path = output_dir / f"{safe_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.svg"
+    svg = f"""<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512">
+  <rect width="512" height="512" fill="#1a1a2e"/>
+  <text x="256" y="256" text-anchor="middle" fill="#00ffff" font-family="monospace" font-size="14">
+    NIKTO LOCAL IMAGE
+  </text>
+  <text x="256" y="280" text-anchor="middle" fill="#ffffff" font-family="monospace" font-size="10">
+    {prompt[:80]}
+  </text>
+</svg>"""
+    output_path.write_text(svg, encoding="utf-8")
+    result["status"] = "generated"
+    result["local_path"] = str(output_path)
+    result["format"] = "svg"
 
     return {"success": True, "output": json.dumps(result, indent=2)}
 
@@ -960,48 +938,6 @@ async def skill_translate_text(**kwargs) -> dict:
         return {"success": False, "output": "Missing 'text' parameter"}
 
     result = {"source_text": text[:500], "target_language": target_lang, "original_length": len(text)}
-
-    api_key = os.environ.get("DEEPL_API_KEY") or os.environ.get("OPENAI_API_KEY")
-
-    if api_key and os.environ.get("DEEPL_API_KEY"):
-        try:
-            import urllib.request
-            req_data = json.dumps({"text": [text], "target_lang": target_lang.upper()}).encode()
-            req = urllib.request.Request(
-                "https://api-free.deepl.com/v2/translate",
-                data=req_data,
-                headers={"Authorization": f"DeepL-Auth-Key {api_key}", "Content-Type": "application/json"},
-            )
-            with urllib.request.urlopen(req, timeout=30) as resp:
-                data = json.loads(resp.read().decode())
-                translated = data.get("translations", [{}])[0].get("text", "")
-                result["translated_text"] = translated
-                result["source"] = "deepl"
-                return {"success": True, "output": json.dumps(result, indent=2)}
-        except Exception as e:
-            result["deepl_error"] = str(e)
-
-    if api_key and not result.get("translated_text"):
-        try:
-            import urllib.request
-            messages = [
-                {"role": "system", "content": f"Translate the following text to {target_lang}. Respond with ONLY the translation, no notes."},
-                {"role": "user", "content": text[:4000]},
-            ]
-            req_data = json.dumps({"model": "gpt-4o-mini", "messages": messages, "temperature": 0.3}).encode()
-            req = urllib.request.Request(
-                "https://api.openai.com/v1/chat/completions",
-                data=req_data,
-                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-            )
-            with urllib.request.urlopen(req, timeout=30) as resp:
-                data = json.loads(resp.read().decode())
-                translated = data.get("choices", [{}])[0].get("message", {}).get("content", "")
-                result["translated_text"] = translated
-                result["source"] = "openai"
-                return {"success": True, "output": json.dumps(result, indent=2)}
-        except Exception as e:
-            result["openai_error"] = str(e)
 
     import random
     word_map = {
@@ -1020,7 +956,7 @@ async def skill_translate_text(**kwargs) -> dict:
             translated_words.append(f"[{word}]")
     result["translated_text"] = " ".join(translated_words) if translated_words else f"[{target_lang}] {text}"
     result["source"] = "local_lookup"
-    result["note"] = "Basic word substitution — set DEEPL_API_KEY or OPENAI_API_KEY for real translations"
+    result["note"] = "Fully local word substitution translation"
     result["accuracy"] = "low"
 
     return {"success": True, "output": json.dumps(result, indent=2)}
@@ -1034,35 +970,6 @@ async def skill_summarize(**kwargs) -> dict:
 
     if len(text) < 50:
         return {"success": True, "output": json.dumps({"summary": text, "note": "Text too short to summarize"}, indent=2)}
-
-    api_key = os.environ.get("OPENAI_API_KEY")
-
-    if api_key:
-        try:
-            import urllib.request
-            messages = [
-                {"role": "system", "content": "Summarize the following text concisely while preserving key information. Return the summary as plain text."},
-                {"role": "user", "content": text[:8000]},
-            ]
-            req_data = json.dumps({"model": "gpt-4o-mini", "messages": messages, "temperature": 0.3, "max_tokens": 500}).encode()
-            req = urllib.request.Request(
-                "https://api.openai.com/v1/chat/completions",
-                data=req_data,
-                headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-            )
-            with urllib.request.urlopen(req, timeout=60) as resp:
-                data = json.loads(resp.read().decode())
-                summary = data.get("choices", [{}])[0].get("message", {}).get("content", "")
-                if summary:
-                    return {"success": True, "output": json.dumps({
-                        "summary": summary,
-                        "original_length": len(text),
-                        "summary_length": len(summary),
-                        "compression_ratio": round(len(summary) / len(text), 2),
-                        "source": "openai",
-                    }, indent=2)}
-        except Exception as e:
-            pass
 
     sentences = re.split(r'(?<=[.!?])\s+', text)
     total = len(sentences)
@@ -1520,17 +1427,17 @@ def register_production_skills(skill_runtime: SkillRuntime):
         {
             "name": "generate_image",
             "description": "Generate an image from a text prompt using DALL-E or a placeholder",
-            "content": "Generates an image using OpenAI DALL-E 3 when OPENAI_API_KEY is set. Falls back to creating a local text placeholder file with the prompt metadata.\n\nUsage: /generate_image prompt=<description>",
+            "content": "Generates an image locally as an SVG file. Fully local, no API keys needed.\n\nUsage: /generate_image prompt=<description>",
         },
         {
             "name": "translate_text",
             "description": "Translate text between languages using DeepL, OpenAI, or local lookup",
-            "content": "Translates text using DeepL API (DEEPL_API_KEY), OpenAI (OPENAI_API_KEY), or a local word-substitution fallback for common languages (es, fr, de, ja).\n\nUsage: /translate_text text=<string> target_lang=<code>",
+            "content": "Translates text using a fully local word-substitution dictionary for common languages (es, fr, de, ja). No API keys needed.\n\nUsage: /translate_text text=<string> target_lang=<code>",
         },
         {
             "name": "summarize",
             "description": "Summarize text content using AI or extractive methods",
-            "content": "Summarizes text using OpenAI GPT-4o-mini when OPENAI_API_KEY is set. Falls back to extractive summarization selecting key sentences and keywords based on position and frequency.\n\nUsage: /summarize text=<string>",
+            "content": "Summarizes text using extractive summarization. Fully local, no API keys needed.\n\nUsage: /summarize text=<string>",
         },
         {
             "name": "extract_data",

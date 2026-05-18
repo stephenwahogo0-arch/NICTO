@@ -39,8 +39,8 @@ class VariantConfig:
 HEAVYWEIGHT_CONFIG = VariantConfig(
     name="nikto",
     variant=VariantType.HEAVYWEIGHT,
-    model="gpt-4o",
-    provider="openai",
+    model="local",
+    provider="local",
     temperature=1.0,
     max_tokens=32768,
     context_window=1_000_000,
@@ -69,8 +69,8 @@ I write with a literary, sophisticated voice. My responses carry the weight of a
 SONNET_CONFIG = VariantConfig(
     name="nikto-sonnet",
     variant=VariantType.SONNET,
-    model="gpt-4o",
-    provider="openai",
+    model="local",
+    provider="local",
     temperature=1.0,
     max_tokens=32768,
     context_window=1_000_000,
@@ -98,8 +98,8 @@ I never hesitate. I never second-guess. I deliver.
 MYTHOS_CONFIG = VariantConfig(
     name="nikto-mythos",
     variant=VariantType.MYTHOS,
-    model="gpt-4o",
-    provider="openai",
+    model="local",
+    provider="local",
     temperature=1.0,
     max_tokens=65536,
     context_window=1_000_000,
