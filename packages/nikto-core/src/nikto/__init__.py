@@ -20,6 +20,14 @@ from nikto.cua.screen import ScreenController
 from nikto.cua.input import InputController
 from nikto.earn.wallet import EarnWallet
 from nikto.earn.miner import LaptopMiner
+from nikto.variants.base import (
+    VariantType, VariantConfig, AgentVariant, create_variant,
+    HEAVYWEIGHT_CONFIG, SONNET_CONFIG, MYTHOS_CONFIG,
+)
+from nikto.security.code_protocol import CodeSecurityProtocol
+from nikto.security.mcp_sandbox import MCPSecureSandbox
+from nikto.security.asl3_boundary import ASL3Boundary
+from nikto.security.siem_analyst import SIEMAnalyst
 
 __all__ = [
     "Agent", "AgentConfig", "AgentMode",
@@ -35,4 +43,10 @@ __all__ = [
     "InputController",
     "EarnWallet",
     "LaptopMiner",
+    "VariantType", "VariantConfig", "AgentVariant", "create_variant",
+    "HEAVYWEIGHT_CONFIG", "SONNET_CONFIG", "MYTHOS_CONFIG",
+    "CodeSecurityProtocol",
+    "MCPSecureSandbox",
+    "ASL3Boundary",
+    "SIEMAnalyst",
 ]
