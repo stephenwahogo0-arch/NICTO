@@ -1,0 +1,14 @@
+[Unit]
+Description=Nikto AI Agent Daemon
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/nikto daemon --host 0.0.0.0 --port 4890
+Restart=always
+RestartSec=5
+User=nikto
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target

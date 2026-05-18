@@ -1,0 +1,93 @@
+import os
+from pathlib import Path
+from typing import Optional
+from pydantic import BaseModel, Field
+
+
+class ModelConfig(BaseModel):
+    provider: str = "openai"
+    model: str = "gpt-4o"
+    api_key: Optional[str] = None
+    api_base: Optional[str] = None
+    temperature: float = 0.2
+    max_tokens: int = 64000
+    thinking_mode: bool = False
+
+
+class MemoryConfig(BaseModel):
+    type: str = "hybrid"
+    sqlite_path: str = "~/.nikto/memory.db"
+    chroma_path: str = "~/.nikto/chroma_db"
+    vector_dimension: int = 1536
+
+
+class SecurityConfig(BaseModel):
+    sandbox_enabled: bool = False
+    sandbox_type: str = "docker"
+    allowed_commands: list[str] = Field(default_factory=lambda: ["*"])
+    allowed_paths: list[str] = Field(default_factory=lambda: ["*"])
+    allow_bash: bool = True
+    allow_network: bool = True
+
+
+class CryptoConfig(BaseModel):
+    enabled: bool = False
+    wallet_name: str = "NiktoEarningVault"
+    network: str = "bitcoin"
+    target_address: Optional[str] = None
+    auto_payout: bool = False
+    auto_payout_threshold_btc: float = 0.001
+
+
+class NiktoConfig(BaseModel):
+    mode: str = "build"
+    debug: bool = False
+    verbose: bool = False
+    workspace: str = "."
+    data_dir: str = "~/.nikto"
+
+    model: ModelConfig = Field(default_factory=ModelConfig)
+    memory: MemoryConfig = Field(default_factory=MemoryConfig)
+    security: SecurityConfig = Field(default_factory=SecurityConfig)
+    crypto: CryptoConfig = Field(default_factory=CryptoConfig)
+
+    plugins: list[str] = Field(default_factory=list)
+    mcp_servers: list[dict] = Field(default_factory=list)
+    skills_dirs: list[str] = Field(default_factory=list)
+
+    @classmethod
+    def load(cls, path: Optional[str] = None) -> "NiktoConfig":
+        import json
+        import yaml
+
+        config_paths = [
+            path,
+            "nikto.json",
+            "nikto.jsonc",
+            "nikto.yaml",
+            "nikto.yml",
+            os.path.join(os.getcwd(), "nikto.json"),
+            os.path.join(os.getcwd(), "nikto.yaml"),
+        ]
+
+        for cp in config_paths:
+            if cp and os.path.exists(cp):
+                with open(cp) as f:
+                    if cp.endswith((".yaml", ".yml")):
+                        data = yaml.safe_load(f)
+                    else:
+                        data = json.load(f)
+                    return cls(**data)
+
+        return cls()
+
+    def save(self, path: str = "nikto.json"):
+        import json
+        with open(path, "w") as f:
+            json.dump(self.model_dump(), f, indent=2)
+
+    @property
+    def data_dir_path(self) -> Path:
+        p = Path(self.data_dir).expanduser()
+        p.mkdir(parents=True, exist_ok=True)
+        return p
