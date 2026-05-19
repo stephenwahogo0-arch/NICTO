@@ -1,29 +1,13 @@
-# Python
 __pycache__/
-*.py[cod]
+*.pyc
+*.pyo
 *.egg-info/
 dist/
 build/
-.venv/
-uv.lock
-
-# Node
-node_modules/
-dist/
-.next/
-
-# IDE
-.vscode/
-.idea/
-*.swp
-
-# OS
+*.sqlite3
+*.db
+chroma.sqlite3
+[0-9a-f]*-[0-9a-f]*-[0-9a-f]*-[0-9a-f]*-[0-9a-f]*/
+.nikto/
 .DS_Store
 Thumbs.db
-
-# Nikto runtime
-.nikto/
-
-# Env
-.env
-*.key

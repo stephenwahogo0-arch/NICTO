@@ -73,8 +73,9 @@ async def chat(req: ChatRequest):
 
 @app.get("/memory/search")
 async def memory_search(q: str = "", limit: int = 10):
+    from nikto.config.settings import MemoryConfig
     from nikto.memory.base import MemorySystem
-    mem = MemorySystem()
+    mem = MemorySystem(MemoryConfig())
     if q:
         results = mem.search(q, limit=limit)
     else:
@@ -84,8 +85,9 @@ async def memory_search(q: str = "", limit: int = 10):
 
 @app.post("/memory/store")
 async def memory_store(key: str, value: str):
+    from nikto.config.settings import MemoryConfig
     from nikto.memory.base import MemorySystem
-    mem = MemorySystem()
+    mem = MemorySystem(MemoryConfig())
     mem.store(key, value, {"source": "api"})
     return {"stored": key}
 

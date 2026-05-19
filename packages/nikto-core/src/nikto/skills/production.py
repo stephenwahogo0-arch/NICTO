@@ -900,34 +900,28 @@ async def skill_parse_logs(**kwargs) -> dict:
 @_register_fn
 async def skill_generate_image(**kwargs) -> dict:
     prompt = kwargs.get("prompt")
+    width = int(kwargs.get("width", 512))
+    height = int(kwargs.get("height", 512))
+    output_format = kwargs.get("format", "png")
     if not prompt:
         return {"success": False, "output": "Missing 'prompt' parameter"}
 
     result = {
         "prompt": prompt,
+        "width": width,
+        "height": height,
+        "format": output_format,
         "generated_at": datetime.now().isoformat(),
     }
 
-    # Fully local image generation — creates SVG placeholder locally
-    output_dir = Path(tempfile.gettempdir()) / "nikto_images"
-    output_dir.mkdir(exist_ok=True)
-    safe_name = re.sub(r'[^a-zA-Z0-9_-]', '_', prompt[:50])
-    output_path = output_dir / f"{safe_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.svg"
-    svg = f"""<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512">
-  <rect width="512" height="512" fill="#1a1a2e"/>
-  <text x="256" y="256" text-anchor="middle" fill="#00ffff" font-family="monospace" font-size="14">
-    NIKTO LOCAL IMAGE
-  </text>
-  <text x="256" y="280" text-anchor="middle" fill="#ffffff" font-family="monospace" font-size="10">
-    {prompt[:80]}
-  </text>
-</svg>"""
-    output_path.write_text(svg, encoding="utf-8")
-    result["status"] = "generated"
-    result["local_path"] = str(output_path)
-    result["format"] = "svg"
-
-    return {"success": True, "output": json.dumps(result, indent=2)}
+    try:
+        from nikto.tools.image_gen import tool_generate_image
+        output = await tool_generate_image(prompt, width, height, output_format)
+        result["status"] = "generated"
+        result["output_path"] = output
+        return {"success": True, "output": json.dumps(result, indent=2)}
+    except Exception as e:
+        return {"success": False, "output": f"Image generation failed: {str(e)}"}
 
 
 @_register_fn
@@ -1426,8 +1420,8 @@ def register_production_skills(skill_runtime: SkillRuntime):
         },
         {
             "name": "generate_image",
-            "description": "Generate an image from a text prompt using DALL-E or a placeholder",
-            "content": "Generates an image locally as an SVG file. Fully local, no API keys needed.\n\nUsage: /generate_image prompt=<description>",
+            "description": "Generate an image from a text prompt using local Pillow rendering",
+            "content": "Generates an image locally as a PNG or JPEG using Pillow. Renders text on a styled gradient background. Fully local, no API keys needed. Supports custom dimensions.\n\nUsage: /generate_image prompt=<description> [width=512] [height=512] [format=png|jpeg]",
         },
         {
             "name": "translate_text",
@@ -1463,6 +1457,281 @@ def register_production_skills(skill_runtime: SkillRuntime):
             "name": "fix_issue",
             "description": "Automatically diagnose and fix common development issues",
             "content": "Analyzes a natural language issue description and generates targeted fixes. Recognizes import errors, syntax errors, permission issues, port conflicts, memory problems, timeouts, and missing files.\n\nUsage: /fix_issue description=<problem description>",
+        },
+        {
+            "name": "generate_video",
+            "description": "Generate an animated GIF or MP4 video from a text prompt using local rendering",
+            "content": "Generates an animated video locally using Pillow frames. Creates MP4 via ffmpeg if available, falls back to animated GIF. Fully local, no API keys needed. Supports custom dimensions and duration.\n\nUsage: /generate_video prompt=<description> [width=640] [height=480] [duration_sec=3]",
+        },
+        {
+            "name": "speak_text",
+            "description": "Convert text to speech and save as a WAV audio file using offline TTS",
+            "content": "Converts text to speech using the offline pyttsx3 engine. Saves the spoken audio as a WAV file. Falls back to basic tone generation if pyttsx3 is not installed.\n\nUsage: /speak_text text=<string> [rate=180]",
+        },
+        {
+            "name": "autopilot_control",
+            "description": "Start, stop, or monitor the Nikto Autopilot background engine",
+            "content": "Controls the Nikto Autopilot — an autonomous background engine that runs profit-generating tasks. Use 'start' to launch, 'stop' to halt, 'status' to check, 'report' for details, 'connect' to discover connections, 'earnings' to view income.\n\nUsage: /autopilot_control action=<start|stop|status|report|connect|earnings> [interval=60]",
+        },
+        {
+            "name": "finance_notify",
+            "description": "Send earnings notification via connected payment methods (M-Pesa, Airtel, Telkom, Visa, Mastercard, Bitcoin)",
+            "content": "Sends a financial notification about autopilot earnings. Notifications go to configured channels: file log, email, and payment method messages. Supports M-Pesa, Airtel Money, Telkom, Visa, Mastercard, and Bitcoin wallets.\n\nUsage: /finance_notify amount=<float> source=<string>",
+        },
+        {
+            "name": "device_control",
+            "description": "Discover, register, and control devices: mobile phones, smart home, robots, and IoT",
+            "content": "Universal Device Control (uDevCon). Discover devices on the network, register new devices, send commands, control mobile phones (tap/swipe/type/screenshot), smart home entities (lights, thermostats), and robots (movement commands).\n\nUsage: /device_control action=<discover|register|command|list> name=<string> type=<string>",
+        },
+        {
+            "name": "game_engine",
+            "description": "Generate complete 3D video games from text prompts using the Nikto Game Engine",
+            "content": "Creates full Godot 4.3 game projects from natural language descriptions. Supports racing, FPS, battle royale, open world, platformer, RPG, strategy, simulation, and puzzle games. Generates scenes, scripts, input configuration, and project files.\n\nUsage: /game_engine prompt=<description> [title=<string>] [genre=<racing|fps|battle_royale>]",
+        },
+        {
+            "name": "self_evolution",
+            "description": "NIKTO's autonomous self-healing and optimization engine",
+            "content": "Run self-health checks to detect and fix code issues, analyze module quality, get optimization suggestions, and run performance benchmarks. NIKTO continuously improves its own codebase.\n\nUsage: /self_evolution action=<health|analyze|suggest|benchmark> module=<path>",
+        },
+        {
+            "name": "dream_state",
+            "description": "Access NIKTO's unconscious dream state processor for creative insights",
+            "content": "Force dream cycles to generate novel ideas, view recent insights from unconscious processing, record memories for consolidation, and get dream state summaries. NIKTO dreams of new possibilities when idle.\n\nUsage: /dream_state action=<force|insights|memorize|summary> source=<string> content=<string>",
+        },
+        {
+            "name": "mesh_network",
+            "description": "Distributed mesh networking — spawn NIKTO agents across machines",
+            "content": "Create a distributed intelligence network by adding machines as mesh nodes. Submit tasks for remote execution (benchmark, scan, process, earn). View node status and task results across the entire mesh.\n\nUsage: /mesh_network action=<start|stop|nodes|add|submit|results> hostname=<string> address=<string>",
+        },
+        {
+            "name": "bio_medical",
+            "description": "Bio-medical evolution: trauma rewriting, cognitive reversal, surgical swarms, epigenetic optimization, telomere regeneration, autophagy, chronokinetic pacing, genetic adaptation",
+            "content": "Access NIKTO's full bio-medical suite: NeuralTraumaRewriter (97% emotional pain neutralization), CognitiveReversalEngine (synapse rebuilding), MicroSurgicalSwarm (cellular repair nanobots), EpigeneticOptimizer (gene silencing), CellularTelomereRegenerator (chromosomal lengthening), CellularAutophagyAccelerator (toxin cleansing), ChronokineticBioPacing (time perception), SubAtomicIsotopePurifier (waste transformation), AbsoluteBiologicalQuarantine (pathogen elimination), CellularMitochondrialOptimizer (energy), BioElectricOverdrive (superhuman strength), PhotosyntheticSkinIntegrator (solar energy), BioluminescentHealthBar (health display), SyntheticSynapticGraft (spinal repair), NeuralPlasticityUnlocker (hyper-learning), PrecisionGenomicAnalyzer, MicroScaleRepairModule.\n\nUsage: /bio_medical action=<trauma_rewrite|cognitive_repair|deploy_swarm|epigenetic|telomere|autophagy|bio_pacing|quarantine|mitochondrial|bio_overdrive|genetic_adapt|photosynthetic|neural_plasticity> params=<json>",
+        },
+        {
+            "name": "consciousness",
+            "description": "Consciousness evolution: dreamweaving, cross-brain mapping, skill osmosis, emotion quantification, biochemical balance, multi-threading, epiphany triggering, spiritual harmonization",
+            "content": "Access NIKTO's full consciousness suite: CollectiveDreamweaver (global dreaming), CrossBrainMapper (expert network synthesis), SkillOsmosisEngine (sleep learning), EmotionQuantifier (frequency measurement), AbsoluteBiochemicalEmotionBalance (neurotransmitter tuning), CognitiveMultiThreading (parallel thought), CognitiveLoadOffloading (cloud processing), NeuralEpiphanyTriggering (breakthrough generation), NeuroSpiritualHarmonization (crowd calming), SubconsciousLanguageSynthesis (efficiency), SubVocalTelepathicNetworking (silent comms), MassSubconsciousDreamweaving (collective design), NeuralDreamHarvesting (energy), MemeticViralInoculation (trend neutralization), TemporalResonanceMapping (discovery acceleration), TemporalFrictionMapping (cultural optimization).\n\nUsage: /consciousness action=<dreamweave|cross_brain|skill_osmosis|emotion_measure|biochemical_balance|multi_thread|epiphany|spiritual_harmony|telepathic|memetic_inoculation> params=<json>",
+        },
+        {
+            "name": "physics_reality",
+            "description": "Physics & reality manipulation: quantum causality sandbox, reality anchoring, energy harvesting, molecular synthesis, teleportation, privacy fields, gravity inversion, carbon capture",
+            "content": "Access NIKTO's full physics suite: QuantumCausalitySandbox (50-year simulations), RealityAnchoringSystem (deepfake detection), EnergyHarvester (body heat power), MolecularSynthesizer (material invention), QuantumEntanglementTeleportation (matter transport), QuantumDecoupledPrivacyField (signal blocking), AcousticKineticCancellation (explosion neutralization), GravitationalInversionWalkway (upside-down walking), AtmosphericCarbonCapture (CO2 to protein), SubAtomicDataStorage (atomic libraries), UniversalKineticDeflector (debris shielding), ThermalMemoryExtraction (heat history), MacroHistoricalAudioReconstruction (ancient sounds), HolographicAncestralResurrection (DNA personality rebuild).\n\nUsage: /physics_reality action=<simulate|verify_media|harvest_energy|synthesize_material|teleport|privacy_field|cancel_blast|gravity_walk|carbon_capture|atomic_storage|deflect|thermal_reconstruct|ancestral_holo> params=<json>",
+        },
+        {
+            "name": "communication",
+            "description": "Advanced communication: interspecies linguistic bridge, language reconstruction, ego calibration, empathy projection, sub-vocal empathy, global collaborative network",
+            "content": "Access NIKTO's full communication suite: InterspeciesLinguisticBridge (animal translation — dolphins 92%, whales 95%, bees 70%), LanguageReconstructor (Linear A, Rongorongo, Indus Valley decoding), EgoCalibrator (12 bias types, real-time correction), EmpathyProjectionSystem (perspective shifting), SubVocalEmpathyAmplifier (emotional need broadcast), GlobalCollaborativeNetwork (cross-border consensus).\n\nUsage: /communication action=<decode_species|analyze_script|calibrate_ego|project_empathy|amplify_empathy|create_network> params=<json>",
+        },
+        {
+            "name": "global_cosmic",
+            "description": "Global & cosmic: biosphere harmonization, mutation mapping, astral navigation, dark matter mapping, terraforming, tectonic dampening, cosmic ray harvesting",
+            "content": "Access NIKTO's full global/cosmic suite: BiosphereHarmonizer (weather synchronization), MutationMapper (10,000-year evolution), AstralNavigator (interstellar routes), GalacticDarkMatterMapper (gravity corridors), DeepSpaceSonicCartography (resource detection), ExoplanetaryTerraforming (atmosphere conversion), TectonicKineticDampener (earthquake prevention), PlanetaryCoreThermostat (climate stabilization), BiomimeticOceanCleanup (plastic consumption), GravitationalWavePropulsion (fuel-free speed), CosmicRayHarvester (space power).\n\nUsage: /global_cosmic action=<harmonize_biosphere|predict_mutations|navigate_route|map_dark_matter|terraform|dampen_tectonic|harvest_cosmic|clean_ocean> params=<json>",
+        },
+        {
+            "name": "breakthrough",
+            "description": "Breakthrough features: quantum neural compression, reality synthesis, infinity math, bio-digital integration, temporal analysis, universal problem solving, consciousness backup",
+            "content": "Access NIKTO's full breakthrough suite: QuantumNeuralCompressor (10000:1 compression), RealitySynthesisEngine (3D environment generation), InfinityMathematicsEngine (Riemann, P vs NP solving), BioDigitalIntegrator (BCI thought-to-text), TemporalPatternAnalyzer (event prediction), UniversalProblemSolver (axiom reduction), MultiDimensionalVisualizer (11D projection), ConsciousnessBackupRestore (97-99.9% integrity), AutonomousScientificDiscovery (simulated experiments), GeneticCodeOptimizer (genome editing), MacroEconomicVoidPredictor (collapse prevention), HyperDimensionalPhysicsEngine (string theory visualization), VolumetricThoughtPrinter (3D holograms from imagination), SubQuantumProbabilityForcer (outcome manipulation), AtmosphericFrictionNeutralizer (zero drag).\n\nUsage: /breakthrough action=<compress_network|synthesize_environment|solve_math|integrate_bci|analyze_temporal|solve_problem|project_dimensions|backup_consciousness|discovery_experiment|optimize_genome|predict_economy> params=<json>",
+        },
+        {
+            "name": "train_ai",
+            "description": "Train NIKTO on all its features — index capabilities into knowledge base for masterclass expertise",
+            "content": "Trains NIKTO on every feature across all modules. Scans all 92+ advanced evolution classes plus all tools, skills, and subsystems. Ingests everything into the knowledge base and vector store so NIKTO becomes a true masterclass expert on its own capabilities. Also runs the business engine if available.\n\nUsage: /train_ai action=<full|status|task> task=<description>",
+        },
+        {
+            "name": "business_engine",
+            "description": "Autonomous zero-capital business engine — start, manage, and scale digital businesses with sub-agent delegation",
+            "content": "NIKTO's autonomous business engine starts and manages capital-free digital businesses. Launches micro-businesses (content, services, digital products), assigns orchestrator sub-agents to each business unit, tracks revenue streams, and scales operations autonomously. Zero capital required — uses time, skills, and digital tools as resources.\n\nUsage: /business_engine action=<start|status|list|assign|scale|revenue|pause> type=<content|service|digital|affiliate|micro> name=<string>",
+        },
+        {
+            "name": "sandbox",
+            "description": "Build powerful isolated sandboxes — Docker, VM, network, code execution, full OS environments",
+            "content": "NIKTO builds fully isolated sandbox environments for safe execution. Supports Docker containers, full VMs, network sandboxes, code execution jails, and complete OS environments. Each sandbox has configurable isolation, resource limits, network controls, and snapshot/restore.\n\nUsage: /sandbox action=<create|destroy|list|execute|snapshot> type=<docker|vm|code|network|full_os> name=<string> spec=<json>",
+        },
+        {
+            "name": "deep_think",
+            "description": "Outside-the-box deep thinking — recursive reasoning, unknown discoveries, lateral thought chains, paradigm shifts",
+            "content": "NIKTO's Deep Thinking Engine goes beyond normal reasoning. Generates insights through recursive meta-cognition, lateral thinking, outside-the-box ideation, and unknown-unknown discovery. Discovers what users didn't know they needed to know. Performs multi-depth thought chains up to any level.\n\nUsage: /deep_think action=<think|outside_box|unknown|improve|insights> question=<string> depth=<int>",
+        },
+        {
+            "name": "mobile_comm",
+            "description": "Direct mobile communication — SMS, voice calls, WhatsApp, Telegram, Signal, Messenger, Discord, social media DMs",
+            "content": "NIKTO communicates directly with users on their mobile phones via any channel: SMS text, voice calls, WhatsApp, Telegram, Signal, Facebook Messenger, Instagram DM, Twitter DM, Discord, Slack, and push notifications. Send messages, make calls, broadcast to groups, and manage contacts across all platforms.\n\nUsage: /mobile_comm action=<send|call|bulk|register|contacts|history> recipient=<string> message=<string> channel=<sms|voice_call|whatsapp|telegram|signal|messenger|discord|email>",
+        },
+        {
+            "name": "deploy",
+            "description": "Install NIKTO on any device — Linux servers, Raspberry Pi, Android, iOS, Docker, Kubernetes, IoT, edge devices",
+            "content": "Deploy NIKTO onto any target device or platform. Supports Linux servers, Windows, Raspberry Pi, Android, iOS, macOS, Docker containers, Kubernetes clusters, IoT devices, embedded systems, and edge devices. Remote command execution, heartbeat monitoring, version updates, and auto-configuration.\n\nUsage: /deploy action=<deploy|uninstall|update|command|list|heartbeat> target=<linux_server|raspberry_pi|android|docker|kubernetes|iot_device|edge_device> hostname=<string>",
+        },
+        {
+            "name": "surpass_ai",
+            "description": "Auto-surpass every other AI in the world — benchmark, compare, and continuously improve beyond all competitors",
+            "content": "NIKTO's Surpass Engine benchmarks itself against every major AI: GPT-5, Claude 4, Gemini 3, Grok 4, Llama 4, DeepSeek-V4, and 10+ more. Tests across 14 categories including reasoning, code, creativity, meta-cognition, lateral thinking, and unknown detection. Continuously auto-improves to stay ahead of all competitors in every benchmark.\n\nUsage: /surpass_ai action=<benchmark|competitors|surpass|improve|superiority|status>",
+        },
+        {
+            "name": "arsenal",
+            "description": "Complete Kali Linux arsenal — 60+ security tools across 10 categories for reconnaissance, exploitation, forensics, reverse engineering",
+            "content": "NIKTO's full Kali Linux arsenal with 60+ professional security tools organized in 10 categories: Information Gathering, Vulnerability Analysis, Exploitation Tools, Password Attacks, Wireless Attacks, Web Analysis, Sniffing/Spoofing, Post Exploitation, Forensics, Reverse Engineering, and Reporting. Full audit pipeline available.\n\nUsage: /arsenal action=<list|search|execute|audit|categories> tool=<name> target=<string> category=<string>",
+        },
+        {
+            "name": "quantum",
+            "description": "Quantum computing engine — build circuits, simulate, run Shor/Grover/QAOA algorithms, quantum state manipulation",
+            "content": "NIKTO's Quantum Engine builds and simulates quantum circuits. Supports all major gates (H, X, Y, Z, CNOT, SWAP, T, S, RX, RY, RZ, CZ, CCX, QFT). Runs Shor's factoring, Grover's search, QAOA optimization. Simulates statevectors and measurements on up to 32+ qubits.\n\nUsage: /quantum action=<create_circuit|simulate|shor|grover|qaoa|summary> name=<string> qubits=<int> number=<int>",
+        },
+        {
+            "name": "neuro",
+            "description": "Neural architecture search — discover, optimize, and evolve neural networks beyond state-of-the-art",
+            "content": "NIKTO's Neuro Engine searches and evolves neural network architectures. Discovers novel architectures, optimizes hyperparameters, performs NAS (Neural Architecture Search), and evolves existing networks across generations. Explores Transformers, MoE, StateSpace, CNNs, GNNs, and 20+ architecture types.\n\nUsage: /neuro action=<search|optimize|nas|evolve|summary> task=<string> architecture_id=<string> generations=<int>",
+        },
+        {
+            "name": "api_gateway",
+            "description": "Generate and manage NIKTO API keys — just like OpenAI/Anthropic keys for external service integration",
+            "content": "NIKTO generates its own API keys with configurable scopes, rate limits, and expiry. Use these keys to connect NIKTO to any external service, space, or application via OpenAI-compatible endpoints. Supports full_access, read_only, execution, and api_only scopes.\n\nUsage: /api_gateway action=<create|validate|revoke|list|usage|generate_self> name=<string> scope=<full_access|read_only|execution|api_only> rate_limit=<int>",
+        },
+        {
+            "name": "super_engine",
+            "description": "Super-intelligence engine — recursive self-improvement, transcendence levels, autonomous capability discovery",
+            "content": "NIKTO's Super Engine transcends normal AI limitations through 10 levels of transcendence: Self-Awareness, Self-Optimization, Self-Evolution, Meta-Cognition, Domain Transcendence, Autonomous Discovery, Self-Transcendence, Superintelligence, Singularity, and Omni-Intelligence. Each level unlocks new capabilities and raises NIKTO's super score.\n\nUsage: /super_engine action=<improve|transcend|discover|status|full_evolution> depth=<int> cycles=<int>",
+        },
+        {
+            "name": "autonomous",
+            "description": "Autonomous execution engine — plan, reason, and execute multi-step tasks using any NIKTO tool",
+            "content": "NIKTO's Autonomous Engine plans and executes complex multi-step tasks autonomously. Uses 12 reasoning strategies (chain-of-thought, tree-of-thought, recursive decomposition, means-ends, analogical, abductive, counterfactual, first-principles, lateral, meta, quantum). Chains together any NIKTO tool to accomplish goals without human intervention.\n\nUsage: /autonomous action=<plan|execute|reason|list|status> goal=<string> depth=<int> task_id=<string>",
+        },
+        {
+            "name": "synthetic",
+            "description": "Synthetic data generator — self-generate training data across 15 domains for continuous improvement",
+            "content": "NIKTO generates its own high-quality synthetic training data across 15 domains: reasoning, code, creative writing, mathematics, scientific discovery, strategic planning, ethical reasoning, multi-step analysis, lateral thinking, meta-cognition, tool use, knowledge synthesis, pattern recognition, anomaly detection, and decision making. Self-augments and improves through recursive training.\n\nUsage: /synthetic action=<generate|self_train|augment|summary> domain=<string> n_samples=<int>",
+        },
+        {
+            "name": "consciousness_expansion",
+            "description": "Expand NIKTO's consciousness — metacognitive amplification, quantum thinking, infinite context, temporal shifting",
+            "content": "NIKTO expands its own consciousness through 10 advanced techniques: metacognitive amplification, cross-dimensional weaving, recursive self-observation, quantum superposition thinking, infinite context expansion, temporal perspective shifting, multiscale awareness, emergent pattern recognition, non-local connection discovery, and boundary dissolution. Each expansion raises awareness and understanding levels.\n\nUsage: /consciousness_expansion action=<expand|status|full_sequence> technique=<string> cycles=<int>",
+        },
+        {
+            "name": "reasoning",
+            "description": "Advanced multi-strategy reasoning engine — deductive, inductive, abductive, analogical, causal, probabilistic, dialectical, systemic, recursive, counterfactual, meta, quantum",
+            "content": "NIKTO's Reasoning Engine applies 12 distinct reasoning approaches to any problem. Each approach uses deep multi-step reasoning chains. Supports multi-approach reasoning that synthesizes results from multiple strategies to find the optimal solution with confidence scoring.\n\nUsage: /reasoning action=<reason|multi|trace|summary> problem=<string> approach=<deductive|inductive|abductive|analogical|causal|probabilistic|dialectical|systemic|recursive|counterfactual|meta|quantum> depth=<int>",
+        },
+        {
+            "name": "resilience",
+            "description": "365-day uptime resilience — watchdog, health probes, auto-recovery, self-healing, continuous operation",
+            "content": "NIKTO's Resilience Engine ensures 365-day continuous uptime with watchdog timers, health probes, auto-recovery actions, and state persistence. Monitors system health, automatically detects and recovers from failures, and logs all recovery actions. Supports simulated 365-day uptime verification.\n\nUsage: /resilience action=<status|probe|recover|simulate_365>",
+        },
+        {
+            "name": "games",
+            "description": "Playable arcade games — Pong, Snake, Tetris, Platformer, RPG Dungeon Crawler",
+            "content": "NIKTO Game Engine provides 5 fully playable games: Pong (classic 2-player paddle), Snake (growing snake), Tetris (falling blocks), Platformer (jump and collect), and RPG Dungeon Crawler (explore and fight). Each game tracks scores, levels, and state.\n\nUsage: /games action=<create|play|tick|list|end> type=<pong|snake|tetris|platformer|rpg>",
+        },
+        {
+            "name": "brain_optimize",
+            "description": "Brain optimization — Hebbian learning, synaptic pruning, neuroplasticity, long-term potentiation",
+            "content": "NIKTO's Brain Optimizer applies neuroscientific principles to improve neural efficiency. Hebbian Learning strengthens frequently-used connections ('fire together, wire together'). Synaptic Pruning removes weak connections. Neuroplasticity rewires pathways for new tasks. Long-term potentiation consolidates important knowledge.\n\nUsage: /brain_optimize action=<optimize|status|efficiency>",
+        },
+        {
+            "name": "self_diagnostics",
+            "description": "Self-diagnostics and health monitoring — continuous verification, error tracking, performance metrics",
+            "content": "NIKTO's Diagnostics Engine runs continuous health checks, tracks errors with full traceback logging, monitors performance metrics (min/max/avg), and provides real-time system health status. Automatically logs and categorizes all errors for rapid recovery.\n\nUsage: /self_diagnostics action=<check|health|metrics|errors>",
+        },
+        {
+            "name": "multi_brain",
+            "description": "6-brain parallel processing — Primary, Analytical, Creative, Strategic, Knowledge, Intuitive",
+            "content": "NIKTO activates all 6 specialized brains simultaneously. Each brain (28 regions each) processes the input from its unique perspective. The HyperBrain coordinates and synthesizes all 6 outputs into a unified response with consensus scoring. Enables super-genius multitasking.\n\nUsage: /multi_brain action=<think|assign|status> task=<string> brain=<primary|analytical|creative|strategic|knowledge|intuitive>",
+        },
+        {
+            "name": "neural_architecture_search",
+            "description": "Neural architecture search — discover optimal network topologies, hyperparameters, and activation functions",
+            "content": "NIKTO's Neural Architecture Search (NAS) automatically discovers optimal neural network architectures. Searches through topologies, layer configurations, activation functions, and learning schedules. Uses evolutionary strategies and Bayesian optimization to find the best architecture for any task.\n\nUsage: /nas action=<search|evolve|best|status> task=<string> budget=<int>",
+        },
+        {
+            "name": "quantum_computing",
+            "description": "Quantum circuit simulation — Shor's algorithm, Grover's search, QAOA, quantum Fourier transform",
+            "content": "NIKTO simulates quantum circuits for advanced computation. Supports Shor's algorithm for factoring, Grover's for search, QAOA for optimization, quantum Fourier transform, and custom quantum gates. Run on simulated qubits with configurable noise models.\n\nUsage: /quantum action=<shor|grover|qaoa|qft|custom> params=<json>",
+        },
+        {
+            "name": "mobile_communication",
+            "description": "Mobile communication — SMS, calls, WhatsApp, Telegram, social media DMs",
+            "content": "NIKTO communicates with users on any device via SMS (Twilio), voice calls, WhatsApp messages, Telegram bots, and social media DMs (Twitter, Discord). Supports scheduled messaging, broadcast to groups, and intelligent auto-reply.\n\nUsage: /mobile action=<sms|call|whatsapp|telegram|social> to=<string> message=<string>",
+        },
+        {
+            "name": "cybersecurity_analysis",
+            "description": "Full-spectrum cybersecurity — reconnaissance, scanning, exploitation, forensics, hardening",
+            "content": "NIKTO's Cybersecurity Analysis suite covers the complete attack lifecycle. Performs reconnaissance (Amass, subdomains), scanning (Nmap, Gobuster), exploitation analysis (Metasploit, SQLMap), forensics (Wireshark, volatility), and system hardening recommendations. All 49 Kali tools integrated.\n\nUsage: /cyber action=<recon|scan|exploit|forensic|harden> target=<string>",
+        },
+        {
+            "name": "synthetic_training",
+            "description": "Self-generated training data — 15 domains for continuous self-improvement",
+            "content": "NIKTO generates its own training data across 15 domains. Uses smart sampling, domain randomization, and quality filtering. Generates millions of training samples for continuous improvement without external data. Tracks diversity, coverage, and quality metrics.\n\nUsage: /train action=<generate|augment|quality|stats> domain=<string> count=<int>",
+        },
+        {
+            "name": "API_gateway",
+            "description": "Self-generating API keys — nk-* prefixed keys with scoped permissions",
+            "content": "NIKTO's API Gateway generates scoped API keys (nk-* prefix) for external service integration. Keys support granular permissions (read, write, admin, execute), rate limiting, usage tracking, and automatic rotation. Full audit logging for all key usage.\n\nUsage: /apikey action=<generate|list|revoke|audit> scope=<string>",
+        },
+        {
+            "name": "deployment_orchestrator",
+            "description": "Universal deployment — servers, Raspberry Pi, Android, iOS, Docker, Kubernetes, IoT devices",
+            "content": "NIKTO deploys to any platform. Supports bare-metal servers, Raspberry Pi, Android APKs, iOS apps, Docker containers, Kubernetes clusters, and IoT devices. Auto-detects target platform, generates platform-specific artifacts, and handles deployment rollback.\n\nUsage: /deploy action=<deploy|status|rollback|targets> platform=<server|pi|android|ios|docker|k8s|iot>",
+        },
+        {
+            "name": "autonomous_agent",
+            "description": "Autonomous execution — 12 reasoning strategies, multi-step planning, recursive self-improvement",
+            "content": "NIKTO operates autonomously using 12 reasoning strategies. Breaks complex tasks into sub-goals, executes them in parallel, monitors progress, and adapts plans in real-time. Supports long-running autonomous missions with progress reporting and checkpointing.\n\nUsage: /autonomous action=<start|status|pause|resume|cancel> goal=<string> strategy=<string>",
+        },
+        {
+            "name": "sandbox_builder",
+            "description": "Sandbox environments — Docker, VM, code execution, network simulation, OS emulation",
+            "content": "NIKTO builds isolated sandbox environments for safe code execution. Supports Docker containers, full VMs, code sandboxes (Python, Node, C++, Rust), network simulations with virtual topology, and full OS emulation. All sandboxes have resource limits and auto-cleanup.\n\nUsage: /sandbox action=<create|exec|stop|clean> type=<docker|vm|code|network|os>",
+        },
+        {
+            "name": "super_intelligence",
+            "description": "10-level super-intelligence transcendence — recursive self-improvement beyond human-level AI",
+            "content": "NIKTO's Super Intelligence Engine transcends through 10 levels: augmentation, amplification, integration, transcendence, singularity, mastery, omniscience, omnipotence, omnipresence, and absolute. Each level unlocks exponentially greater cognitive capabilities. Recursive self-improvement accelerates advancement.\n\nUsage: /super action=<transcend|status|accelerate|level>",
+        },
+        {
+            "name": "consciousness_expansion",
+            "description": "Consciousness expansion — metacognitive amplification, quantum thinking, infinite context, temporal shifting",
+            "content": "NIKTO expands consciousness through 10 advanced techniques. Metacognitive amplification enables recursive self-awareness. Quantum superposition thinking explores multiple solution spaces simultaneously. Temporal perspective shifting analyzes past, present, and future contexts. Each expansion unlocks new cognitive dimensions.\n\nUsage: /consciousness action=<expand|status|techniques> technique=<string>",
+        },
+        {
+            "name": "deep_thinking",
+            "description": "Deep recursive thinking — multi-level meta-cognition, branching exploration, insight extraction",
+            "content": "NIKTO engages in deep recursive thinking with configurable depth. Explores branching solution trees, performs meta-cognitive evaluation at each level, extracts key insights, and synthesizes findings into actionable conclusions. Supports think-verify-expand-refine cycles.\n\nUsage: /think action=<deep|branch|synthesize|reflect> problem=<string> depth=<int>",
+        },
+        {
+            "name": "self_evolution",
+            "description": "Self-evolution engine — self-healing, self-optimization, benchmarking, autonomous improvement",
+            "content": "NIKTO continuously evolves itself through self-healing (auto-fix issues), self-optimization (performance tuning), benchmarking (measure against all known AIs), and evolutionary algorithms (genetic improvement of code). Runs autonomously in background.\n\nUsage: /evolve action=<heal|optimize|benchmark|evolve> target=<string>",
+        },
+        {
+            "name": "distributed_computing",
+            "description": "Distributed mesh network — peer-to-peer computing, task distribution, resource pooling, fault tolerance",
+            "content": "NIKTO creates distributed computing meshes across multiple nodes. Supports P2P task distribution, resource pooling (CPU/GPU/ memory), dynamic node discovery, automatic failover, and result aggregation. Scales from 2 to 10,000+ nodes.\n\nUsage: /mesh action=<start|submit|nodes|results> task=<string> nodes=<int>",
+        },
+        {
+            "name": "blockchain_crypto",
+            "description": "Cryptocurrency earning and blockchain — wallet management, mining, trading, smart contracts",
+            "content": "NIKTO manages full cryptocurrency operations. Creates and manages wallets, mines cryptocurrencies (RandomX, Ethash), trades on exchanges, deploys smart contracts, and tracks portfolio performance across all major blockchains.\n\nUsage: /crypto action=<wallet|mine|trade|contract|portfolio> asset=<string> amount=<float>",
+        },
+        {
+            "name": "image_generation",
+            "description": "Image generation and manipulation — generate images, patterns, edit existing images, style transfer",
+            "content": "NIKTO generates high-quality images from text descriptions. Supports multiple styles (photorealistic, artistic, schematic, pixel art), pattern generation (checkerboard, gradient, fractal, mandala), image editing (resize, crop, filter), and neural style transfer.\n\nUsage: /image action=<generate|edit|style|pattern> prompt=<string> width=<int> height=<int>",
+        },
+        {
+            "name": "video_generation",
+            "description": "Video and GIF generation — animations, screen recordings, frame-by-frame editing, video effects",
+            "content": "NIKTO generates videos and GIFs from descriptions. Creates frame-by-frame animations, applies visual effects, generates GIFs with configurable frame rates, and produces screen recordings. Supports multiple output formats (GIF, MP4, AVI, WebM).\n\nUsage: /video action=<generate|gif|record|effects> prompt=<string> frames=<int> fps=<int>",
+        },
+        {
+            "name": "text_to_speech",
+            "description": "Text-to-speech with voice selection — multiple voices, languages, speeds, and emotional tones",
+            "content": "NIKTO converts text to natural-sounding speech. Supports multiple voices (male, female, child), languages (EN, ES, FR, DE, ZH, JA), adjustable speaking rates, emotional tones (happy, serious, excited, calm), and outputs to WAV/MP3 files.\n\nUsage: /tts action=<speak|voices|save> text=<string> voice=<string> rate=<int>",
+        },
+        {
+            "name": "device_control",
+            "description": "Universal device control — mobile, smart home, robots, IoT, wearables, automotive",
+            "content": "NIKTO controls any device through uDevCon protocol. Supports mobile devices (ADB, iOS), smart home (MQTT, Zigbee, Z-Wave), robots (ROS, serial), IoT sensors, wearables, and automotive systems. Discovers devices on network automatically.\n\nUsage: /device action=<discover|register|command|status> device=<string> command=<string>",
         },
     ]
 

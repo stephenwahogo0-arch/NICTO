@@ -54,10 +54,10 @@ class MCPRegistry:
     def get(self, name: str) -> Optional[MCPServer]:
         return self._servers.get(name)
 
-    def list(self) -> list[dict]:
+    def list_servers(self) -> list[dict]:
         return [s.to_dict() for s in self._servers.values()]
 
-    def running(self) -> list[MCPServer]:
+    def running_servers(self) -> list[MCPServer]:
         return [s for s in self._servers.values() if s.status == ServerStatus.RUNNING]
 
 
