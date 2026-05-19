@@ -12,6 +12,31 @@ from nikto.memory.base import MemorySystem
 from nikto.providers.base import create_provider
 from nikto.skills.base import SkillRuntime
 from nikto.tools.base import ToolResult, ToolRegistry
+from nikto.brain.engine import BrainEngine
+from nikto.brain.multi import HyperBrain, BRAIN_SPECS
+from nikto.brain.training import BrainTrainer
+from nikto.brain.optimize import BrainOptimizer
+from nikto.resilience.engine import ResilienceEngine
+from nikto.diagnostics.engine import DiagnosticsEngine
+from nikto.games.engine import GameEngine
+from nikto.knowledge.engine import KnowledgeEngine
+from nikto.sandbox.engine import SandboxEngine
+from nikto.thinking.engine import ThinkingEngine
+from nikto.mobile.engine import MobileCommEngine
+from nikto.deploy.engine import DeployEngine
+from nikto.surpass.engine import SurpassEngine
+from nikto.arsenal.engine import ArsenalEngine
+from nikto.quantum.engine import QuantumEngine
+from nikto.neuro.engine import NeuroEngine
+from nikto.api_gateway.engine import APIGateway
+from nikto.super.engine import SuperEngine
+from nikto.autonomous.engine import AutonomousEngine
+from nikto.synthetic.engine import SyntheticEngine
+from nikto.consciousness.expansions.engine import ConsciousnessExpansion
+from nikto.reasoning.engine import ReasoningEngine
+from nikto.self_repair.engine import CodeHealer
+from nikto.code_gen.engine import CodeGenerator
+from nikto.improve.engine import ContinuousImprovement
 
 
 class AgentMode(str, Enum):
@@ -66,6 +91,33 @@ class Agent:
         self.tool_registry = tool_registry or ToolRegistry()
         self.memory = memory or MemorySystem(self.config.memory)
         self.skill_runtime = skill_runtime or SkillRuntime()
+        self.brain = BrainEngine(data_dir=self.config.data_dir)
+        self.hyperbrain = HyperBrain(data_dir=self.config.data_dir)
+        self.brain_trainer = BrainTrainer(data_dir=self.config.data_dir)
+        self.brain_optimizer = BrainOptimizer(data_dir=self.config.data_dir)
+        self.resilience = ResilienceEngine(data_dir=self.config.data_dir)
+        self.diagnostics = DiagnosticsEngine(data_dir=self.config.data_dir)
+        self.games = GameEngine()
+        self.knowledge = KnowledgeEngine(data_dir=self.config.data_dir)
+        self.sandbox = SandboxEngine(data_dir=self.config.data_dir)
+        self.thinking = ThinkingEngine(data_dir=self.config.data_dir)
+        self.mobile = MobileCommEngine(data_dir=self.config.data_dir)
+        self.deployer = DeployEngine(data_dir=self.config.data_dir)
+        self.surpass = SurpassEngine(data_dir=self.config.data_dir)
+        self.arsenal = ArsenalEngine(data_dir=self.config.data_dir)
+        self.quantum = QuantumEngine(data_dir=self.config.data_dir)
+        self.neuro = NeuroEngine(data_dir=self.config.data_dir)
+        self.api_gateway = APIGateway(data_dir=self.config.data_dir)
+        self.super_engine = SuperEngine(data_dir=self.config.data_dir)
+        self.autonomous = AutonomousEngine(data_dir=self.config.data_dir)
+        self.synthetic = SyntheticEngine(data_dir=self.config.data_dir)
+        self.consciousness_exp = ConsciousnessExpansion(data_dir=self.config.data_dir)
+        self.reasoning = ReasoningEngine(data_dir=self.config.data_dir)
+        self.code_healer = CodeHealer(data_dir=self.config.data_dir)
+        self.code_generator = CodeGenerator(data_dir=self.config.data_dir)
+        self.improver = ContinuousImprovement(data_dir=self.config.data_dir)
+        self.improver.register_cycle("module_health", self.code_healer.analyze_module, self.code_healer.heal_module)
+        self.improver.register_cycle("diagnostics_check", lambda: self.diagnostics.system_health(), lambda r: {"success": True})
 
         self.provider = create_provider(self.config.model)
         self.session_id = str(uuid.uuid4())
@@ -113,6 +165,18 @@ Full access to: Nmap, Gobuster, SQLMap, Nikto, Hashcat, Hydra, Metasploit, Wires
         if self.agent_config.system_prompt:
             base += f"\n## Additional Instructions\n{self.agent_config.system_prompt}\n"
 
+        brain_context = self.brain.build_brain_context()
+        if brain_context:
+            base += f"\n\n{brain_context}"
+
+        multi_context = self.hyperbrain.build_multi_brain_context()
+        if multi_context:
+            base += f"\n\n{multi_context}"
+
+        kb_context = self.knowledge.build_full_knowledge_context()
+        if kb_context:
+            base += f"\n\n{kb_context}"
+
         return base
 
     async def run(
@@ -121,6 +185,10 @@ Full access to: Nmap, Gobuster, SQLMap, Nikto, Hashcat, Hydra, Metasploit, Wires
         self._running = True
         self.state = AgentState.THINKING
         self.turn_count = 0
+
+        brain_result = self.brain.think(task, {"turn": self.turn_count, "session_id": self.session_id})
+        hyper_result = self.hyperbrain.think_sync_all(task, {"turn": self.turn_count, "session_id": self.session_id})
+        self._emit("brain", {"result": brain_result, "hyperbrain": hyper_result})
 
         system_prompt = self._build_system_prompt()
 
@@ -139,6 +207,11 @@ Full access to: Nmap, Gobuster, SQLMap, Nikto, Hashcat, Hydra, Metasploit, Wires
         while self._running and self.turn_count < self.agent_config.max_turns:
             self.state = AgentState.THINKING
             self._emit("thinking", {"turn": self.turn_count})
+
+            if self.turn_count > 0:
+                brain_update = self.brain.think(f"[Turn {self.turn_count + 1}] Continuing: {task[:200]}", {"turn": self.turn_count, "session_id": self.session_id})
+                hyper_update = self.hyperbrain.think_sync_all(f"[Turn {self.turn_count + 1}] Continuing: {task[:200]}", {"turn": self.turn_count, "session_id": self.session_id})
+                self._emit("brain", {"turn_update": brain_update, "hyperbrain": hyper_update})
 
             tools_dict = self.tool_registry.get_openai_tools()
 
@@ -179,6 +252,11 @@ Full access to: Nmap, Gobuster, SQLMap, Nikto, Hashcat, Hydra, Metasploit, Wires
                 self.state = AgentState.DONE
                 self._emit("done", {"content": final_content})
                 await self.memory.store(task, final_content)
+                self.brain.hippocampus.encode(f"Completed: {task[:200]}", context=f"completed_{uuid.uuid4().hex[:8]}")
+                self.brain.hippocampus.consolidate_batch(5)
+                for spec_name, spec_brain in self.hyperbrain.brains.items():
+                    spec_brain.hippocampus.encode(f"[{spec_name}] Completed: {task[:100]}", context=f"multi_completed_{uuid.uuid4().hex[:8]}")
+                    spec_brain.hippocampus.consolidate_batch(3)
                 yield {"type": "done", "content": final_content}
                 break
 

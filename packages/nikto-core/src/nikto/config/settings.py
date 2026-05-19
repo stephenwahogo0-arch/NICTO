@@ -23,6 +23,14 @@ class MemoryConfig(BaseModel):
     vector_dimension: int = 768
 
 
+class KnowledgeConfig(BaseModel):
+    enabled: bool = True
+    auto_ingest: bool = True
+    knowledge_path: str = "~/.nikto/knowledge_base.json"
+    vector_path: str = "~/.nikto/chroma_kb"
+    max_context_features: int = 50
+
+
 class SecurityConfig(BaseModel):
     sandbox_enabled: bool = False
     sandbox_type: str = "docker"
