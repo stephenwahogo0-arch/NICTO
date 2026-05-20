@@ -86,6 +86,9 @@ from nikto.evolution.masterclass import MasterclassTrainer
 # Infinite Context — Million-Word Processing
 from nikto.infinite_context import InfiniteContextEngine
 
+# Model Manager — Multi-tier GGUF download & management
+from nikto.model_manager import ModelManager, MODEL_REGISTRY
+
 # Hotkeys — Global Keyboard Shortcuts
 from nikto.avatar.hotkeys import HotkeyManager
 

@@ -1,3 +1,4 @@
+"""NIKTO configuration — with real LLM engine settings."""
 import os
 from pathlib import Path
 from typing import Optional
@@ -9,11 +10,18 @@ class ModelConfig(BaseModel):
     model: str = "local"
     api_key: Optional[str] = None
     api_base: Optional[str] = None
-    temperature: float = 0.7
-    max_tokens: int = 65536
+    temperature: float = 0.5
+    max_tokens: int = 4096
     thinking_mode: bool = False
-    ollama_model: str = "llama3"
+    
+    # Ollama config
+    ollama_model: str = "llama3.2:1b"
     ollama_host: str = "http://127.0.0.1:11434"
+    
+    # GGUF / llama.cpp config
+    model_path: Optional[str] = None
+    n_gpu_layers: Optional[int] = None
+    model_tier: str = "auto"  # "tier1", "tier2", "auto"
 
 
 class MemoryConfig(BaseModel):
@@ -88,7 +96,6 @@ class NiktoConfig(BaseModel):
                     else:
                         data = json.load(f)
                     return cls(**data)
-
         return cls()
 
     def save(self, path: str = "nikto.json"):
