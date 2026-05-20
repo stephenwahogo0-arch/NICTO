@@ -16,6 +16,23 @@ class AnimationType(Enum):
     LISTENING = "listening"
     CELEBRATING = "celebrating"
     TYPING = "typing"
+    CODING_SETUP = "coding_setup"
+    CODING_LOOP = "coding_loop"
+    LAB_ENTRY = "lab_entry"
+    LAB_WORK = "lab_work"
+    DREAMING = "dreaming"
+    CALLING_AGENTS = "calling_agents"
+    EMAIL_ASSIST = "email_assist"
+    EARNING_MONEY = "earning_money"
+    BIOLOGY_LAB = "biology_lab"
+    QUANTUM_LAB = "quantum_lab"
+    AI_LAB = "ai_lab"
+    RELAXING = "relaxing"
+    SLEEPING = "sleeping"
+    MICROSCOPE = "microscope"
+    WORKBENCH = "workbench"
+    SERVER_RACK = "server_rack"
+    SOFA_RELAX = "sofa_relax"
 
 
 class Expression(Enum):
@@ -103,6 +120,61 @@ ANIMATIONS = {
     AnimationType.TYPING: [
         AnimationFrame("working", "focused", 0.1),
         AnimationFrame("working", "neutral", 0.1),
+    ],
+    AnimationType.CODING_SETUP: [
+        AnimationFrame("walking", "neutral", 0.5),
+        AnimationFrame("pointing", "focused", 0.5),
+        AnimationFrame("working", "focused", 1.0),
+    ],
+    AnimationType.CODING_LOOP: [
+        AnimationFrame("working", "focused", 0.2),
+        AnimationFrame("working", "thinking", 0.4),
+        AnimationFrame("working", "focused", 0.2),
+    ],
+    AnimationType.LAB_ENTRY: [
+        AnimationFrame("walking", "neutral", 1.0),
+        AnimationFrame("pointing", "surprised", 0.5),
+        AnimationFrame("idle", "happy", 0.5),
+    ],
+    AnimationType.LAB_WORK: [
+        AnimationFrame("pointing", "focused", 0.8),
+        AnimationFrame("idle", "thinking", 1.2),
+        AnimationFrame("working", "focused", 0.8),
+    ],
+    AnimationType.DREAMING: [
+        AnimationFrame("sleeping", "neutral", 3.0),
+        AnimationFrame("sleeping", "happy", 2.0),
+        AnimationFrame("sleeping", "neutral", 3.0),
+    ],
+    AnimationType.CALLING_AGENTS: [
+        AnimationFrame("pointing", "focused", 0.5),
+        AnimationFrame("idle", "listening", 1.0),
+        AnimationFrame("pointing", "happy", 0.5),
+    ],
+    AnimationType.EMAIL_ASSIST: [
+        AnimationFrame("working", "focused", 1.0),
+        AnimationFrame("pointing", "neutral", 0.5),
+        AnimationFrame("working", "happy", 1.0),
+    ],
+    AnimationType.EARNING_MONEY: [
+        AnimationFrame("working", "focused", 0.5),
+        AnimationFrame("pointing", "surprised", 0.5),
+        AnimationFrame("idle", "happy", 1.0),
+    ],
+    AnimationType.BIOLOGY_LAB: [
+        AnimationFrame("microscope", "focused", 2.0),
+        AnimationFrame("pointing", "neutral", 0.5),
+    ],
+    AnimationType.QUANTUM_LAB: [
+        AnimationFrame("workbench", "focused", 2.0),
+        AnimationFrame("pointing", "happy", 0.5),
+    ],
+    AnimationType.AI_LAB: [
+        AnimationFrame("server_rack", "focused", 2.0),
+        AnimationFrame("idle", "thinking", 1.0),
+    ],
+    AnimationType.RELAXING: [
+        AnimationFrame("sofa_relax", "happy", 5.0),
     ],
 }
 

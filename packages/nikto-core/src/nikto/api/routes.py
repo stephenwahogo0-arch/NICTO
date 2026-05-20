@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import platform
 from pathlib import Path
@@ -102,3 +103,51 @@ async def system_info():
         "platform": platform.platform(),
         "python_version": platform.python_version(),
     }
+
+
+@app.get("/sources/summary")
+async def sources_summary():
+    if not _agent:
+        raise HTTPException(503, "Agent not initialized")
+    return {"sources": _agent.sourcing.get_session_summary()}
+
+
+@app.post("/sources/clear")
+async def sources_clear():
+    if not _agent:
+        raise HTTPException(503, "Agent not initialized")
+    _agent.sourcing.clear_session()
+    return {"status": "cleared"}
+
+
+@app.get("/voice/profiles")
+async def voice_profiles():
+    if not _agent:
+        raise HTTPException(503, "Agent not initialized")
+    return {"profiles": _agent.voice.list_profiles()}
+
+
+@app.post("/voice/set-profile")
+async def voice_set_profile(name: str = "default"):
+    if not _agent:
+        raise HTTPException(503, "Agent not initialized")
+    _agent.voice.set_profile(name)
+    return {"profile": name}
+
+
+@app.get("/evolution/status")
+async def evolution_status():
+    if not _agent:
+        raise HTTPException(503, "Agent not initialized")
+    return {
+        "level": _agent.evolution.level,
+        "xp": _agent.evolution.xp,
+        "skills": list(_agent.evolution.skills),
+    }
+
+
+@app.get("/infinite/status")
+async def infinite_status():
+    if not _agent:
+        raise HTTPException(503, "Agent not initialized")
+    return {"total_processed": _agent.infinite_context.total_processed}
