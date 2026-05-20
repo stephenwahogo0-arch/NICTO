@@ -280,3 +280,31 @@ async def training_train_now():
         result = _agent.trainer.train()
         return result
     return {"error": "Trainer not available"}
+
+
+@app.get("/model/status")
+async def model_status():
+    from nikto.model_manager import ModelManager
+    mm = ModelManager()
+    return {
+        "hw_tier": mm.detect_hardware_tier(),
+        "installed": mm.list_installed(),
+        "recommended": mm.recommend_model(),
+    }
+
+
+@app.post("/model/download")
+async def model_download(tier: str = "tier1"):
+    from nikto.model_manager import ModelManager
+    mm = ModelManager()
+    result = mm.download_model(tier)
+    return result
+
+
+@app.get("/engine/info")
+async def engine_info():
+    if not _ensure_agent():
+        raise HTTPException(503, "Agent not initialized")
+    if hasattr(_agent, 'provider') and hasattr(_agent.provider, 'get_info'):
+        return _agent.provider.get_info()
+    return {"error": "Engine info not available"}
