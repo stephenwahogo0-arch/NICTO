@@ -86,6 +86,10 @@ class AvatarRenderer:
 
         # Render with double buffering
         img = get_sprite(pose, expression)
+
+        # Add holographic display if active
+        if hasattr(self, 'hologram_text') and self.hologram_text:
+            img = self._add_hologram(img, self.hologram_text)
         self.tk_images[0] = ImageTk.PhotoImage(img)
         self.canvas.delete("all")
         self.canvas.create_image(self.width // 2, self.height // 2, image=self.tk_images[0])
@@ -103,7 +107,32 @@ class AvatarRenderer:
         self.anim_player.play(anim_type, loop)
 
     def set_expression(self, expression: str):
-        pass
+        if expression in [e.value for e in Expression]:
+            self.anim_player.set_expression(Expression(expression))
+
+    def set_hologram(self, text: str):
+        self.hologram_text = text
+
+    def _add_hologram(self, base_img, text):
+        from PIL import ImageDraw, ImageFont
+        canvas = Image.new("RGBA", (self.width * 2, self.height), (0, 0, 0, 0))
+        canvas.paste(base_img, (0, 0))
+        draw = ImageDraw.Draw(canvas)
+        s = self.width / 200.0
+        hx, hy = self.width + 10, 20
+        hw, hh = 150, 80
+        try:
+            font = ImageFont.load_default()
+        except:
+            font = None
+        draw.rectangle([hx, hy, hx + hw, hy + hh], outline=(0, 180, 255, 150), width=2)
+        draw.rounded_rectangle([hx, hy, hx + hw, hy + hh], radius=10,
+                               fill=(0, 180, 255, 40), outline=(0, 255, 255, 150))
+        draw.text((hx + 10, hy + 10), f"TASK: {text[:50]}", fill=(0, 255, 255, 200), font=font)
+        draw.text((10, 10), f"NET: ACTIVE", fill=(0, 255, 0, 255), font=font)
+        draw.rectangle([10, 30, 110, 40], outline=(255, 255, 255, 150))
+        draw.rectangle([11, 31, 80, 39], fill=(255, 0, 0, 200))
+        return canvas
 
     def stop(self):
         self.running = False
@@ -115,14 +144,20 @@ class AvatarRenderer:
                 pass
 
     def speak_text(self, text: str, duration: float = None):
-        import random as _r
-        words = len(text.split())
-        dur = duration or max(1.0, words * 0.2)
-        self.set_animation(self.anim_player.current_anim)
-        end_time = time.time() + dur
-        while time.time() < end_time and self.running:
-            _r.choice(["O", "o", "_", "o"])
+        from nikto.avatar.animations import PHONEME_MAP
+        words = text.lower().split()
+        dur_per_word = (duration or max(1.0, len(words) * 0.3)) / max(1, len(words))
+        old_expr = self.anim_player.current_expression
+        for word in words:
+            if not self.running:
+                break
+            for char in word:
+                shape = PHONEME_MAP.get(char, PHONEME_MAP['default'])
+                self.set_expression(shape)
+                time.sleep(0.05)
+            self.set_expression("closed")
             time.sleep(0.05)
+        self.anim_player.set_expression(old_expr)
 
     def is_visible(self):
         return self.running and self._window is not None
