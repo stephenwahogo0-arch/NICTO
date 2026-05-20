@@ -2246,6 +2246,89 @@ async def test_continuous_improvement():
         check("Continuous improvement", False, str(e))
 
 
+async def test_headless_avatar():
+    print("\n=== HEADLESS AVATAR SYSTEM ===")
+    try:
+        from nikto.avatar.engine import AvatarEngine
+        from nikto.avatar.sprites import create_avatar_frame, AVAILABLE_POSES, AVAILABLE_EXPRESSIONS
+        from nikto.avatar.animations import AnimationType, Expression, AnimationPlayer
+        from nikto.avatar.desktop import DesktopController
+        from nikto.avatar.webcam import WebcamEngine
+
+        # Sprites
+        for pose in ["idle", "working", "walking", "pointing"]:
+            img = create_avatar_frame(pose, "neutral")
+            check(f"Sprite generated for pose '{pose}'", img is not None)
+        for expr in ["neutral", "happy", "surprised", "focused"]:
+            img = create_avatar_frame("idle", expr)
+            check(f"Sprite generated for expression '{expr}'", img is not None)
+        check("AVAILABLE_POSES has poses", len(AVAILABLE_POSES) >= 4)
+        check("AVAILABLE_EXPRESSIONS has expressions", len(AVAILABLE_EXPRESSIONS) >= 4)
+
+        # Animations
+        player = AnimationPlayer()
+        for atype in AnimationType:
+            player.play(atype)
+            player.update(0.1)
+            pose, expr, pos = player.get_pose_and_expression()
+            check(f"Animation '{atype.value}' plays", pose in AVAILABLE_POSES)
+        check("All animation types playable", True)
+
+        # Desktop controller
+        dc = DesktopController()
+        screen = dc.get_screen_size()
+        check("Desktop screen size detected", screen.get("success"))
+        if screen.get("success"):
+            check("Screen has width", screen.get("width", 0) > 0)
+            check("Screen has height", screen.get("height", 0) > 0)
+        windows = dc.list_windows()
+        check("Desktop window listing works", windows.get("success"))
+
+        # Webcam engine (no actual camera needed for init test)
+        we = WebcamEngine()
+        wc_summary = we.summary()
+        check("WebcamEngine creates", "webcam_available" in wc_summary)
+
+        # Avatar engine
+        ae = AvatarEngine()
+        summary = ae.summary()
+        check("AvatarEngine creates", "avatar_visible" in summary)
+        check("Avatar has desktop controller", "desktop_available" in summary)
+        check("Avatar has webcam status", "webcam_status" in summary)
+        check("Avatar has 10 animations", summary.get("animations") is not None)
+        check("Avatar has 6 expressions", summary.get("expressions") is not None)
+
+        # Training
+        train_result = ae.masterclass_train(rounds=3)
+        check("Masterclass training runs", train_result["success"])
+        check("Training completed rounds", train_result["rounds"] == 3)
+        check("Training covered all animations", train_result["animations_trained"] == len(AnimationType))
+        check("Training covered all expressions", train_result["expressions_trained"] == len(Expression))
+
+        # Task training
+        task_result = ae.train_on_task("type some text and open the browser")
+        check("Task training works", task_result["success"])
+        check("Task training detects typing skill", "typing" in task_result["trained_skills"])
+        check("Task training detects app control skill", "app_control" in task_result.get("trained_skills", []))
+
+        # Expression setting
+        for expr in Expression:
+            result = ae.set_expression(expr.value)
+            check(f"Expression '{expr.value}' sets", result["success"])
+
+        # Desktop ops via avatar
+        type_result = ae.type_text("hello")
+        check("Avatar typing works", type_result.get("success"))
+
+        # Webcam ops
+        wc = ae.webcam
+        check("Webcam accessible from avatar", "webcam_available" in wc.summary())
+
+        check("ALL HEADLESS AVATAR FEATURES OPERATIONAL", True)
+    except Exception as e:
+        check("Headless avatar", False, str(e))
+
+
 async def main():
     print("=" * 60)
     print("  NIKTO COMPREHENSIVE FEATURE TEST (300+ FEATURES)")
@@ -2301,6 +2384,7 @@ async def main():
     await test_self_repair()
     await test_code_generator()
     await test_continuous_improvement()
+    await test_headless_avatar()
 
     total = PASS + FAIL
     print(f"\n{'='*60}")

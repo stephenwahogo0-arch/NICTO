@@ -65,6 +65,12 @@ from nikto.diagnostics.engine import DiagnosticsEngine
 from nikto.self_repair.engine import CodeHealer
 from nikto.code_gen.engine import CodeGenerator
 from nikto.improve.engine import ContinuousImprovement, ImprovementCycle
+from nikto.avatar.engine import AvatarEngine
+from nikto.avatar.renderer import AvatarRenderer
+from nikto.avatar.desktop import DesktopController as AvatarDesktopController
+from nikto.avatar.webcam import WebcamEngine as AvatarWebcamEngine
+from nikto.avatar.animations import AnimationType, Expression
+from nikto.avatar.sprites import create_avatar_frame, AVAILABLE_POSES, AVAILABLE_EXPRESSIONS
 
 __all__ = [
     "Agent", "AgentConfig", "AgentMode",
@@ -124,4 +130,13 @@ __all__ = [
     "CodeGenerator",
     "ContinuousImprovement",
     "ImprovementCycle",
+    "AvatarEngine",
+    "AvatarRenderer",
+    "AvatarDesktopController",
+    "AvatarWebcamEngine",
+    "AnimationType",
+    "Expression",
+    "create_avatar_frame",
+    "AVAILABLE_POSES",
+    "AVAILABLE_EXPRESSIONS",
 ]

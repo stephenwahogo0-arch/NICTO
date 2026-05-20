@@ -37,6 +37,7 @@ from nikto.reasoning.engine import ReasoningEngine
 from nikto.self_repair.engine import CodeHealer
 from nikto.code_gen.engine import CodeGenerator
 from nikto.improve.engine import ContinuousImprovement
+from nikto.avatar.engine import AvatarEngine
 
 
 class AgentMode(str, Enum):
@@ -118,6 +119,7 @@ class Agent:
         self.improver = ContinuousImprovement(data_dir=self.config.data_dir)
         self.improver.register_cycle("module_health", self.code_healer.analyze_module, self.code_healer.heal_module)
         self.improver.register_cycle("diagnostics_check", lambda: self.diagnostics.system_health(), lambda r: {"success": True})
+        self.avatar = AvatarEngine(data_dir=self.config.data_dir)
 
         self.provider = create_provider(self.config.model)
         self.session_id = str(uuid.uuid4())
