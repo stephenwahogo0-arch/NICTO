@@ -9,12 +9,12 @@
 body{background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;overflow:hidden;height:100vh}
 .app{display:flex;height:100vh}
 .sidebar{width:260px;background:#0a0a0a;border-right:1px solid #1a1a1a;padding:20px;display:flex;flex-direction:column;flex-shrink:0}
-.logo{font-size:28px;font-weight:900;color:#fff;margin-bottom:4px;letter-spacing:-1px}
+.logo{font-size:28px;font-weight:900;color:#fff;margin-bottom:2px;letter-spacing:-1px;background:linear-gradient(90deg,#0af,#0ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .logo-sub{font-size:11px;color:#555;margin-bottom:28px;letter-spacing:2px;text-transform:uppercase}
 .nav-item{padding:10px 14px;border-radius:8px;color:#888;cursor:pointer;margin-bottom:2px;font-size:13px;transition:all .15s;display:flex;align-items:center;gap:8px}
 .nav-item:hover,.nav-item.active{background:#141414;color:#fff}
 .nav-item.active{color:#fff;font-weight:600}
-.nav-icon{width:18px;text-align:center;font-size:14px}
+.nav-icon{width:20px;text-align:center;font-size:14px}
 .status-bar{margin-top:auto;padding:16px 14px;background:#0a0a0a;border-radius:10px;border:1px solid #1a1a1a}
 .status-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#0f0;margin-right:8px;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
@@ -25,11 +25,12 @@ body{background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Se
 .header-status{display:flex;align-items:center;gap:12px;font-size:11px}
 .badge{padding:3px 10px;border-radius:12px;font-size:10px;font-weight:600}
 .badge-online{background:#0f020;color:#0f0;border:1px solid #0f040}
+.badge-training{background:#00f020;color:#0ff;border:1px solid #0ff040}
 .panel{flex:1;display:none;flex-direction:column;overflow:hidden}
 .panel.active{display:flex}
 .chat-area{flex:1;display:flex;flex-direction:column}
 .messages{flex:1;overflow-y:auto;padding:20px 28px;scroll-behavior:smooth}
-.msg{max-width:78%;margin-bottom:16px;animation:fadeIn .25s ease}
+.msg{max-width:80%;margin-bottom:16px;animation:fadeIn .25s ease}
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 .msg-user{margin-left:auto}
 .msg-content{padding:12px 18px;border-radius:14px;font-size:14px;line-height:1.6}
@@ -47,55 +48,56 @@ body{background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Se
 .input-row:focus-within{border-color:#333}
 .input-row input{flex:1;background:none;border:none;outline:none;color:#fff;font-size:13px;padding:10px 14px;font-family:inherit}
 .input-row input::placeholder{color:#444}
-.send-btn{width:38px;height:38px;border-radius:10px;border:none;background:#1a1a1a;color:#fff;font-size:16px;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.send-btn:hover{background:#222}
+.send-btn,.voice-btn{width:38px;height:38px;border-radius:10px;border:none;background:#1a1a1a;color:#fff;font-size:16px;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.send-btn:hover,.voice-btn:hover{background:#222}
 .send-btn:disabled{opacity:.3;cursor:not-allowed}
-.shortcuts-hint{text-align:center;margin-top:8px;font-size:10px;color:#333}
-.shortcuts-hint kbd{background:#0a0a0a;padding:2px 6px;border-radius:3px;border:1px solid #1a1a1a;font-family:inherit;font-size:9px;color:#666}
-.voice-btn{width:38px;height:38px;border-radius:10px;border:none;background:#1a1a1a;color:#fff;font-size:15px;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.voice-btn:hover{background:#222}
 .voice-btn.listening{background:#0f02;border:1px solid #0f0;animation:voicePulse .8s infinite}
 @keyframes voicePulse{0%,100%{box-shadow:0 0 5px #0f0}50%{box-shadow:0 0 20px #0f0}}
-.finance-panel{padding:28px;overflow-y:auto}
-.finance-panel h2{font-size:20px;color:#fff;margin-bottom:16px;font-weight:600}
-.finance-panel h3{font-size:14px;color:#888;margin:20px 0 8px;text-transform:uppercase;letter-spacing:1px}
-.fin-card{background:#0a0a0a;border:1px solid #1a1a1a;border-radius:12px;padding:16px;margin-bottom:10px}
-.fin-card .label{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.5px}
-.fin-card .value{font-size:18px;color:#fff;font-weight:600;margin-top:4px}
-.fin-btn{padding:8px 16px;background:#1a1a1a;border:1px solid #222;border-radius:8px;color:#fff;font-size:12px;cursor:pointer;transition:all .15s;margin-right:6px;margin-top:8px}
-.fin-btn:hover{background:#222}
-.fin-btn.danger{border-color:#400;color:#f55}
-.fin-btn.danger:hover{background:#200}
-.fin-input{width:100%;padding:8px 12px;background:#0a0a0a;border:1px solid #1a1a1a;border-radius:8px;color:#fff;font-size:13px;margin:6px 0;font-family:inherit}
-.fin-input:focus{outline:none;border-color:#333}
-.fin-row{display:flex;gap:8px;align-items:center}
-.fin-row .fin-input{flex:1}
+.shortcuts-hint{text-align:center;margin-top:8px;font-size:10px;color:#333}
+.shortcuts-hint kbd{background:#0a0a0a;padding:2px 6px;border-radius:3px;border:1px solid #1a1a1a;font-family:inherit;font-size:9px;color:#666}
+.panel-content{padding:28px;overflow-y:auto}
+.panel-content h2{font-size:20px;color:#fff;margin-bottom:16px;font-weight:600}
+.panel-content h3{font-size:14px;color:#888;margin:20px 0 8px;text-transform:uppercase;letter-spacing:1px}
+.card{background:#0a0a0a;border:1px solid #1a1a1a;border-radius:12px;padding:16px;margin-bottom:10px}
+.card .label{font-size:11px;color:#888;text-transform:uppercase;letter-spacing:.5px}
+.card .value{font-size:18px;color:#fff;font-weight:600;margin-top:4px}
+.card .sub{font-size:12px;color:#555;margin-top:2px}
+.btn{padding:8px 16px;background:#1a1a1a;border:1px solid #222;border-radius:8px;color:#fff;font-size:12px;cursor:pointer;transition:all .15s;margin-right:6px;margin-top:8px;display:inline-block}
+.btn:hover{background:#222}
+input[type="text"],input[type="number"]{padding:8px 12px;background:#0a0a0a;border:1px solid #1a1a1a;border-radius:8px;color:#fff;font-size:13px;margin:6px 0;font-family:inherit;outline:none}
+input:focus{border-color:#333}
+.row{display:flex;gap:8px;align-items:center}
+.row input{flex:1}
 .empty-state{text-align:center;padding:60px 20px;color:#444}
-.empty-state .icon{font-size:48px;margin-bottom:12px;color:#222}
+.empty-state .icon{font-size:48px;margin-bottom:12px}
 .empty-state .text{font-size:14px}
+.train-bar{height:6px;border-radius:3px;background:#1a1a1a;margin:8px 0;overflow:hidden}
+.train-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,#0af,#0ff);transition:width 1s}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.topic-tag{display:inline-block;padding:4px 10px;border-radius:12px;background:#1a1a1a;color:#aaa;font-size:11px;margin:3px}
 </style>
 </head>
 <body>
 <div class="app">
   <div class="sidebar">
     <div class="logo">NIKTO</div>
-    <div class="logo-sub">Artificial Intelligence System</div>
+    <div class="logo-sub">AI System</div>
     <div class="nav-item active" onclick="switchPanel('chat')"><span class="nav-icon">💬</span> Chat</div>
+    <div class="nav-item" onclick="switchPanel('training')"><span class="nav-icon">🧠</span> Training</div>
     <div class="nav-item" onclick="switchPanel('finance')"><span class="nav-icon">💰</span> Finance</div>
-    <div class="nav-item" onclick="switchPanel('brain')"><span class="nav-icon">🧠</span> Brain</div>
     <div class="nav-item" onclick="switchPanel('evolution')"><span class="nav-icon">📈</span> Evolution</div>
     <div class="nav-item" onclick="switchPanel('games')"><span class="nav-icon">🎮</span> Games</div>
     <div class="nav-item" onclick="switchPanel('settings')"><span class="nav-icon">⚙</span> Settings</div>
     <div class="status-bar">
       <div><span class="status-dot"></span><span class="status-text">System Online</span></div>
-      <div class="status-text" style="margin-top:6px;font-size:10px" id="statusInfo">6 brains · 28 regions · 1000+ cap</div>
+      <div class="status-text" style="margin-top:6px;font-size:10px" id="statusInfo">Training hourly · Learning forever</div>
     </div>
   </div>
   <div class="main">
     <div class="header">
       <div class="header-title" id="panelTitle">NIKTO Chat</div>
       <div class="header-status">
-        <span class="badge badge-online">● Online</span>
+        <span class="badge badge-training" id="trainBadge">● Training: idle</span>
         <span style="color:#444;font-size:11px">v1.0.0</span>
       </div>
     </div>
@@ -105,7 +107,7 @@ body{background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Se
       <div class="chat-area">
         <div class="messages" id="messages">
           <div class="msg msg-nikto">
-            <div class="msg-content">Hello. I am NIKTO. I am an AI system.<br><br>6 brains · 28 neural regions · 1000+ capabilities.<br><br>How can I help you?</div>
+            <div class="msg-content">NIKTO is online. I learn from every conversation — hourly training ensures I never forget. What can I help you with?</div>
             <div class="msg-time">NIKTO · just now</div>
           </div>
         </div>
@@ -116,66 +118,100 @@ body{background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Se
             <button class="send-btn" id="sendBtn" onclick="send()">→</button>
           </div>
           <div class="shortcuts-hint">
-            <kbd>Space</kbd>×2 Activate &nbsp;·&nbsp; <kbd>Ctrl+N</kbd> New chat &nbsp;·&nbsp; <kbd>Ctrl+Shift+V</kbd> Voice toggle
+            <kbd>Space</kbd>×2 Activate &nbsp;·&nbsp; <kbd>Ctrl+N</kbd> New chat &nbsp;·&nbsp; <kbd>Ctrl+Shift+V</kbd> Voice
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRAINING PANEL -->
+    <div class="panel" id="panel-training">
+      <div class="panel-content">
+        <h2>🧠 Training</h2>
+        <p style="color:#666;font-size:13px;line-height:1.6">NIKTO trains every hour on every conversation. All learning is persistent — never forgotten. Training runs automatically in the background.</p>
+        <div id="trainingContent">
+          <div class="card"><div class="label">Status</div><div class="value">Loading...</div></div>
+        </div>
+        <div style="margin-top:12px">
+          <button class="btn" onclick="trainNow()">Train Now</button>
+          <button class="btn" onclick="refreshTraining()">Refresh</button>
         </div>
       </div>
     </div>
 
     <!-- FINANCE PANEL -->
     <div class="panel" id="panel-finance">
-      <div class="finance-panel">
-        <h2>Finance</h2>
+      <div class="panel-content">
+        <h2>💰 Finance</h2>
         <h3>Create Account</h3>
-        <div class="fin-row">
-          <input class="fin-input" id="finName" placeholder="Account name" style="flex:1">
-          <input class="fin-input" id="finDeposit" placeholder="Initial deposit" type="number" style="width:120px">
-          <button class="fin-btn" onclick="createAccount()">Create</button>
+        <div class="row">
+          <input id="finName" placeholder="Account name">
+          <input id="finDeposit" placeholder="Initial deposit" type="number" style="width:120px">
+          <button class="btn" onclick="createAccount()">Create</button>
         </div>
         <h3>Accounts</h3>
-        <div id="finAccounts"><div class="empty-state"><div class="icon">💰</div><div class="text">No accounts yet. Create one above.</div></div></div>
+        <div id="finAccounts"><div class="empty-state"><div class="icon">💰</div><div class="text">No accounts</div></div></div>
         <h3>Transfer</h3>
-        <div class="fin-row">
-          <input class="fin-input" id="finFrom" placeholder="From account ID" style="flex:1">
-          <input class="fin-input" id="finTo" placeholder="To account ID" style="flex:1">
-          <input class="fin-input" id="finAmount" placeholder="Amount" type="number" style="width:100px">
-          <button class="fin-btn" onclick="transfer()">Transfer</button>
+        <div class="row">
+          <input id="finFrom" placeholder="From account ID">
+          <input id="finTo" placeholder="To account ID">
+          <input id="finAmount" placeholder="Amount" type="number" style="width:100px">
+          <button class="btn" onclick="transfer()">Send</button>
         </div>
-        <div id="finResult"></div>
-      </div>
-    </div>
-
-    <!-- BRAIN PANEL -->
-    <div class="panel" id="panel-brain">
-      <div class="finance-panel">
-        <h2>🧠 Brain Status</h2>
-        <p style="color:#666;font-size:13px;line-height:1.6">NIKTO has 6 specialized brains, each with 28 neural regions (18 core + 10 advanced). All brains are trained via Hebbian learning with synaptic pruning and neuroplasticity.</p>
-        <div id="brainStatus"></div>
+        <div id="finResult" style="margin-top:8px;font-size:12px;color:#888"></div>
       </div>
     </div>
 
     <!-- EVOLUTION PANEL -->
     <div class="panel" id="panel-evolution">
-      <div class="finance-panel">
+      <div class="panel-content">
         <h2>📈 Evolution</h2>
-        <p style="color:#666;font-size:13px;line-height:1.6">NIKTO evolves through XP across 92 modules in 6 domains: Bio-Medical, Consciousness, Physics, Communication, Global, and Breakthrough.</p>
-        <div id="evolutionStatus"></div>
+        <p style="color:#666;font-size:13px;margin-bottom:16px">Learning progress — NIKTO gets smarter with every training cycle.</p>
+        <div class="grid" id="evolutionGrid">
+          <div class="card"><div class="label">Level</div><div class="value" id="evLevel">-</div></div>
+          <div class="card"><div class="label">XP</div><div class="value" id="evXP">-</div></div>
+          <div class="card"><div class="label">Patterns Learned</div><div class="value" id="evPatterns">-</div></div>
+          <div class="card"><div class="label">Conversations</div><div class="value" id="evConvs">-</div></div>
+        </div>
+        <h3>Learned Topics</h3>
+        <div id="evTopics"></div>
       </div>
     </div>
 
     <!-- GAMES PANEL -->
     <div class="panel" id="panel-games">
-      <div class="finance-panel">
+      <div class="panel-content">
         <h2>🎮 Games</h2>
-        <p style="color:#666;font-size:13px;line-height:1.6">Available games: Pong, Snake, Tetris, Platformer, RPG. Type "play pong" in chat to start.</p>
+        <p style="color:#666;font-size:13px;line-height:1.6">NIKTO can create and play Pong, Snake, Tetris, Platformer, and RPG. Type "play pong" or "create snake game" in chat to start.</p>
+        <div class="grid">
+          <div class="card"><div class="label">Pong</div><div class="value">↔</div><div class="sub">2-player paddle game</div></div>
+          <div class="card"><div class="label">Snake</div><div class="value">🐍</div><div class="sub">Classic snake</div></div>
+          <div class="card"><div class="label">Tetris</div><div class="value">▣</div><div class="sub">Block stacking</div></div>
+          <div class="card"><div class="label">Platformer</div><div class="value">🏃</div><div class="sub">Side-scrolling</div></div>
+          <div class="card"><div class="label">RPG</div><div class="value">⚔</div><div class="sub">Dungeon crawler</div></div>
+        </div>
       </div>
     </div>
 
     <!-- SETTINGS PANEL -->
     <div class="panel" id="panel-settings">
-      <div class="finance-panel">
+      <div class="panel-content">
         <h2>⚙ Settings</h2>
-        <p style="color:#666;font-size:13px">NIKTO is fully local. No configuration needed — just type what you know in English.</p>
+        <div class="card">
+          <div class="label">Model</div>
+          <div class="value">Local (Ollama)</div>
+          <div class="sub">Fully offline. Install Ollama for AI responses.</div>
+        </div>
+        <div class="card">
+          <div class="label">Training</div>
+          <div class="value">Every hour</div>
+          <div class="sub">Automatic background training on all conversations.</div>
+        </div>
+        <div class="card">
+          <div class="label">Memory</div>
+          <div class="value">Persistent</div>
+          <div class="sub">Never forgets. All learning saved to disk.</div>
+        </div>
       </div>
     </div>
   </div>
@@ -186,26 +222,11 @@ const inputEl = document.getElementById('input');
 const sendBtn = document.getElementById('sendBtn');
 const voiceBtn = document.getElementById('voiceBtn');
 const panelTitle = document.getElementById('panelTitle');
-let isLoading = false;
-let isListening = false;
-let recognition = null;
-
-function switchPanel(name) {
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  const panel = document.getElementById('panel-' + name);
-  if (panel) panel.classList.add('active');
-  document.querySelector(`.nav-item[onclick*="'${name}'"]`)?.classList.add('active');
-  const titles = {chat:'NIKTO Chat',finance:'Finance',brain:'Brain Status',evolution:'Evolution',games:'Games',settings:'Settings'};
-  panelTitle.textContent = titles[name] || 'NIKTO';
-  if (name === 'finance') refreshFinance();
-  if (name === 'brain') refreshBrain();
-  if (name === 'evolution') refreshEvolution();
-}
+let isLoading = false, isListening = false, recognition = null;
 
 if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  recognition = new SpeechRecognition();
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SR();
   recognition.lang = 'en-US'; recognition.interimResults = false; recognition.continuous = false;
   recognition.onresult = function(e) {
     inputEl.value = e.results[0][0].transcript; isListening = false;
@@ -215,13 +236,25 @@ if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
 }
 
 function toggleVoice() {
-  if (!recognition) { alert('Voice input not supported in this browser.'); return; }
+  if (!recognition) { alert('Voice not supported in this browser.'); return; }
   if (isListening) { recognition.stop(); isListening = false; voiceBtn.classList.remove('listening'); voiceBtn.textContent = '🎤'; }
   else { recognition.start(); isListening = true; voiceBtn.classList.add('listening'); voiceBtn.textContent = '🔴'; }
 }
 
-inputEl.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } });
+function switchPanel(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const panel = document.getElementById('panel-' + name);
+  if (panel) panel.classList.add('active');
+  document.querySelector(`.nav-item[onclick*="'${name}'"]`)?.classList.add('active');
+  const titles = {chat:'NIKTO Chat',training:'Training Center',finance:'Finance',evolution:'Evolution',games:'Games',settings:'Settings'};
+  panelTitle.textContent = titles[name] || 'NIKTO';
+  if (name === 'training') refreshTraining();
+  if (name === 'finance') refreshFinance();
+  if (name === 'evolution') refreshEvolution();
+}
 
+inputEl.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } });
 document.addEventListener('keydown', e => {
   if (e.ctrlKey && e.key === 'n') { e.preventDefault(); location.reload(); }
   if (e.ctrlKey && e.shiftKey && e.key === 'V') { e.preventDefault(); toggleVoice(); }
@@ -250,58 +283,99 @@ async function send() {
     const resp = await fetch('/chat', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({message:text,mode:'build'}) });
     if (!resp.ok) { const err = await resp.json(); removeTyping(); addMessage(`Error: ${err.detail||resp.statusText}`, false); }
     else { const data = await resp.json(); removeTyping(); addMessage(data.response.replace(/\n/g,'<br>'), false); }
-  } catch(e) { removeTyping(); addMessage(`Connection error: ${e.message}. Is NIKTO server running?`, false); }
+  } catch(e) { removeTyping(); addMessage(`Connection error: ${e.message}`, false); }
   isLoading = false; sendBtn.disabled = false; inputEl.focus();
+}
+
+async function refreshTraining() {
+  try {
+    const resp = await fetch('/training/stats'); const data = await resp.json();
+    const el = document.getElementById('trainingContent');
+    if (data.error) {
+      el.innerHTML = `<div class="card"><div class="label">Status</div><div class="value">${data.error}</div></div>`;
+    } else {
+      const patterns = data.total_patterns || 0;
+      const convs = data.total_conversations || 0;
+      const topics = (data.topics || []).join(', ');
+      const sessions = data.training_sessions || 0;
+      el.innerHTML = `
+        <div class="grid">
+          <div class="card"><div class="label">Patterns Learned</div><div class="value">${patterns}</div></div>
+          <div class="card"><div class="label">Conversations</div><div class="value">${convs}</div></div>
+          <div class="card"><div class="label">Training Sessions</div><div class="value">${sessions}</div></div>
+          <div class="card"><div class="label">Topics</div><div class="value" style="font-size:14px">${topics || 'none'}</div></div>
+        </div>
+        <div class="card"><div class="label">Progress</div>
+          <div class="train-bar"><div class="train-fill" style="width:${Math.min(100, patterns)}%"></div></div>
+          <div class="sub">${patterns} patterns learned — unlimited capacity</div>
+        </div>`;
+      document.getElementById('trainBadge').textContent = patterns > 0 ? '● Learning: ' + patterns + ' patterns' : '● Training: idle';
+    }
+  } catch(e) {
+    document.getElementById('trainingContent').innerHTML = `<div class="card"><div class="label">Status</div><div class="value">Offline</div></div>`;
+  }
+}
+
+async function trainNow() {
+  document.getElementById('trainingContent').innerHTML = `<div class="card"><div class="label">Training</div><div class="value">Running...</div></div>`;
+  try {
+    const resp = await fetch('/training/train', { method:'POST' });
+    const data = await resp.json();
+    refreshTraining();
+  } catch(e) {
+    document.getElementById('trainingContent').innerHTML = `<div class="card"><div class="label">Error</div><div class="value">${e.message}</div></div>`;
+  }
+}
+
+async function refreshEvolution() {
+  try {
+    const resp = await fetch('/training/stats'); const data = await resp.json();
+    const patterns = data.total_patterns || 0;
+    const convs = data.total_conversations || 0;
+    const level = Math.floor(patterns / 10) + 1;
+    const xp = patterns % 10;
+    document.getElementById('evLevel').textContent = level;
+    document.getElementById('evXP').textContent = xp + '/10';
+    document.getElementById('evPatterns').textContent = patterns;
+    document.getElementById('evConvs').textContent = convs;
+    const topics = data.topics || [];
+    document.getElementById('evTopics').innerHTML = topics.length
+      ? topics.map(t => `<span class="topic-tag">${t}</span>`).join('')
+      : '<div class="sub">No topics yet — start chatting to teach NIKTO</div>';
+  } catch(e) { /* ignore */ }
 }
 
 async function createAccount() {
   const name = document.getElementById('finName').value.trim();
   const deposit = parseFloat(document.getElementById('finDeposit').value) || 0;
-  if (!name) { document.getElementById('finResult').textContent = 'Enter a name'; return; }
-  const resp = await fetch('/finance/account', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name, initial_deposit: deposit}) });
+  if (!name) return;
+  const resp = await fetch('/finance/account', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name,initial_deposit:deposit}) });
   const data = await resp.json();
-  document.getElementById('finResult').textContent = data.success ? `Account ${data.account.account_id} created` : 'Failed';
   document.getElementById('finName').value = ''; document.getElementById('finDeposit').value = '';
   refreshFinance();
 }
 
 async function refreshFinance() {
-  const resp = await fetch('/finance/accounts'); const data = await resp.json();
-  const el = document.getElementById('finAccounts');
-  if (!data.accounts || data.accounts.length === 0) {
-    el.innerHTML = '<div class="empty-state"><div class="icon">💰</div><div class="text">No accounts yet. Create one above.</div></div>';
-  } else {
-    el.innerHTML = data.accounts.map(a => `<div class="fin-card"><div class="label">${a.name} · ${a.account_id}</div><div class="value">$${a.balance.toFixed(2)}</div><div style="font-size:10px;color:#444;margin-top:4px">${a.transaction_count} transactions</div></div>`).join('');
-  }
+  try {
+    const resp = await fetch('/finance/accounts'); const data = await resp.json();
+    const el = document.getElementById('finAccounts');
+    if (!data.accounts || !data.accounts.length) {
+      el.innerHTML = '<div class="empty-state"><div class="icon">💰</div><div class="text">No accounts yet</div></div>';
+    } else {
+      el.innerHTML = data.accounts.map(a => `<div class="card"><div class="label">${a.name} · ${a.account_id}</div><div class="value">$${a.balance.toFixed(2)}</div><div class="sub">${a.transaction_count} transactions</div></div>`).join('');
+    }
+  } catch(e) { /* ignore */ }
 }
 
 async function transfer() {
   const from = document.getElementById('finFrom').value.trim();
   const to = document.getElementById('finTo').value.trim();
   const amount = parseFloat(document.getElementById('finAmount').value);
-  if (!from || !to || !amount) { document.getElementById('finResult').textContent = 'Fill all fields'; return; }
+  if (!from || !to || !amount) return;
   const resp = await fetch('/finance/transfer', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({from_id:from, to_id:to, amount}) });
   const data = await resp.json();
-  document.getElementById('finResult').textContent = data.success ? `Transferred $${amount}` : `Failed: ${data.error}`;
+  document.getElementById('finResult').textContent = data.success ? `Transferred $${amount}` : `Error: ${data.error}`;
   refreshFinance();
-}
-
-async function refreshBrain() {
-  try {
-    const resp = await fetch('/health'); const data = await resp.json();
-    document.getElementById('brainStatus').innerHTML = `<div class="fin-card"><div class="label">Agent Ready</div><div class="value">${data.agent_ready ? 'Yes' : 'No'}</div></div>`;
-  } catch(e) {
-    document.getElementById('brainStatus').innerHTML = '<div class="fin-card"><div class="label">Status</div><div class="value">Offline</div></div>';
-  }
-}
-
-async function refreshEvolution() {
-  try {
-    const resp = await fetch('/evolution/status'); const data = await resp.json();
-    document.getElementById('evolutionStatus').innerHTML = `<div class="fin-card"><div class="label">Level</div><div class="value">${data.level || 0}</div></div>`;
-  } catch(e) {
-    document.getElementById('evolutionStatus').innerHTML = '<div class="fin-card"><div class="label">Status</div><div class="value">Offline</div></div>';
-  }
 }
 </script>
 </body>
