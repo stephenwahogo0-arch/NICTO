@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NIKTO — AI System</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#000;color:#fff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;overflow:hidden;height:100vh}
+.app{display:flex;height:100vh}
+.sidebar{width:260px;background:#0a0a0a;border-right:1px solid #1a1a1a;padding:20px;display:flex;flex-direction:column;flex-shrink:0}
+.logo{font-size:28px;font-weight:900;color:#fff;margin-bottom:4px;letter-spacing:-1px}
+.logo-sub{font-size:11px;color:#555;margin-bottom:28px;letter-spacing:2px;text-transform:uppercase}
+.nav-item{padding:10px 14px;border-radius:8px;color:#888;cursor:pointer;margin-bottom:2px;font-size:13px;transition:all .15s}
+.nav-item:hover,.nav-item.active{background:#141414;color:#fff}
+.nav-item.active{color:#fff;font-weight:600}
+.status-bar{margin-top:auto;padding:16px 14px;background:#0a0a0a;border-radius:10px;border:1px solid #1a1a1a}
+.status-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#0f0;margin-right:8px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.status-text{font-size:11px;color:#666}
+.main{flex:1;display:flex;flex-direction:column;background:#000}
+.header{padding:14px 28px;border-bottom:1px solid #1a1a1a;display:flex;align-items:center;justify-content:space-between}
+.header-title{font-size:13px;font-weight:500;color:#555}
+.header-status{display:flex;align-items:center;gap:12px;font-size:11px}
+.badge{padding:3px 10px;border-radius:12px;font-size:10px;font-weight:600}
+.badge-online{background:#0f020;color:#0f0;border:1px solid #0f040}
+.chat-area{flex:1;display:flex;flex-direction:column}
+.messages{flex:1;overflow-y:auto;padding:20px 28px;scroll-behavior:smooth}
+.msg{max-width:78%;margin-bottom:16px;animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.msg-user{margin-left:auto}
+.msg-content{padding:12px 18px;border-radius:14px;font-size:14px;line-height:1.6}
+.msg-user .msg-content{background:#1a1a1a;color:#fff;border-bottom-right-radius:4px}
+.msg-nikto .msg-content{background:#0a0a0a;border:1px solid #1a1a1a;border-bottom-left-radius:4px;color:#ccc}
+.msg-time{font-size:10px;color:#555;margin-top:4px;padding:0 4px}
+.msg-user .msg-time{text-align:right}
+.typing{display:flex;gap:4px;padding:12px 18px}
+.typing span{width:6px;height:6px;border-radius:50%;background:#555;animation:typing 1.4s infinite}
+.typing span:nth-child(2){animation-delay:.2s}
+.typing span:nth-child(3){animation-delay:.4s}
+@keyframes typing{0%,60%,100%{opacity:.3;transform:scale(.8)}30%{opacity:1;transform:scale(1.2)}}
+.input-area{padding:14px 28px 20px;border-top:1px solid #1a1a1a;background:#000}
+.input-row{display:flex;gap:8px;align-items:center;background:#0a0a0a;border:1px solid #1a1a1a;border-radius:12px;padding:3px;transition:border-color .2s}
+.input-row:focus-within{border-color:#333}
+.input-row input{flex:1;background:none;border:none;outline:none;color:#fff;font-size:13px;padding:10px 14px;font-family:inherit}
+.input-row input::placeholder{color:#444}
+.send-btn{width:38px;height:38px;border-radius:10px;border:none;background:#1a1a1a;color:#fff;font-size:16px;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.send-btn:hover{background:#222}
+.send-btn:disabled{opacity:.3;cursor:not-allowed}
+.shortcuts-hint{text-align:center;margin-top:8px;font-size:10px;color:#333}
+.shortcuts-hint kbd{background:#0a0a0a;padding:2px 6px;border-radius:3px;border:1px solid #1a1a1a;font-family:inherit;font-size:9px;color:#666}
+.voice-btn{width:38px;height:38px;border-radius:10px;border:none;background:#1a1a1a;color:#fff;font-size:15px;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.voice-btn:hover{background:#222}
+.voice-btn.listening{background:#0f02;border:1px solid #0f0;animation:voicePulse .8s infinite}
+@keyframes voicePulse{0%,100%{box-shadow:0 0 5px #0f0}50%{box-shadow:0 0 20px #0f0}}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="sidebar">
+    <div class="logo">NIKTO</div>
+    <div class="logo-sub">Artificial Intelligence System</div>
+    <div class="nav-item active">💬 Chat</div>
+    <div class="nav-item">🧠 Brain</div>
+    <div class="nav-item">📈 Evolution</div>
+    <div class="nav-item">🎮 Games</div>
+    <div class="nav-item">⚙ Settings</div>
+    <div class="status-bar">
+      <div><span class="status-dot"></span><span class="status-text">System Online</span></div>
+      <div class="status-text" style="margin-top:6px;font-size:10px" id="statusInfo">6 brains · 28 regions · 1000+ cap</div>
+    </div>
+  </div>
+  <div class="main">
+    <div class="header">
+      <div class="header-title">NIKTO Chat</div>
+      <div class="header-status">
+        <span class="badge badge-online">● Online</span>
+        <span style="color:#444;font-size:11px">v1.0.0</span>
+      </div>
+    </div>
+    <div class="chat-area">
+      <div class="messages" id="messages">
+        <div class="msg msg-nikto">
+          <div class="msg-content">Hello. I am NIKTO. I am an AI system.<br><br>6 brains · 28 neural regions · 1000+ capabilities.<br><br>How can I help you?</div>
+          <div class="msg-time">NIKTO · just now</div>
+        </div>
+      </div>
+      <div class="input-area">
+        <div class="input-row">
+          <button class="voice-btn" id="voiceBtn" onclick="toggleVoice()" title="Voice input">🎤</button>
+          <input type="text" id="input" placeholder="Message NIKTO..." autofocus>
+          <button class="send-btn" id="sendBtn" onclick="send()">→</button>
+        </div>
+        <div class="shortcuts-hint">
+          <kbd>Space</kbd>×2 Activate &nbsp;·&nbsp; <kbd>Ctrl+N</kbd> New chat &nbsp;·&nbsp; <kbd>Ctrl+Shift+V</kbd> Voice toggle
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+const messagesEl = document.getElementById('messages');
+const inputEl = document.getElementById('input');
+const sendBtn = document.getElementById('sendBtn');
+const voiceBtn = document.getElementById('voiceBtn');
+let isLoading = false;
+let isListening = false;
+let recognition = null;
+
+if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SpeechRecognition();
+  recognition.lang = 'en-US';
+  recognition.interimResults = false;
+  recognition.continuous = false;
+  recognition.onresult = function(e) {
+    const transcript = e.results[0][0].transcript;
+    inputEl.value = transcript;
+    isListening = false;
+    voiceBtn.classList.remove('listening');
+    voiceBtn.textContent = '🎤';
+    send();
+  };
+  recognition.onerror = function() {
+    isListening = false;
+    voiceBtn.classList.remove('listening');
+    voiceBtn.textContent = '🎤';
+  };
+}
+
+function toggleVoice() {
+  if (!recognition) { alert('Voice input not supported in this browser.'); return; }
+  if (isListening) {
+    recognition.stop();
+    isListening = false;
+    voiceBtn.classList.remove('listening');
+    voiceBtn.textContent = '🎤';
+  } else {
+    recognition.start();
+    isListening = true;
+    voiceBtn.classList.add('listening');
+    voiceBtn.textContent = '🔴';
+  }
+}
+
+inputEl.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } });
+
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey && e.key === 'n') { e.preventDefault(); location.reload(); }
+  if (e.ctrlKey && e.shiftKey && e.key === 'V') { e.preventDefault(); toggleVoice(); }
+});
+
+function addMessage(text, isUser) {
+  const div = document.createElement('div');
+  div.className = `msg ${isUser ? 'msg-user' : 'msg-nikto'}`;
+  div.innerHTML = `<div class="msg-content">${text}</div><div class="msg-time">${isUser ? 'You' : 'NIKTO'} · just now</div>`;
+  messagesEl.appendChild(div);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function addTyping() {
+  const div = document.createElement('div'); div.className = 'msg msg-nikto'; div.id = 'typingIndicator';
+  div.innerHTML = '<div class="msg-content typing"><span></span><span></span><span></span></div>';
+  messagesEl.appendChild(div); messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function removeTyping() { const el = document.getElementById('typingIndicator'); if (el) el.remove(); }
+
+async function send() {
+  const text = inputEl.value.trim();
+  if (!text || isLoading) return;
+  inputEl.value = '';
+  addMessage(text.replace(/\n/g, '<br>'), true);
+  isLoading = true; sendBtn.disabled = true; addTyping();
+  try {
+    const resp = await fetch('/chat', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({message:text,mode:'build'}) });
+    if (!resp.ok) { const err = await resp.json(); removeTyping(); addMessage(`Error: ${err.detail||resp.statusText}`, false); }
+    else { const data = await resp.json(); removeTyping(); addMessage(data.response.replace(/\n/g,'<br>'), false); }
+  } catch(e) { removeTyping(); addMessage(`Connection error: ${e.message}. Is NIKTO server running?`, false); }
+  isLoading = false; sendBtn.disabled = false; inputEl.focus();
+}
+</script>
+</body>
+</html>
