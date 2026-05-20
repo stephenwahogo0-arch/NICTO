@@ -1,15 +1,42 @@
-import asyncio
 import logging
 import platform
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Nikto API", version="0.1.0", docs_url="/docs")
+_agent = None
+_orch = None
+_miner = None
+
+WEBUI_DIR = Path(__file__).parent.parent / "webui"
+
+
+def _ensure_agent():
+    global _agent
+    if _agent is not None:
+        return True
+    try:
+        from nikto.agent.base import Agent
+        from nikto.config.settings import NiktoConfig
+        import tempfile
+        td = tempfile.mkdtemp()
+        from nikto.config.settings import ModelConfig
+        cfg = NiktoConfig(data_dir=td, model=ModelConfig(provider="local", model="local"))
+        _agent = Agent(config=cfg)
+        logger.info("Agent auto-initialized")
+        return True
+    except Exception as e:
+        logger.warning(f"Agent auto-init failed: {e}")
+        return False
+
+
+app = FastAPI(title="NIKTO API", version="1.0.0", docs_url="/docs")
 
 app.add_middleware(
     CORSMiddleware,
@@ -42,33 +69,39 @@ class AgentRegister(BaseModel):
     skills: list = []
 
 
-_agent = None
-_orch = None
-_miner = None
-
-
 def set_globals(agent=None, orch=None, miner=None):
     global _agent, _orch, _miner
-    _agent = agent
-    _orch = orch
-    _miner = miner
+    if agent:
+        _agent = agent
+    if orch:
+        _orch = orch
+    if miner:
+        _miner = miner
 
 
 @app.get("/")
 async def root():
-    return {"name": "Nikto", "version": "0.1.0", "platform": platform.system()}
+    return {"name": "NIKTO", "version": "1.0.0", "platform": platform.system(), "status": "running"}
 
 
 @app.get("/health")
 async def health():
-    return {"status": "ok"}
+    return {"status": "ok", "agent_ready": _agent is not None}
+
+
+@app.get("/chat-ui")
+async def chat_ui():
+    html_path = WEBUI_DIR / "index.html"
+    if html_path.exists():
+        return HTMLResponse(content=html_path.read_text(encoding="utf-8"))
+    return HTMLResponse("<h1>NIKTO Chat</h1><p>Web UI not found. Run install.py first.</p>")
 
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat(req: ChatRequest):
-    if not _agent:
-        raise HTTPException(503, "Agent not initialized")
-    resp = await _agent.run(req.message)
+    if not _ensure_agent():
+        raise HTTPException(503, "Agent failed to initialize")
+    resp = await _agent.run_sync(req.message)
     return ChatResponse(response=resp, mode=req.mode)
 
 
@@ -107,14 +140,14 @@ async def system_info():
 
 @app.get("/sources/summary")
 async def sources_summary():
-    if not _agent:
+    if not _ensure_agent():
         raise HTTPException(503, "Agent not initialized")
     return {"sources": _agent.sourcing.get_session_summary()}
 
 
 @app.post("/sources/clear")
 async def sources_clear():
-    if not _agent:
+    if not _ensure_agent():
         raise HTTPException(503, "Agent not initialized")
     _agent.sourcing.clear_session()
     return {"status": "cleared"}
@@ -122,14 +155,14 @@ async def sources_clear():
 
 @app.get("/voice/profiles")
 async def voice_profiles():
-    if not _agent:
+    if not _ensure_agent():
         raise HTTPException(503, "Agent not initialized")
     return {"profiles": _agent.voice.list_profiles()}
 
 
 @app.post("/voice/set-profile")
 async def voice_set_profile(name: str = "default"):
-    if not _agent:
+    if not _ensure_agent():
         raise HTTPException(503, "Agent not initialized")
     _agent.voice.set_profile(name)
     return {"profile": name}
@@ -137,7 +170,7 @@ async def voice_set_profile(name: str = "default"):
 
 @app.get("/evolution/status")
 async def evolution_status():
-    if not _agent:
+    if not _ensure_agent():
         raise HTTPException(503, "Agent not initialized")
     return {
         "level": _agent.evolution.level,
@@ -148,6 +181,6 @@ async def evolution_status():
 
 @app.get("/infinite/status")
 async def infinite_status():
-    if not _agent:
+    if not _ensure_agent():
         raise HTTPException(503, "Agent not initialized")
     return {"total_processed": _agent.infinite_context.total_processed}
