@@ -79,6 +79,22 @@ from nikto.eagle_eye import (
     AnomalyDetector, create_eagle_eye,
 )
 
+# Sourcing Engine — Citation Tracking & Truth Verification
+from nikto.sourcing.engine import SourcingEngine, Citation, SourcedClaim
+
+# Voice Engine — Text-to-Speech with Multiple Backends
+from nikto.voice.engine import VoiceEngine, VoiceProfile
+
+# Evolution Protocol — Autonomous Self-Improvement
+from nikto.evolution.protocol import EvolutionProtocol
+from nikto.evolution.masterclass import MasterclassTrainer
+
+# Infinite Context — Million-Word Processing
+from nikto.infinite_context import InfiniteContextEngine
+
+# Hotkeys — Global Keyboard Shortcuts
+from nikto.avatar.hotkeys import HotkeyManager
+
 # Registration, Privacy & Safety
 from nikto.registration import UserRegistry, RegistrationData, RegistrationFlow
 from nikto.privacy import get_privacy_policy, get_policy_summary
@@ -158,6 +174,12 @@ __all__ = [
     "PersonalAvatarGenerator", "ColorPalette",
     "EagleEye", "LieDetector", "PreemptiveIssueScanner",
     "AnomalyDetector", "create_eagle_eye",
+    "SourcingEngine", "Citation", "SourcedClaim",
+    "VoiceEngine", "VoiceProfile",
+    "EvolutionProtocol",
+    "MasterclassTrainer",
+    "InfiniteContextEngine",
+    "HotkeyManager",
     "UserRegistry", "RegistrationData", "RegistrationFlow",
     "get_privacy_policy", "get_policy_summary",
     "SafetySystem", "ActivityAuditLog", "EmergencySystem",

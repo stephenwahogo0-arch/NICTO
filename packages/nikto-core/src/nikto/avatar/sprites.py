@@ -345,5 +345,5 @@ def get_sprite(pose="idle", expression="neutral"):
     return SPRITE_CACHE[key]
 
 
-AVAILABLE_POSES = ["idle", "walking", "working", "pointing"]
+AVAILABLE_POSES = ["idle", "walking", "working", "pointing", "sleeping", "microscope", "workbench", "server_rack", "sofa_relax"]
 AVAILABLE_EXPRESSIONS = ["neutral", "happy", "surprised", "focused", "listening", "thinking"]
