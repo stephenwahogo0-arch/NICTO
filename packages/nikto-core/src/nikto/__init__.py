@@ -72,6 +72,21 @@ from nikto.avatar.webcam import WebcamEngine as AvatarWebcamEngine
 from nikto.avatar.animations import AnimationType, Expression
 from nikto.avatar.sprites import create_avatar_frame, AVAILABLE_POSES, AVAILABLE_EXPRESSIONS
 
+# Eagle Eye — Truth Verification & Preemptive Issue Detection
+from nikto.eagle_eye import (
+    EagleEye, LieDetector, PreemptiveIssueScanner,
+    AnomalyDetector, create_eagle_eye,
+)
+
+# Registration, Privacy & Safety
+from nikto.registration import UserRegistry, RegistrationData, RegistrationFlow
+from nikto.privacy import get_privacy_policy, get_policy_summary
+from nikto.safety import (
+    SafetySystem, ActivityAuditLog, EmergencySystem, AbuseReporter,
+    PoliceCooperationMode, SafetyLock, ContentSafetyMonitor,
+    LogEntry, create_safety_system,
+)
+
 __all__ = [
     "Agent", "AgentConfig", "AgentMode",
     "Tool", "ToolResult", "ToolRegistry",
@@ -139,4 +154,11 @@ __all__ = [
     "create_avatar_frame",
     "AVAILABLE_POSES",
     "AVAILABLE_EXPRESSIONS",
+    "EagleEye", "LieDetector", "PreemptiveIssueScanner",
+    "AnomalyDetector", "create_eagle_eye",
+    "UserRegistry", "RegistrationData", "RegistrationFlow",
+    "get_privacy_policy", "get_policy_summary",
+    "SafetySystem", "ActivityAuditLog", "EmergencySystem",
+    "AbuseReporter", "PoliceCooperationMode", "SafetyLock",
+    "ContentSafetyMonitor", "LogEntry", "create_safety_system",
 ]

@@ -18,6 +18,8 @@ from nikto.tools.crypto import (
 )
 from nikto.memory.base import MemorySystem
 from nikto.skills.base import SkillRuntime
+from nikto.registration import UserRegistry, RegistrationFlow
+from nikto.safety import SafetySystem, create_safety_system
 
 
 @click.group(invoke_without_command=True)
@@ -66,6 +68,28 @@ def cli(ctx, config, ollama_model, variant, verbose, version):
     ctx.obj["memory"] = memory
     ctx.obj["skills"] = skill_runtime
     ctx.obj["variant"] = agent_variant
+
+    # First-run registration check
+    from rich.console import Console
+    reg_console = Console()
+    reg_flow = RegistrationFlow()
+    if not reg_flow.registry.is_registered():
+        reg_console.print()
+        reg_console.print("[bold cyan]Welcome to NIKTO![/]")
+        reg_console.print("[white]Before we begin, you need to complete a one-time registration.[/]")
+        reg_flow.run()
+    else:
+        # On subsequent runs, check safety lock
+        import nikto.safety as _safety_mod
+        safety = _safety_mod.SafetySystem()
+        if safety.safety_lock.is_enabled() and safety.safety_lock.locked:
+            pin = reg_console.input("[yellow]NIKTO is locked. Enter PIN: [/]")
+            if not safety.safety_lock.unlock(pin):
+                reg_console.print("[red]Incorrect PIN. Exiting.[/]")
+                return
+        reg_console.print(f"[green]✓ Welcome back, {reg_flow.registry.get_registration().full_name}![/]")
+
+    ctx.obj["safety"] = _safety_mod.SafetySystem()
 
     variant_name = agent_variant.name if agent_variant else "nikto"
     model_name = f"local/{nikto_config.model.ollama_model}" if agent_variant else "local"
@@ -416,6 +440,72 @@ def orch():
             click.echo(f"  {k}: {v}")
 
     asyncio.run(_orch())
+
+
+@cli.command()
+@click.option("--export", is_flag=True, help="Export all your data")
+@click.option("--delete", is_flag=True, help="Delete all your data")
+def privacy(export, delete):
+    """Privacy & safety center — view policy, export or delete data"""
+    import nikto.safety as _safety_mod
+    safety = _safety_mod.SafetySystem()
+    if export:
+        import json
+        from datetime import datetime
+        from pathlib import Path
+        export_path = Path(safety.audit_log.log_dir) / f"user_data_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        export_data = {
+            "exported_at": datetime.now().isoformat(),
+            "registration": safety.registry.get_registration().to_dict() if safety.registry.get_registration() else None,
+            "audit_log": json.loads(safety.audit_log.export_json()),
+        }
+        export_path.write_text(json.dumps(export_data, indent=2, ensure_ascii=False, default=str), encoding="utf-8")
+        click.echo(click.style(f"  Data exported to: {export_path}", fg="green"))
+    elif delete:
+        if click.confirm(click.style("Delete ALL registration data and audit logs?", fg="red"), abort=True):
+            safety.registry.delete()
+            import shutil
+            for f in Path(safety.audit_log.log_dir).glob("*"):
+                f.unlink()
+            click.echo(click.style("  All data deleted.", fg="green"))
+            click.echo("Run 'nikto' to re-register.")
+    else:
+        safety.run_privacy_cli()
+
+
+@cli.command(name="safety")
+@click.option("--sos", help="Trigger SOS emergency with a reason")
+@click.option("--report", help="Report abuse (provide description)")
+@click.option("--status", is_flag=True, help="Show safety status")
+def safety_cmd(sos, report, status):
+    """Safety controls — SOS, abuse reporting, safety status"""
+    import nikto.safety as _safety_mod
+    from rich.console import Console
+    s = _safety_mod.SafetySystem()
+    c = Console()
+
+    if sos:
+        result = s.emergency.trigger_sos(sos)
+        if result["status"] == "alerted":
+            c.print(f"[red]SOS triggered. Contact: {result['contact_name']} ({result['contact_phone']})[/]")
+        else:
+            c.print(f"[red]Error: {result['message']}[/]")
+    elif report:
+        result = s.abuse_reporter.report(report)
+        c.print(f"[yellow]Abuse report logged. ID: {result['report_id']}[/]")
+    elif status:
+        stats = s.get_status()
+        for k, v in stats.items():
+            c.print(f"  [cyan]{k}:[/] {v}")
+    else:
+        c.print("[yellow]Usage: nikto safety --sos <reason> | --report <description> | --status[/]")
+
+
+@cli.command()
+def register():
+    """Register or update your NIKTO user profile"""
+    from nikto.registration import RegistrationFlow
+    RegistrationFlow().run()
 
 
 def main():
