@@ -38,6 +38,7 @@ from nikto.self_repair.engine import CodeHealer
 from nikto.code_gen.engine import CodeGenerator
 from nikto.improve.engine import ContinuousImprovement
 from nikto.avatar.engine import AvatarEngine
+from nikto.eagle_eye import EagleEye, create_eagle_eye
 
 
 class AgentMode(str, Enum):
@@ -120,6 +121,7 @@ class Agent:
         self.improver.register_cycle("module_health", self.code_healer.analyze_module, self.code_healer.heal_module)
         self.improver.register_cycle("diagnostics_check", lambda: self.diagnostics.system_health(), lambda r: {"success": True})
         self.avatar = AvatarEngine(data_dir=self.config.data_dir)
+        self.eagle_eye = create_eagle_eye(data_dir=self.config.data_dir)
 
         self.provider = create_provider(self.config.model)
         self.session_id = str(uuid.uuid4())
