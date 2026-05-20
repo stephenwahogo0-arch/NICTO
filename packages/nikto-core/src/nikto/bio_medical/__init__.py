@@ -1,6 +1,5 @@
-"""Bio-Medical Module — Neural Trauma, MicroSwarm, Epigenetic, Cognitive."""
+"""Cognitive tools — real NLP pattern matching, no simulators."""
 
-from .neural_trauma import NeuralTraumaRewriter
-from .cognitive import CognitiveReversalEngine
-from .swarm import MicroSurgicalSwarm
-from .epigenetic import EpigeneticOptimizer
+from .neural_trauma import NeuralTraumaRewriter, CognitiveReversalEngine, MicroSurgicalSwarm, EpigeneticOptimizer
+
+__all__ = ["NeuralTraumaRewriter", "CognitiveReversalEngine", "MicroSurgicalSwarm", "EpigeneticOptimizer"]

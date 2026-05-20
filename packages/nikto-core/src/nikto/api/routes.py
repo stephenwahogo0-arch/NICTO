@@ -101,7 +101,13 @@ async def chat_ui():
 async def chat(req: ChatRequest):
     if not _ensure_agent():
         raise HTTPException(503, "Agent failed to initialize")
+    import time
+    start = time.time()
     resp = await _agent.run_sync(req.message)
+    duration = time.time() - start
+    # Record for hourly training
+    if hasattr(_agent, 'trainer'):
+        _agent.trainer.record_interaction(req.message, resp, duration)
     return ChatResponse(response=resp, mode=req.mode)
 
 
@@ -255,3 +261,22 @@ async def finance_auto_earn(account_id: str):
 async def finance_risk_check():
     fin = _ensure_finance()
     return {"at_risk": fin["prevention"].check_accounts()}
+
+
+@app.get("/training/stats")
+async def training_stats():
+    if not _ensure_agent():
+        raise HTTPException(503, "Agent not initialized")
+    if hasattr(_agent, 'trainer'):
+        return _agent.trainer.get_stats()
+    return {"error": "Trainer not available"}
+
+
+@app.post("/training/train")
+async def training_train_now():
+    if not _ensure_agent():
+        raise HTTPException(503, "Agent not initialized")
+    if hasattr(_agent, 'trainer') and hasattr(_agent.trainer, 'train'):
+        result = _agent.trainer.train()
+        return result
+    return {"error": "Trainer not available"}
