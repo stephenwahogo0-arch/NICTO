@@ -56,6 +56,16 @@ FEATURES = [
     ("Police Cooperation Mode", True, False, False, False, False),
     ("Privacy Policy (GDPR/CCPA)", True, True, True, True, True),
     ("True Autonomy (System)", True, False, False, False, False),
+    ("Sourcing Engine", True, False, False, False, False),
+    ("Voice Engine (TTS)", True, True, True, True, False),
+    ("Evolution Protocol (XP)", True, False, False, False, False),
+    ("Masterclass Training", True, False, False, False, False),
+    ("Infinite Context", True, False, False, False, False),
+    ("Hotkey Activation", True, False, False, False, False),
+    ("Hologram / HUD Overlay", True, False, False, False, False),
+    ("Personalized Avatar", True, False, False, False, False),
+    ("Phoneme Lip-Sync", True, False, False, False, False),
+    ("Web Dashboard (React)", True, False, False, False, False),
 ]
 
 img = Image.new("RGB", (WIDTH, HEIGHT), BG_DARK)
@@ -124,10 +134,10 @@ for i, m in enumerate(models):
 grid_x = 40
 grid_y = 350
 col_w = 140
-row_h = 28
+row_h = 18
 header_h = 35
 
-features_per_page = 20
+features_per_page = 42
 page = 0
 start_feat = page * features_per_page
 end_feat = min(start_feat + features_per_page, len(FEATURES))
@@ -153,7 +163,7 @@ for fi, feat in enumerate(visible_features):
     for vi, v in enumerate(vals):
         color = GREEN if v else RED
         label = "YES" if v else "NO"
-        draw.text((grid_x + col_w + vi * 95 + 25, y + 4), label, fill=color, font=font_small)
+        draw.text((grid_x + col_w + vi * 95 + 25, y + 2), label, fill=color, font=font_tiny)
 
     y += row_h
 
