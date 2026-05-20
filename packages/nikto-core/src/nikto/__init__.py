@@ -71,6 +71,7 @@ from nikto.avatar.desktop import DesktopController as AvatarDesktopController
 from nikto.avatar.webcam import WebcamEngine as AvatarWebcamEngine
 from nikto.avatar.animations import AnimationType, Expression
 from nikto.avatar.sprites import create_avatar_frame, AVAILABLE_POSES, AVAILABLE_EXPRESSIONS
+from nikto.avatar.personalize import PersonalAvatarGenerator, ColorPalette
 
 # Eagle Eye — Truth Verification & Preemptive Issue Detection
 from nikto.eagle_eye import (
@@ -154,6 +155,7 @@ __all__ = [
     "create_avatar_frame",
     "AVAILABLE_POSES",
     "AVAILABLE_EXPRESSIONS",
+    "PersonalAvatarGenerator", "ColorPalette",
     "EagleEye", "LieDetector", "PreemptiveIssueScanner",
     "AnomalyDetector", "create_eagle_eye",
     "UserRegistry", "RegistrationData", "RegistrationFlow",

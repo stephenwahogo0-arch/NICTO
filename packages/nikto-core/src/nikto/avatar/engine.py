@@ -10,6 +10,7 @@ from nikto.avatar.animations import AnimationPlayer, AnimationType, Expression
 from nikto.avatar.renderer import AvatarRenderer
 from nikto.avatar.desktop import DesktopController
 from nikto.avatar.webcam import WebcamEngine
+from nikto.avatar.personalize import PersonalAvatarGenerator, REF_DIR
 
 
 class AvatarEngine:
@@ -27,6 +28,8 @@ class AvatarEngine:
         self.avatar_y = 100
         self.session_id = str(uuid.uuid4().hex[:8])
         self.interaction_count = 0
+        self.personalizer = PersonalAvatarGenerator()
+        self.lively_mode = self.personalizer.has_references()
         self._lock = threading.Lock()
 
     def start_avatar(self, x: int = 100, y: int = 100) -> dict:
@@ -213,6 +216,14 @@ class AvatarEngine:
             "total_operations": len(training_results),
         }
 
+    def generate_lively_frame(self, pose: str = "idle", expression: str = "neutral",
+                               frame: int = 0):
+        """Generate a personalized, lively avatar frame from reference images."""
+        if not self.personalizer.has_references():
+            from nikto.avatar.sprites import create_avatar_frame
+            return create_avatar_frame(pose, expression)
+        return self.personalizer.generate_lively_sprite(pose, expression, frame)
+
     def summary(self) -> dict:
         return {
             "avatar_visible": self.avatar_visible,
@@ -224,4 +235,6 @@ class AvatarEngine:
             "webcam_status": self.webcam.summary(),
             "animations": [a.value for a in AnimationType],
             "expressions": [e.value for e in Expression],
+            "lively_mode": self.lively_mode,
+            "reference_images": len(self.personalizer.references),
         }
