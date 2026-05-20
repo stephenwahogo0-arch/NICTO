@@ -1,0 +1,27 @@
+{
+  "mode": "build",
+  "debug": false,
+  "verbose": false,
+  "workspace": ".",
+  "data_dir": "~/.nikto",
+  "model": {
+    "provider": "local",
+    "model": "local",
+    "temperature": 0.7,
+    "max_tokens": 65536,
+    "thinking_mode": false,
+    "ollama_model": "llama3",
+    "ollama_host": "http://127.0.0.1:11434"
+  },
+  "memory": {
+    "type": "hybrid",
+    "sqlite_path": "~/.nikto/memory.db",
+    "chroma_path": "~/.nikto/chroma_db",
+    "vector_dimension": 768
+  },
+  "crypto": {
+    "enabled": false,
+    "wallet_name": "NiktoEarningVault",
+    "network": "bitcoin"
+  }
+}

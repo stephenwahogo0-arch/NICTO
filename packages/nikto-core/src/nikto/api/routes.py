@@ -184,3 +184,74 @@ async def infinite_status():
     if not _ensure_agent():
         raise HTTPException(503, "Agent not initialized")
     return {"total_processed": _agent.infinite_context.total_processed}
+
+
+# === FINANCE API ===
+
+class FinanceAccountCreate(BaseModel):
+    name: str
+    initial_deposit: float = 0.0
+
+
+class FinanceTransfer(BaseModel):
+    from_id: str
+    to_id: str
+    amount: float
+
+
+_finance = None
+
+
+def _ensure_finance():
+    global _finance
+    if _finance is None:
+        from nikto.finance import BankManager, BankruptcyPrevention
+        _finance = {
+            "manager": BankManager(),
+            "prevention": None,
+        }
+        _finance["prevention"] = BankruptcyPrevention(_finance["manager"])
+    return _finance
+
+
+@app.post("/finance/account")
+async def finance_create_account(req: FinanceAccountCreate):
+    fin = _ensure_finance()
+    acct = fin["manager"].create_account(req.name, req.initial_deposit)
+    return {"success": True, "account": acct.statement()}
+
+
+@app.get("/finance/accounts")
+async def finance_list_accounts():
+    fin = _ensure_finance()
+    return {"accounts": fin["manager"].list_accounts()}
+
+
+@app.get("/finance/account/{account_id}")
+async def finance_get_account(account_id: str):
+    fin = _ensure_finance()
+    try:
+        acct = fin["manager"].get_account(account_id)
+        return acct.statement()
+    except ValueError as e:
+        raise HTTPException(404, str(e))
+
+
+@app.post("/finance/transfer")
+async def finance_transfer(req: FinanceTransfer):
+    fin = _ensure_finance()
+    result = fin["manager"].transfer(req.from_id, req.to_id, req.amount)
+    return result
+
+
+@app.post("/finance/auto-earn/{account_id}")
+async def finance_auto_earn(account_id: str):
+    fin = _ensure_finance()
+    result = fin["prevention"].auto_earn(account_id)
+    return result
+
+
+@app.get("/finance/risk")
+async def finance_risk_check():
+    fin = _ensure_finance()
+    return {"at_risk": fin["prevention"].check_accounts()}

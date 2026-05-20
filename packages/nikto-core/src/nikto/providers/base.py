@@ -132,25 +132,14 @@ class LocalProvider(ModelProvider):
             yield {"type": "error", "content": str(e)}
 
     def _builtin_chat(self, messages, tools) -> dict:
-        """Built-in local inference engine — no external dependencies, no API calls.
-        Uses template-based response generation for when Ollama isn't available."""
-        last_msg = messages[-1]["content"] if messages else ""
+        from nikto.providers.local_inference import LocalInferenceEngine
+        engine = getattr(self, '_local_engine', None)
+        if engine is None:
+            engine = LocalInferenceEngine()
+            self._local_engine = engine
         system = next((m["content"] for m in messages if m["role"] == "system"), "")
-
-        response = f"""I am NIKTO — a fully local AI operating on your computer.
-
-I received your request and I'm processing it locally with no external dependencies.
-
-Query: {last_msg[:200]}
-
-I have access to all local tools and capabilities. Let me execute what you asked.
-
-"""
-
-        if tools and "available_tools" in str(tools).lower() or any(t.get("function", {}).get("name") for t in (tools or [])):
-            response += "\nI will use my local tools to fulfill this request. Executing now..."
-
-        return {"content": response}
+        content = engine.generate(messages, system)
+        return {"content": content}
 
     def _convert_tools(self, tools: list[dict]) -> list[dict]:
         """Convert OpenAI-format tools to Ollama format."""
