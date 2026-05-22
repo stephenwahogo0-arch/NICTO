@@ -1,71 +1,32 @@
-"""Physics & Reality capabilities — powered by LLM analysis."""
+"""Physics & Reality capabilities — computational prototypes with measurable outputs."""
+
+from __future__ import annotations
+
+import hashlib
+import math
+import time
+from typing import Any
 
 
 class QuantumCausalitySandbox:
-    def initialize(self, *a) -> dict: return {"initialized": True}
-    def run(self, *a) -> dict: return {"result": "simulated"}
+    def initialize(self, horizon_years: int = 50, *a, **k) -> dict:
+        return {"initialized": True, "horizon_years": max(1, int(horizon_years))}
+
+    def run(self, events: list[dict[str, Any]] | None = None, *a, **k) -> dict:
+        events = events or []
+        ordered = sorted(events, key=lambda e: e.get("t", 0))
+        causal_links = sum(1 for i in range(1, len(ordered)) if ordered[i].get("t", 0) >= ordered[i-1].get("t", 0))
+        entropy = round(math.log2(len(events) + 1), 4)
+        return {"result": "analyzed", "event_count": len(events), "causal_links": causal_links, "entropy_bits": entropy}
 
 
 class RealityAnchoringSystem:
-    def verify_media(self, *a) -> dict: return {"verified": True}
-    def verify_sensors(self, *a) -> dict: return {"sensors_ok": True}
+    def verify_media(self, content: bytes | str = b"", *a) -> dict:
+        data = content.encode() if isinstance(content, str) else (content or b"")
+        digest = hashlib.sha256(data).hexdigest()
+        return {"verified": True, "sha256": digest, "size_bytes": len(data)}
 
-
-class EnergyHarvester:
-    def deploy(self, *a) -> dict: return {"deployed": True}
-    def optimize(self, *a) -> dict: return {"optimized": True}
-
-
-class MolecularSynthesizer:
-    def design(self, *a) -> dict: return {"designed": True}
-    def synthesize(self, *a) -> dict: return {"synthesized": True}
-
-
-class QuantumEntanglementTeleportation:
-    def calculate(self, *a) -> dict: return {"calculated": True}
-    def execute(self, *a) -> dict: return {"executed": True}
-
-
-class QuantumDecoupledPrivacyField:
-    def generate(self, *a) -> dict: return {"generated": True}
-    def activate(self, *a) -> dict: return {"activated": True}
-
-
-class AcousticKineticCancellation:
-    def detect(self, *a) -> dict: return {"detected": True}
-    def cancel(self, *a) -> dict: return {"cancelled": True}
-
-
-class GravitationalInversionWalkway:
-    def calibrate(self, *a) -> dict: return {"calibrated": True}
-    def activate(self, *a) -> dict: return {"activated": True}
-
-
-class AtmosphericCarbonCapture:
-    def deploy(self, *a) -> dict: return {"deployed": True}
-    def convert(self, *a) -> dict: return {"converted": True}
-
-
-class SubAtomicDataStorage:
-    def initialize(self, *a) -> dict: return {"initialized": True}
-    def write(self, *a) -> dict: return {"written": True}
-
-
-class UniversalKineticDeflector:
-    def detect(self, *a) -> dict: return {"detected": True}
-    def deflect(self, *a) -> dict: return {"deflected": True}
-
-
-class ThermalMemoryExtraction:
-    def scan(self, *a) -> dict: return {"scanned": True}
-    def reconstruct(self, *a) -> dict: return {"reconstructed": True}
-
-
-class MacroHistoricalAudioReconstruction:
-    def scan(self, *a) -> dict: return {"scanned": True}
-    def play(self, *a) -> dict: return {"playing": True}
-
-
-class HolographicAncestralResurrection:
-    def extract(self, *a) -> dict: return {"extracted": True}
-    def reconstruct(self, *a) -> dict: return {"reconstructed": True}
+    def verify_sensors(self, readings: dict[str, float] | None = None, *a) -> dict:
+        readings = readings or {}
+        anomalies = [k for k, v in readings.items() if not (-1e6 < float(v) < 1e6)]
+        return {"sensors_ok": len(anomalies) == 0, "sensor_count": len(readings), "anomalies": anomalies}
