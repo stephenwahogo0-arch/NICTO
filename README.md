@@ -198,6 +198,45 @@ NIKTO includes a built-in continuous improvement loop that:
 
 ---
 
+
+## NIKTO Game Engine: Strategy to Outperform Other Engines
+
+To make NIKTO a true Unreal-class competitor, focus on measurable wins instead of marketing-only claims.
+
+### 1) Win Conditions (what “beat Unreal” means)
+- **Frame-time stability:** maintain <16.6ms p95 on target scenes (60 FPS), and publish traces.
+- **Iteration speed:** shader compile, hot-reload, and “edit-to-play” loop faster than alternatives.
+- **Build & deploy speed:** one-click export to Web, desktop, and mobile with reproducible builds.
+- **Total cost:** smaller runtime footprint, faster patch delivery, and lower content production cost.
+
+### 2) Core Technical Roadmap
+- **Virtualized geometry + clustered lighting:** build a Nanite/Lumen-style path in phases (software fallback first, then hardware acceleration).
+- **World streaming stack:** deterministic chunking, async IO scheduler, hierarchical LOD, and predictive prefetch.
+- **Unified render pipeline:** one material model + quality tiers (mobile/console/desktop) instead of separate pipelines.
+- **Deterministic gameplay core:** lockstep/rollback-ready simulation for multiplayer and replays.
+- **Asset build graph:** incremental imports, derived-data cache, and remote cache for teams.
+
+### 3) Creator Experience (where teams switch engines)
+- **Node visual scripting that generates readable code** (C++/C#/Lua/Python-like script targets).
+- **Template-first project bootstrap:** FPS, RPG, strategy, platformer with production-ready save/inventory/dialogue modules.
+- **Integrated marketplace with compatibility checks:** versioned assets, ABI/API validation, dependency conflict warnings.
+- **AI-assisted tooling:** rigging helpers, animation retargeting, terrain/foliage authoring, profiling recommendations.
+
+### 4) Benchmark Suite (publish every release)
+- 10 fixed scenes (indoor GI, dense foliage, destruction, crowds, VFX stress, etc.).
+- Compare: startup time, frame-time distribution, memory, package size, and battery drain (mobile).
+- Keep all benchmark content and scripts in-repo for reproducibility.
+
+### 5) 90-Day Execution Plan
+- **Days 1-30:** instrumentation first (profiler, telemetry, trace viewer), baseline benchmarks, bottleneck map.
+- **Days 31-60:** streaming + LOD + render-path upgrades, editor hot-reload improvements.
+- **Days 61-90:** template system hardening, cross-platform exporter, public benchmark report + sample game.
+
+### 6) Positioning
+NIKTO should position as **“faster iteration + predictable performance + integrated AI workflows”** rather than promising impossible “zero lag” for all cases. Shipping trustworthy benchmarks is what wins studios.
+
+---
+
 ## License
 
 Proprietary — NIKTO AI System

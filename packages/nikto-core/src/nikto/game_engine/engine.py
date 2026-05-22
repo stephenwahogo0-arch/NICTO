@@ -69,12 +69,15 @@ class SceneGenerator:
 
     @staticmethod
     def generate_main_scene() -> str:
-        return """[gd_scene load_steps=2 format=3 uid="uid://main"]
+        return """[gd_scene load_steps=3 format=3 uid="uid://main"]
 
 [ext_resource type="Script" path="res://main.gd" id="1"]
+[ext_resource type="PackedScene" path="res://world.tscn" id="2"]
 
 [node name="World" type="Node3D"]
 script = ExtResource("1")
+
+[node name="WorldScene" parent="." instance=ExtResource("2")]
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, -0.5, 0.866, 0, 0.866, 0.5, 0, 10, 0)
@@ -173,8 +176,7 @@ var steering = 0.0
 
 func _ready():
     Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
-    $PlayerCar/EngineSound.play()
-
+    
 func _process(delta):
     var steer = 0
     if Input.is_action_pressed("ui_left"): steer = -1
@@ -226,8 +228,7 @@ func shoot():
     var query = PhysicsRayQueryParameters3D.create(from, to)
     var hit = space_state.intersect_ray(query)
     if hit:
-        $HitEffect.position = hit.position
-        $HitEffect.emitting = true
+        print("Hit at: ", hit.position)
 
 func _physics_process(delta):
     var input = Vector3.ZERO
@@ -401,12 +402,29 @@ class GameEngine:
         self.output_base.mkdir(parents=True, exist_ok=True)
         self.projects: dict[str, GameProject] = {}
 
+    def _parse_resolution(self, resolution: str) -> tuple[int, int]:
+        match = re.fullmatch(r"\s*(\d{2,5})x(\d{2,5})\s*", resolution or "")
+        if not match:
+            return (1920, 1080)
+        w, h = int(match.group(1)), int(match.group(2))
+        if w < 320 or h < 240 or w > 16384 or h > 16384:
+            return (1920, 1080)
+        return (w, h)
+
+    def _extract_target_fps(self, prompt: str) -> int:
+        nums = [int(n) for n in re.findall(r"\b(\d{2,7})\s*fps\b", prompt.lower())]
+        if not nums:
+            return 120
+        # avoid impossible claims; clamp to practical engine target range
+        return max(24, min(max(nums), 1000))
+
     async def generate_game(self, prompt: str, title: str = "", genre: str = "", resolution: str = "1920x1080") -> dict:
         detected_genre = self._detect_genre(prompt)
         if genre and genre in [g.value for g in GameGenre]:
             detected_genre = GameGenre(genre)
         title = title or self._generate_title(prompt, detected_genre)
-        w, h = [int(x) for x in resolution.split("x")] if "x" in resolution else (1920, 1080)
+        w, h = self._parse_resolution(resolution)
+        target_fps = self._extract_target_fps(prompt)
 
         project = GameProject(
             title=title,
@@ -429,7 +447,8 @@ class GameEngine:
             "resolution": f"{w}x{h}",
             "assets_count": len(project.assets),
             "prompt": prompt[:200],
-            "message": f"Game '{title}' generated at {output_path}. Open with Godot {project.godot_version}.",
+            "target_fps": target_fps,
+            "message": f"Game '{title}' generated at {output_path}. Open with Godot {project.godot_version}. Target FPS profile: {target_fps}.",
         }
 
     async def export_game(self, project_id: str, export_format: str = "windows") -> dict:
