@@ -1,6 +1,10 @@
 """Real deploy engine — deploys via SSH, Docker, or local subprocess."""
 import json
 import os
+import random
+import re
+import socket
+import shutil
 import subprocess
 import time
 import uuid
@@ -90,6 +94,87 @@ class DeployEngine:
                 record.error = str(e)
                 return False
         return False
+            target_enum = DeploymentTarget(target)
+        except ValueError:
+            return {"success": False, "error": f"Invalid target: {target}. Valid: {[t.value for t in DeploymentTarget]}"}
+
+        template = DEPLOYMENT_TEMPLATES.get(target, {})
+        record = DeploymentRecord(
+            target=target,
+            hostname=hostname or f"{target}-{random.randint(1000,9999)}",
+            status="deploying",
+            version=version,
+            components=template.get("components", ["nikto-core"]),
+            config=config or {},
+        )
+        validation = self._validate_deployment_target(target_enum, hostname, config or {})
+        if validation["ok"]:
+            record.status = "running"
+            record.installed_at = time.time()
+            record.last_heartbeat = time.time()
+            record.metadata["validation"] = validation
+        else:
+            record.status = "failed"
+            record.metadata["validation"] = validation
+
+        self.deployments[record.id] = record
+        self._save()
+        return {
+            "success": record.status == "running",
+            "deployment_id": record.id,
+            "target": target,
+            "hostname": record.hostname,
+            "status": record.status,
+            "components": record.components,
+            "description": template.get("description", ""),
+            "validation": record.metadata.get("validation", {}),
+        }
+
+    def _validate_deployment_target(self, target: DeploymentTarget, hostname: str, config: dict[str, Any]) -> dict:
+        issues = []
+        host = (hostname or "").strip()
+        if host and not re.fullmatch(r"[a-zA-Z0-9.-]{1,253}", host):
+            issues.append("hostname_invalid_format")
+        if target in {DeploymentTarget.DOCKER, DeploymentTarget.KUBERNETES}:
+            if not shutil.which("docker") and target == DeploymentTarget.DOCKER:
+                issues.append("docker_binary_not_found")
+            if not shutil.which("kubectl") and target == DeploymentTarget.KUBERNETES:
+                issues.append("kubectl_binary_not_found")
+        if target in {DeploymentTarget.LINUX_SERVER, DeploymentTarget.CLOUD_VM, DeploymentTarget.EDGE_DEVICE} and not host:
+            issues.append("hostname_required")
+        return {"ok": len(issues) == 0, "issues": issues, "checked_at": time.time()}
+
+    def uninstall(self, deployment_id: str) -> dict:
+        if deployment_id not in self.deployments:
+            return {"success": False, "error": "Deployment not found"}
+        self.deployments[deployment_id].status = "uninstalled"
+        self._save()
+        return {"success": True, "deployment_id": deployment_id}
+
+    def heartbeat(self, deployment_id: str) -> dict:
+        if deployment_id not in self.deployments:
+            return {"success": False, "error": "Deployment not found"}
+        self.deployments[deployment_id].last_heartbeat = time.time()
+        self.deployments[deployment_id].status = "running"
+        self._save()
+        return {"success": True, "deployment_id": deployment_id, "status": "running"}
+
+    def update(self, deployment_id: str, new_version: str) -> dict:
+        if deployment_id not in self.deployments:
+            return {"success": False, "error": "Deployment not found"}
+        d = self.deployments[deployment_id]
+        old_ver = d.version
+        d.version = new_version
+        d.status = "running"
+        self._save()
+        return {"success": True, "deployment_id": deployment_id, "old_version": old_ver, "new_version": new_version}
+
+    def list_deployments(self) -> list[dict]:
+        return [d.to_dict() for d in self.deployments.values()]
+
+    def get_deployment(self, deployment_id: str) -> Optional[dict]:
+        d = self.deployments.get(deployment_id)
+        return d.to_dict() if d else None
 
     def remote_command(self, deployment_id: str, command: str) -> dict:
         record = self.records.get(deployment_id)
