@@ -797,45 +797,49 @@ async def skill_crypto_trade(**kwargs) -> dict:
         "pair": pair,
         "amount": amount,
         "side": side,
-        "status": "simulated",
-        "order_id": f"sim_{datetime.now().strftime('%Y%m%d%H%M%S')}_{abs(hash(pair)) % 10000:04d}",
+        "status": "pending",
+        "order_id": "",
     }
 
     api_key = os.environ.get("CRYPTO_API_KEY", "")
     api_secret = os.environ.get("CRYPTO_API_SECRET", "")
 
-    if api_key and api_secret:
-        try:
-            import hmac
-            import hashlib
-            import time
-            import urllib.request
-            base_url = "https://api.binance.com"
-            endpoint = "/api/v3/order"
-            params = {
-                "symbol": pair.replace("/", ""),
-                "side": side.upper(),
-                "type": "MARKET",
-                "quantity": str(amount),
-                "timestamp": int(time.time() * 1000),
-                "recvWindow": 5000,
-            }
-            query = "&".join(f"{k}={v}" for k, v in sorted(params.items()))
-            signature = hmac.new(api_secret.encode(), query.encode(), hashlib.sha256).hexdigest()
-            url = f"{base_url}{endpoint}?{query}&signature={signature}"
-            req = urllib.request.Request(url, headers={"X-MBX-APIKEY": api_key})
-            with urllib.request.urlopen(req, timeout=15) as resp:
-                data = json.loads(resp.read().decode())
-                trade["status"] = "executed"
-                trade["exchange_response"] = data
-                trade["order_id"] = data.get("orderId", trade["order_id"])
-        except Exception as e:
-            trade["api_attempted"] = True
-            trade["api_error"] = str(e)
-            trade["status"] = "simulated_after_api_failure"
-    else:
-        trade["note"] = "Set CRYPTO_API_KEY and CRYPTO_API_SECRET env vars for real execution"
-        trade["exchange"] = "binance"
+    if not api_key or not api_secret:
+        return {
+            "success": False, 
+            "error": "Binance API credentials required. Set CRYPTO_API_KEY and CRYPTO_API_SECRET environment variables for real cryptocurrency trading."
+        }
+
+    try:
+        import hmac
+        import hashlib
+        import time
+        import urllib.request
+        base_url = "https://api.binance.com"
+        endpoint = "/api/v3/order"
+        params = {
+            "symbol": pair.replace("/", ""),
+            "side": side.upper(),
+            "type": "MARKET",
+            "quantity": str(amount),
+            "timestamp": int(time.time() * 1000),
+            "recvWindow": 5000,
+        }
+        query = "&".join(f"{k}={v}" for k, v in sorted(params.items()))
+        signature = hmac.new(api_secret.encode(), query.encode(), hashlib.sha256).hexdigest()
+        url = f"{base_url}{endpoint}?{query}&signature={signature}"
+        req = urllib.request.Request(url, headers={"X-MBX-APIKEY": api_key})
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            data = json.loads(resp.read().decode())
+            trade["status"] = "executed"
+            trade["exchange_response"] = data
+            trade["order_id"] = data.get("orderId", "")
+            trade["note"] = "Real trade executed via Binance API"
+    except Exception as e:
+        return {
+            "success": False,
+            "error": f"Binance API error: {str(e)}"
+        }
 
     return {"success": True, "output": json.dumps(trade, indent=2)}
 
