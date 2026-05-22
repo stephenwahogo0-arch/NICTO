@@ -101,7 +101,13 @@ async def chat_ui():
 async def chat(req: ChatRequest):
     if not _ensure_agent():
         raise HTTPException(503, "Agent failed to initialize")
+    import time
+    start = time.time()
     resp = await _agent.run_sync(req.message)
+    duration = time.time() - start
+    # Record for hourly training
+    if hasattr(_agent, 'trainer'):
+        _agent.trainer.record_interaction(req.message, resp, duration)
     return ChatResponse(response=resp, mode=req.mode)
 
 
@@ -109,11 +115,16 @@ async def chat(req: ChatRequest):
 async def memory_search(q: str = "", limit: int = 10):
     from nikto.config.settings import MemoryConfig
     from nikto.memory.base import MemorySystem
-    mem = MemorySystem(MemoryConfig())
-    if q:
-        results = mem.search(q, limit=limit)
+    
+    if _ensure_agent():
+        mem = _agent.memory
     else:
-        results = mem.recent(limit=limit)
+        mem = MemorySystem(MemoryConfig())
+    
+    if q:
+        results = await mem.search(q, limit=limit)
+    else:
+        results = await mem.recent(limit=limit)
     return {"results": results}
 
 
@@ -121,8 +132,13 @@ async def memory_search(q: str = "", limit: int = 10):
 async def memory_store(key: str, value: str):
     from nikto.config.settings import MemoryConfig
     from nikto.memory.base import MemorySystem
-    mem = MemorySystem(MemoryConfig())
-    mem.store(key, value, {"source": "api"})
+    
+    if _ensure_agent():
+        mem = _agent.memory
+    else:
+        mem = MemorySystem(MemoryConfig())
+    
+    await mem.store(key, value, {"source": "api"})
     return {"stored": key}
 
 
@@ -184,3 +200,231 @@ async def infinite_status():
     if not _ensure_agent():
         raise HTTPException(503, "Agent not initialized")
     return {"total_processed": _agent.infinite_context.total_processed}
+
+
+# === FINANCE API ===
+
+class FinanceAccountCreate(BaseModel):
+    name: str
+    initial_deposit: float = 0.0
+
+
+class FinanceTransfer(BaseModel):
+    from_id: str
+    to_id: str
+    amount: float
+
+
+_finance = None
+
+
+def _ensure_finance():
+    global _finance
+    if _finance is None:
+        from nikto.finance import BankManager, BankruptcyPrevention
+        _finance = {
+            "manager": BankManager(),
+            "prevention": None,
+        }
+        _finance["prevention"] = BankruptcyPrevention(_finance["manager"])
+    return _finance
+
+
+@app.post("/finance/account")
+async def finance_create_account(req: FinanceAccountCreate):
+    fin = _ensure_finance()
+    acct = fin["manager"].create_account(req.name, req.initial_deposit)
+    return {"success": True, "account": acct.statement()}
+
+
+@app.get("/finance/accounts")
+async def finance_list_accounts():
+    fin = _ensure_finance()
+    return {"accounts": fin["manager"].list_accounts()}
+
+
+@app.get("/finance/account/{account_id}")
+async def finance_get_account(account_id: str):
+    fin = _ensure_finance()
+    try:
+        acct = fin["manager"].get_account(account_id)
+        return acct.statement()
+    except ValueError as e:
+        raise HTTPException(404, str(e))
+
+
+@app.post("/finance/transfer")
+async def finance_transfer(req: FinanceTransfer):
+    fin = _ensure_finance()
+    result = fin["manager"].transfer(req.from_id, req.to_id, req.amount)
+    return result
+
+
+@app.post("/finance/auto-earn/{account_id}")
+async def finance_auto_earn(account_id: str):
+    fin = _ensure_finance()
+    result = fin["prevention"].auto_earn(account_id)
+    return result
+
+
+@app.get("/finance/risk")
+async def finance_risk_check():
+    fin = _ensure_finance()
+    return {"at_risk": fin["prevention"].check_accounts()}
+
+
+@app.get("/training/stats")
+async def training_stats():
+    if not _ensure_agent():
+        raise HTTPException(503, "Agent not initialized")
+    if hasattr(_agent, 'trainer'):
+        return _agent.trainer.get_stats()
+    return {"error": "Trainer not available"}
+
+
+@app.post("/training/train")
+async def training_train_now():
+    if not _ensure_agent():
+        raise HTTPException(503, "Agent not initialized")
+    if hasattr(_agent, 'trainer') and hasattr(_agent.trainer, 'train'):
+        result = _agent.trainer.train()
+        return result
+    return {"error": "Trainer not available"}
+
+
+@app.get("/model/status")
+async def model_status():
+    from nikto.model_manager import ModelManager
+    mm = ModelManager()
+    return {
+        "hw_tier": mm.detect_hardware_tier(),
+        "installed": mm.list_installed(),
+        "recommended": mm.recommend_model(),
+    }
+
+
+@app.post("/model/download")
+async def model_download(tier: str = "tier1"):
+    from nikto.model_manager import ModelManager
+    mm = ModelManager()
+    result = mm.download_model(tier)
+    return result
+
+
+@app.get("/engine/info")
+async def engine_info():
+    if not _ensure_agent():
+        raise HTTPException(503, "Agent not initialized")
+    if hasattr(_agent, 'provider') and hasattr(_agent.provider, 'get_info'):
+        return _agent.provider.get_info()
+    return {"error": "Engine info not available"}
+
+
+# === GAME ENGINE API ===
+
+_game_engine = None
+
+
+def _ensure_game_engine():
+    global _game_engine
+    if _game_engine is None:
+        try:
+            from nikto.game_engine.core import NIKTOCoreEngine
+            _game_engine = NIKTOCoreEngine()
+        except Exception as e:
+            return None
+    return _game_engine
+
+
+@app.get("/game/status")
+async def game_status():
+    eng = _ensure_game_engine()
+    if eng is None:
+        return {"status": "not_initialized", "modules": []}
+    return {
+        "status": "ready",
+        "modules": [
+            "core", "renderer", "physics", "audio", "ai", "vfx", "animation", "visual_script",
+        ],
+        "pygame_available": True,
+    }
+
+
+@app.post("/game/build")
+async def game_build(prompt: str = "platformer"):
+    from nikto.game_engine.builder import GameBuilder
+    builder = GameBuilder()
+    result = builder.build_game(prompt)
+    return {"game": result}
+
+
+@app.get("/game/templates")
+async def game_templates():
+    from nikto.game_engine.builder import GameBuilder
+    builder = GameBuilder()
+    return {"templates": list(builder.templates.keys())}
+
+
+@app.get("/game/physics")
+async def game_physics_info():
+    return {
+        "physics_world": True,
+        "rigid_body": True,
+        "soft_body": True,
+        "joints": ["distance", "spring", "hinge"],
+        "materials": ["wood", "metal", "rubber", "glass", "ice"],
+        "destruction": True,
+        "gravity_wells": True,
+        "raycasting": True,
+        "aabb_query": True,
+        "a_star_pathfinding": True,
+        "dijkstra_pathfinding": True,
+    }
+
+
+@app.get("/game/audio")
+async def game_audio_info():
+    return {
+        "3d_audio": True,
+        "doppler_effect": True,
+        "audio_buses": ["master", "music", "sfx", "voice", "ambient"],
+        "effects": ["lowpass", "highpass", "reverb", "chorus", "delay"],
+        "synthesizer": True,
+        "waveforms": ["sine", "square", "sawtooth", "triangle", "noise"],
+    }
+
+
+@app.get("/game/ai")
+async def game_ai_info():
+    return {
+        "behavior_trees": True,
+        "state_machine": True,
+        "utility_ai": True,
+        "pathfinding": ["a_star", "dijkstra"],
+        "nav_grid": True,
+        "sensor_system": True,
+    }
+
+
+@app.get("/game/vfx")
+async def game_vfx_info():
+    return {
+        "particle_system": True,
+        "emitter_modules": True,
+        "presets": ["fire", "smoke", "explosion", "spark", "magic", "rain", "snow"],
+    }
+
+
+@app.get("/game/animation")
+async def game_animation_info():
+    return {
+        "skeleton_rigging": True,
+        "humanoid_skeleton": True,
+        "fk_ik_solver": True,
+        "animation_clips": True,
+        "blend_trees": True,
+        "state_machine": True,
+        "motion_warping": True,
+        "sprite_sheet": True,
+        "walk_cycle": True,
+    }

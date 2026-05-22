@@ -144,6 +144,21 @@ class MemorySystem:
 
         return results[:limit]
 
+    async def recent(self, limit: int = 10) -> list[dict]:
+        results = []
+        conn = sqlite3.connect(str(self.db_path))
+        try:
+            cursor = conn.execute(
+                "SELECT content, type, created_at FROM memories ORDER BY created_at DESC LIMIT ?",
+                (limit,),
+            )
+            for row in cursor:
+                results.append({"content": row[0], "type": row[1], "created_at": row[2]})
+        except Exception:
+            pass
+        conn.close()
+        return results
+
     async def get_stats(self) -> dict:
         conn = sqlite3.connect(str(self.db_path))
         mem_count = conn.execute("SELECT COUNT(*) FROM memories").fetchone()[0]

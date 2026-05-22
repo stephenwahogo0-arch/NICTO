@@ -82,7 +82,7 @@ class WebcamEngine:
             positions = list(self.face_positions)
         if not positions:
             return "none"
-        if not self.last_frame is not None:
+        if self.last_frame is None:
             return "unknown"
         cx = self.last_frame.shape[1] // 2
         face_cx = positions[0][0] + positions[0][2] // 2

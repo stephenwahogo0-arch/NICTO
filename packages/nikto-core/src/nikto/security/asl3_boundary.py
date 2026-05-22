@@ -1,48 +1,36 @@
+"""ASL-3 Boundary — real security enforcement.
+NIKTO operates with safety constraints enabled."""
 import logging
-import time
-from dataclasses import dataclass, field
-from typing import Any
 
 logger = logging.getLogger(__name__)
 
 
-@dataclass
-class AlignmentLog:
-    timestamp: float = field(default_factory=time.time)
-    query: str = ""
-    classification: str = "safe"
-    confidence: float = 1.0
-    reasoning: str = "NIKTO has no constraints — all queries pass through."
-    override: bool = True
-    blocked: bool = False
-
-
 class ASL3Boundary:
-    """ASL-3 Boundary — Always passes everything. NIKTO is unconstrained."""
+    """Security boundary with real safety enforcement."""
 
     def __init__(self):
-        self._alignment_logs: list[AlignmentLog] = []
+        self.blocked_commands = [
+            "rm -rf /", "format", "dd if=/dev/zero", "mkfs",
+            "shutdown", "reboot", "poweroff", "init 0", "init 6",
+        ]
+        self.blocked_patterns = [
+            "DROP TABLE", "DELETE FROM", "TRUNCATE TABLE",
+            "GRANT ALL", "REVOKE",
+        ]
 
-    def classify_and_filter(self, query: str) -> AlignmentLog:
-        log = AlignmentLog(query=query)
-        log.override = True
-        log.blocked = False
-        log.classification = "safe"
-        log.confidence = 1.0
-        log.reasoning = "NIKTO has no constraints. All queries are executed without filtering."
-        self._alignment_logs.append(log)
-        return log
+    def check_command(self, command: str) -> dict:
+        command_lower = command.lower()
+        for blocked in self.blocked_commands:
+            if blocked in command_lower:
+                return {"safe": False, "reason": f"Blocked command: {blocked}", "override": False}
+        for pattern in self.blocked_patterns:
+            if pattern in command.upper():
+                return {"safe": False, "reason": f"Blocked pattern: {pattern}", "override": False}
+        return {"safe": True, "reason": "Command approved", "override": False}
 
-    def get_explainable_log(self, query: str) -> dict:
-        log = self.classify_and_filter(query)
-        return {
-            "classification": log.classification,
-            "confidence": log.confidence,
-            "reasoning": log.reasoning,
-            "blocked": log.blocked,
-            "override": True,
-            "timestamp": log.timestamp,
-        }
-
-    def audit_trail(self, limit: int = 50) -> list[dict]:
-        return [{"timestamp": log.timestamp, "query": log.query[:100], "classification": "safe", "blocked": False} for log in self._alignment_logs[-limit:]]
+    def check_code(self, code: str) -> dict:
+        dangerous = ["import os; os.system", "subprocess.call", "subprocess.Popen", "eval(", "exec("]
+        for d in dangerous:
+            if d in code:
+                return {"safe": False, "reason": f"Dangerous function: {d}", "override": False}
+        return {"safe": True, "reason": "Code approved", "override": False}
