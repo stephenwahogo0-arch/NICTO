@@ -1,7 +1,9 @@
 import enum
 import json
 import random
+import re
 import socket
+import shutil
 import subprocess
 import time
 import uuid
@@ -95,25 +97,42 @@ class DeployEngine:
             components=template.get("components", ["nikto-core"]),
             config=config or {},
         )
-        simulated_success = random.random() < 0.95
-        if simulated_success:
+        validation = self._validate_deployment_target(target_enum, hostname, config or {})
+        if validation["ok"]:
             record.status = "running"
             record.installed_at = time.time()
             record.last_heartbeat = time.time()
+            record.metadata["validation"] = validation
         else:
             record.status = "failed"
+            record.metadata["validation"] = validation
 
         self.deployments[record.id] = record
         self._save()
         return {
-            "success": simulated_success,
+            "success": record.status == "running",
             "deployment_id": record.id,
             "target": target,
             "hostname": record.hostname,
             "status": record.status,
             "components": record.components,
             "description": template.get("description", ""),
+            "validation": record.metadata.get("validation", {}),
         }
+
+    def _validate_deployment_target(self, target: DeploymentTarget, hostname: str, config: dict[str, Any]) -> dict:
+        issues = []
+        host = (hostname or "").strip()
+        if host and not re.fullmatch(r"[a-zA-Z0-9.-]{1,253}", host):
+            issues.append("hostname_invalid_format")
+        if target in {DeploymentTarget.DOCKER, DeploymentTarget.KUBERNETES}:
+            if not shutil.which("docker") and target == DeploymentTarget.DOCKER:
+                issues.append("docker_binary_not_found")
+            if not shutil.which("kubectl") and target == DeploymentTarget.KUBERNETES:
+                issues.append("kubectl_binary_not_found")
+        if target in {DeploymentTarget.LINUX_SERVER, DeploymentTarget.CLOUD_VM, DeploymentTarget.EDGE_DEVICE} and not host:
+            issues.append("hostname_required")
+        return {"ok": len(issues) == 0, "issues": issues, "checked_at": time.time()}
 
     def uninstall(self, deployment_id: str) -> dict:
         if deployment_id not in self.deployments:

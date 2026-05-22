@@ -90,9 +90,14 @@ class BankruptcyPrevention:
                 })
         return at_risk
 
-    def auto_earn(self, account_id: str) -> dict:
-        """Generate small income via simulated gig/freelance earnings."""
+    def auto_earn(self, account_id: str, jobs_completed: int = 1, avg_job_value: float = 12.5) -> dict:
+        """Record earnings based on completed jobs instead of random simulation."""
         if account_id not in self.bank.accounts:
             return {"success": False, "error": "Account not found"}
-        earning = round(random.uniform(5.0, 50.0), 2)
-        return self.bank.accounts[account_id].deposit(earning, "auto_earn")
+        jobs = max(0, int(jobs_completed))
+        value = max(0.0, float(avg_job_value))
+        if jobs == 0 or value == 0:
+            return {"success": False, "error": "No completed jobs to settle"}
+        reliability_bonus = min(0.2, jobs / 100)
+        earning = round(jobs * value * (1.0 + reliability_bonus), 2)
+        return self.bank.accounts[account_id].deposit(earning, "auto_earn_settlement")
