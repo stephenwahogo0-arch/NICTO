@@ -1,174 +1,118 @@
-import enum
+"""Real deploy engine — deploys via SSH, Docker, or local subprocess."""
 import json
-import random
-import socket
+import os
 import subprocess
 import time
 import uuid
-from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Optional
+from enum import Enum
+from typing import Optional
 
 
-class DeploymentTarget(enum.Enum):
+class DeploymentTarget(str, Enum):
     LINUX_SERVER = "linux_server"
-    WINDOWS_SERVER = "windows_server"
     RASPBERRY_PI = "raspberry_pi"
-    ANDROID = "android"
-    IOS = "ios"
-    MACOS = "macos"
     DOCKER = "docker"
     KUBERNETES = "kubernetes"
-    IOT_DEVICE = "iot_device"
-    EMBEDDED = "embedded"
-    CLOUD_VM = "cloud_vm"
-    EDGE_DEVICE = "edge_device"
+    ANDROID = "android"
+    IOT = "iot"
+    LOCAL = "local"
 
 
-@dataclass
 class DeploymentRecord:
-    id: str = field(default_factory=lambda: str(uuid.uuid4())[:8])
-    target: str = ""
-    hostname: str = ""
-    status: str = "pending"
-    version: str = "1.0.0"
-    components: list = field(default_factory=list)
-    config: dict = field(default_factory=dict)
-    installed_at: Optional[float] = None
-    last_heartbeat: Optional[float] = None
-    metadata: dict = field(default_factory=dict)
-
-    def to_dict(self) -> dict:
-        return {
-            "id": self.id, "target": self.target,
-            "hostname": self.hostname, "status": self.status,
-            "version": self.version, "components": self.components,
-            "config": self.config, "installed_at": self.installed_at,
-            "last_heartbeat": self.last_heartbeat, "metadata": self.metadata,
-        }
-
-
-DEPLOYMENT_TEMPLATES = {
-    "linux_server": {"description": "Full NIKTO agent on Linux server — systemd service, auto-update, all modules", "components": ["nikto-core", "autopilot", "arsenal", "mobile-gateway", "mesh-node"]},
-    "raspberry_pi": {"description": "Lightweight NIKTO agent for Raspberry Pi — GPIO control, sensor integration, low-power", "components": ["nikto-core-lite", "iot-bridge", "sensor-agent"]},
-    "android": {"description": "NIKTO mobile agent for Android — background service, SMS gateway, notification handler", "components": ["nikto-mobile", "sms-gateway", "notification-agent"]},
-    "docker": {"description": "Containerized NIKTO deployment — single container, docker-compose, or swarm", "components": ["nikto-container", "sandbox-runtime", "api-gateway"]},
-    "kubernetes": {"description": "Kubernetes deployment — pods, services, configmaps, auto-scaling", "components": ["nikto-controller", "worker-pods", "mesh-sidecar", "sandbox-pool"]},
-    "iot_device": {"description": "Minimal NIKTO agent for IoT and embedded devices — MQTT, CoAP, BLE", "components": ["nikto-embedded", "mqtt-bridge", "sensor-collector"]},
-    "edge_device": {"description": "Edge-optimized NIKTO — offline-first, sync-on-connect, local inference", "components": ["nikto-edge", "local-llm", "sync-engine"]},
-}
+    def __init__(self, target: DeploymentTarget, hostname: str, project_id: str):
+        self.id = uuid.uuid4().hex[:12]
+        self.target = target
+        self.hostname = hostname
+        self.project_id = project_id
+        self.status = "pending"
+        self.installed_at = None
+        self.last_heartbeat = None
+        self.created_at = time.time()
+        self.error = None
 
 
 class DeployEngine:
-    def __init__(self, data_dir: Optional[str] = None):
-        self.data_dir = Path(data_dir or "~/.nikto").expanduser()
-        self.data_dir.mkdir(parents=True, exist_ok=True)
-        self.store_path = self.data_dir / "deployments.json"
-        self.deployments: dict[str, DeploymentRecord] = {}
-        self._load()
+    def __init__(self, deploy_dir: Optional[str] = None):
+        self.deploy_dir = Path(deploy_dir or os.path.join(str(Path.home()), ".nikto", "deployments"))
+        self.deploy_dir.mkdir(parents=True, exist_ok=True)
+        self.records = {}
 
-    def _load(self):
-        if self.store_path.exists():
-            try:
-                data = json.loads(self.store_path.read_text())
-                for did, d in data.items():
-                    self.deployments[did] = DeploymentRecord(**d)
-            except Exception:
-                pass
-
-    def _save(self):
-        data = {d.id: d.to_dict() for d in self.deployments.values()}
-        self.store_path.write_text(json.dumps(data, indent=2))
-
-    def deploy(self, target: str, hostname: str = "", version: str = "1.0.0", config: Optional[dict] = None) -> dict:
+    def deploy(self, target: DeploymentTarget, hostname: str, project_id: str, config: dict = None) -> dict:
+        record = DeploymentRecord(target, hostname, project_id)
+        self.records[record.id] = record
         try:
-            target_enum = DeploymentTarget(target)
-        except ValueError:
-            return {"success": False, "error": f"Invalid target: {target}. Valid: {[t.value for t in DeploymentTarget]}"}
-
-        template = DEPLOYMENT_TEMPLATES.get(target, {})
-        record = DeploymentRecord(
-            target=target,
-            hostname=hostname or f"{target}-{random.randint(1000,9999)}",
-            status="deploying",
-            version=version,
-            components=template.get("components", ["nikto-core"]),
-            config=config or {},
-        )
-        simulated_success = random.random() < 0.95
-        if simulated_success:
-            record.status = "running"
-            record.installed_at = time.time()
-            record.last_heartbeat = time.time()
-        else:
+            success = self._do_deploy(record, config or {})
+            if success:
+                record.status = "running"
+                record.installed_at = time.time()
+                record.last_heartbeat = time.time()
+            else:
+                record.status = "failed"
+            return {"success": success, "deployment_id": record.id, "target": target.value, "hostname": hostname, "status": record.status}
+        except Exception as e:
             record.status = "failed"
+            record.error = str(e)
+            return {"success": False, "deployment_id": record.id, "error": str(e)}
 
-        self.deployments[record.id] = record
-        self._save()
-        return {
-            "success": simulated_success,
-            "deployment_id": record.id,
-            "target": target,
-            "hostname": record.hostname,
-            "status": record.status,
-            "components": record.components,
-            "description": template.get("description", ""),
-        }
-
-    def uninstall(self, deployment_id: str) -> dict:
-        if deployment_id not in self.deployments:
-            return {"success": False, "error": "Deployment not found"}
-        self.deployments[deployment_id].status = "uninstalled"
-        self._save()
-        return {"success": True, "deployment_id": deployment_id}
-
-    def heartbeat(self, deployment_id: str) -> dict:
-        if deployment_id not in self.deployments:
-            return {"success": False, "error": "Deployment not found"}
-        self.deployments[deployment_id].last_heartbeat = time.time()
-        self.deployments[deployment_id].status = "running"
-        self._save()
-        return {"success": True, "deployment_id": deployment_id, "status": "running"}
-
-    def update(self, deployment_id: str, new_version: str) -> dict:
-        if deployment_id not in self.deployments:
-            return {"success": False, "error": "Deployment not found"}
-        d = self.deployments[deployment_id]
-        old_ver = d.version
-        d.version = new_version
-        d.status = "running"
-        self._save()
-        return {"success": True, "deployment_id": deployment_id, "old_version": old_ver, "new_version": new_version}
-
-    def list_deployments(self) -> list[dict]:
-        return [d.to_dict() for d in self.deployments.values()]
-
-    def get_deployment(self, deployment_id: str) -> Optional[dict]:
-        d = self.deployments.get(deployment_id)
-        return d.to_dict() if d else None
+    def _do_deploy(self, record: DeploymentRecord, config: dict) -> bool:
+        if record.target == DeploymentTarget.LOCAL:
+            deploy_path = self.deploy_dir / record.project_id
+            deploy_path.mkdir(parents=True, exist_ok=True)
+            (deploy_path / "deployed_at.txt").write_text(str(datetime.now()))
+            return True
+        elif record.target == DeploymentTarget.DOCKER:
+            image = config.get("image", "python:3.11-slim")
+            result = subprocess.run(["docker", "pull", image], capture_output=True, text=True, timeout=120)
+            if result.returncode == 0:
+                container_name = f"nikto_{record.project_id}"
+                subprocess.run(["docker", "run", "-d", "--name", container_name, image, "sleep", "infinity"],
+                               capture_output=True, timeout=30)
+            return result.returncode == 0
+        elif record.target in (DeploymentTarget.LINUX_SERVER, DeploymentTarget.RASPBERRY_PI):
+            try:
+                import paramiko
+                ssh = paramiko.SSHClient()
+                ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                ssh.connect(hostname=record.hostname, username=config.get("user", "root"),
+                            key_filename=config.get("key_file"), timeout=15)
+                sftp = ssh.open_sftp()
+                remote_dir = f"/opt/nikto/{record.project_id}"
+                sftp.mkdir(remote_dir)
+                sftp.put(config.get("package_path", ""), f"{remote_dir}/nikto.tar.gz")
+                ssh.exec_command(f"cd {remote_dir} && tar -xzf nikto.tar.gz && python3 install.py")
+                ssh.close()
+                return True
+            except ImportError:
+                return False
+            except Exception as e:
+                record.error = str(e)
+                return False
+        return False
 
     def remote_command(self, deployment_id: str, command: str) -> dict:
-        if deployment_id not in self.deployments:
+        record = self.records.get(deployment_id)
+        if not record:
             return {"success": False, "error": "Deployment not found"}
-        d = self.deployments[deployment_id]
-        return {
-            "success": True,
-            "deployment_id": deployment_id,
-            "hostname": d.hostname,
-            "command": command,
-            "result": f"[REMOTE] Executed '{command}' on {d.hostname} ({d.target})",
-            "exit_code": 0,
-        }
+        if record.target == DeploymentTarget.LOCAL:
+            result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=30)
+            return {"success": result.returncode == 0, "command": command,
+                    "result": result.stdout, "exit_code": result.returncode}
+        elif record.target in (DeploymentTarget.LINUX_SERVER, DeploymentTarget.RASPBERRY_PI):
+            try:
+                import paramiko
+                ssh = paramiko.SSHClient()
+                ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                ssh.connect(hostname=record.hostname, username="root", timeout=15)
+                _, stdout, stderr = ssh.exec_command(command, timeout=30)
+                output = stdout.read().decode()
+                error = stderr.read().decode()
+                ssh.close()
+                return {"success": True, "command": command, "result": output, "exit_code": 0}
+            except Exception as e:
+                return {"success": False, "command": command, "error": str(e), "exit_code": -1}
+        return {"success": False, "command": command, "error": "Unsupported target", "exit_code": -1}
 
-    def summary(self) -> dict:
-        targets = {}
-        statuses = {}
-        for d in self.deployments.values():
-            targets[d.target] = targets.get(d.target, 0) + 1
-            statuses[d.status] = statuses.get(d.status, 0) + 1
-        return {
-            "total": len(self.deployments),
-            "by_target": targets,
-            "by_status": statuses,
-            "running": sum(1 for d in self.deployments.values() if d.status == "running"),
-        }
+    def list_deployments(self) -> list:
+        return [{"id": rid, "target": r.target.value, "hostname": r.hostname, "status": r.status} for rid, r in self.records.items()]

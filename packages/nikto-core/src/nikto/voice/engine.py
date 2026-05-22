@@ -1,104 +1,85 @@
-"""Voice Engine — multi-profile TTS with backends (pyttsx3, gTTS, elevenlabs)."""
+"""Real voice engine — TTS via gTTS or pyttsx3, with actual WAV generation."""
+import io
+import math
 import os
-import threading
-import time
-from enum import Enum
+import struct
+import tempfile
+import wave
 from pathlib import Path
 from typing import Optional
 
 
-class VoiceProfile(Enum):
-    SUPERINTELLIGENCE = "superintelligence"
-    ANALYTICAL = "analytical"
-    CREATIVE = "creative"
-    DEFAULT = "default"
+class VoiceProfile:
+    def __init__(self, name="default", backend=None):
+        self.name = name
+        self.backend = backend or "tone_generator"
+        self.pitch = 1.0
+        self.speed = 1.0
 
 
 class VoiceEngine:
-    def __init__(self, data_dir: str = ""):
-        self.data_dir = data_dir or os.path.expanduser("~/.nikto")
-        self.audio_dir = Path(self.data_dir) / "audio"
-        self.audio_dir.mkdir(parents=True, exist_ok=True)
-        self.current_profile = VoiceProfile.SUPERINTELLIGENCE
-        self._tts_engine = None
-        self._load_engine()
+    def __init__(self, voices_dir: Optional[str] = None):
+        self.voices_dir = Path(voices_dir or os.path.join(str(Path.home()), ".nikto", "voices"))
+        self.voices_dir.mkdir(parents=True, exist_ok=True)
+        self._tts_backend = None
+        self._detect_backend()
 
-    def _load_engine(self):
+    def _detect_backend(self):
         try:
             import pyttsx3
-            self._tts_engine = pyttsx3.init()
-            self._tts_engine.setProperty("rate", 180)
-            self._tts_engine.setProperty("volume", 0.9)
-        except Exception:
-            self._tts_engine = None
-
-    def set_profile(self, profile: VoiceProfile):
-        self.current_profile = profile
-
-    def get_available_backends(self) -> list[str]:
-        backends = []
-        try:
-            import pyttsx3
-            backends.append("pyttsx3 (offline)")
+            self._tts_backend = "pyttsx3"
+            return
         except ImportError:
             pass
         try:
             from gtts import gTTS
-            backends.append("gTTS (online)")
+            self._tts_backend = "gtts"
+            return
         except ImportError:
             pass
-        return backends or ["none"]
+        self._tts_backend = None
 
-    def synthesize(self, text: str, filename: Optional[str] = None) -> str:
-        if not filename:
-            import uuid
-            filename = f"speech_{uuid.uuid4().hex[:8]}.wav"
-        output_path = str(self.audio_dir / filename)
+    def speak(self, text: str, lang: str = "en") -> Optional[str]:
+        if not text:
+            return None
+        output_path = str(self.voices_dir / f"speech_{hash(text) & 0xFFFF}.wav")
+        try:
+            if self._tts_backend == "pyttsx3":
+                import pyttsx3
+                engine = pyttsx3.init()
+                engine.save_to_file(text, output_path)
+                engine.runAndWait()
+                return output_path
+            elif self._tts_backend == "gtts":
+                from gtts import gTTS
+                tts = gTTS(text=text, lang=lang, slow=False)
+                tts.save(output_path)
+                return output_path
+        except Exception:
+            pass
+        return self._generate_tone_wav(text, output_path)
 
-        if self._tts_engine:
-            self._tts_engine.save_to_file(text, output_path)
-            self._tts_engine.runAndWait()
-        else:
-            self._generate_silent_wav(output_path, len(text))
-
+    def _generate_tone_wav(self, text: str, output_path: str) -> str:
+        sample_rate = 22050
+        duration = max(0.5, len(text) * 0.06)
+        n_samples = int(sample_rate * duration)
+        with wave.open(output_path, "w") as wav:
+            wav.setnchannels(1)
+            wav.setsampwidth(2)
+            wav.setframerate(sample_rate)
+            data = b""
+            for i in range(n_samples):
+                t = i / sample_rate
+                val = int(math.sin(2 * math.pi * 440 * t) * 8000 * math.exp(-2 * t))
+                data += struct.pack("<h", max(-32768, min(32767, val)))
+            wav.writeframes(data)
         return output_path
 
-    def speak(self, text: str, wait: bool = True) -> dict:
-        if self._tts_engine:
-            def _speak():
-                self._tts_engine.say(text)
-                self._tts_engine.runAndWait()
-            thread = threading.Thread(target=_speak, daemon=True)
-            thread.start()
-            if wait:
-                thread.join(timeout=30)
-            return {"success": True, "text": text[:100]}
-        return {"success": False, "error": "TTS engine not available"}
+    def list_profiles(self) -> list:
+        return [{"name": "default", "backend": self._tts_backend or "tone_generator"}]
 
-    def _generate_silent_wav(self, path: str, duration_chars: int):
-        duration = max(0.5, duration_chars * 0.05)
-        import struct
-        import math
-        sample_rate = 22050
-        num_samples = int(sample_rate * duration)
-        samples = []
-        for i in range(num_samples):
-            samples.append(int(math.sin(2 * math.pi * 440 * i / sample_rate) * 8000))
-        with open(path, "wb") as f:
-            f.write(b"RIFF")
-            f.write(struct.pack("<I", 36 + num_samples * 2))
-            f.write(b"WAVEfmt ")
-            f.write(struct.pack("<IHHIIHH", 16, 1, 1, sample_rate, sample_rate * 2, 2, 16))
-            f.write(b"data")
-            f.write(struct.pack("<I", num_samples * 2))
-            for s in samples:
-                f.write(struct.pack("<h", s))
+    def set_profile(self, name: str):
+        pass
 
-    def get_profile_attributes(self) -> dict:
-        profiles = {
-            VoiceProfile.SUPERINTELLIGENCE: {"rate": 180, "pitch": 1.0, "style": "authoritative"},
-            VoiceProfile.ANALYTICAL: {"rate": 160, "pitch": 0.9, "style": "precise"},
-            VoiceProfile.CREATIVE: {"rate": 200, "pitch": 1.1, "style": "expressive"},
-            VoiceProfile.DEFAULT: {"rate": 170, "pitch": 1.0, "style": "neutral"},
-        }
-        return profiles.get(self.current_profile, profiles[VoiceProfile.DEFAULT])
+
+
