@@ -45,7 +45,7 @@ class SIEMAnalyst:
                                 for i, line in enumerate(lines) if line.strip()
                             ])
                             total_lines += len(lines)
-                        except: pass
+                        except Exception: pass
 
         return {
             "source": source_name,

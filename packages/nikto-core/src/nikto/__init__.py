@@ -57,14 +57,8 @@ from nikto.synthetic.engine import SyntheticEngine
 from nikto.consciousness.expansions.engine import ConsciousnessExpansion
 from nikto.reasoning.engine import ReasoningEngine
 from nikto.brain.engine import BrainEngine
-from nikto.brain.multi import HyperBrain, SpecializedBrain, BRAIN_SPECS
-from nikto.brain.training import BrainTrainer
-from nikto.brain.optimize import BrainOptimizer
 from nikto.resilience.engine import ResilienceEngine
 from nikto.diagnostics.engine import DiagnosticsEngine
-from nikto.self_repair.engine import CodeHealer
-from nikto.code_gen.engine import CodeGenerator
-from nikto.improve.engine import ContinuousImprovement, ImprovementCycle
 from nikto.avatar.engine import AvatarEngine
 from nikto.avatar.renderer import AvatarRenderer
 from nikto.avatar.desktop import DesktopController as AvatarDesktopController
@@ -91,6 +85,9 @@ from nikto.evolution.masterclass import MasterclassTrainer
 
 # Infinite Context — Million-Word Processing
 from nikto.infinite_context import InfiniteContextEngine
+
+# Model Manager — Multi-tier GGUF download & management
+from nikto.model_manager import ModelManager, MODEL_REGISTRY
 
 # Hotkeys — Global Keyboard Shortcuts
 from nikto.avatar.hotkeys import HotkeyManager
@@ -153,15 +150,8 @@ __all__ = [
     "ConsciousnessExpansion",
     "ReasoningEngine",
     "BrainEngine",
-    "HyperBrain", "SpecializedBrain", "BRAIN_SPECS",
-    "BrainTrainer",
-    "BrainOptimizer",
     "ResilienceEngine",
     "DiagnosticsEngine",
-    "CodeHealer",
-    "CodeGenerator",
-    "ContinuousImprovement",
-    "ImprovementCycle",
     "AvatarEngine",
     "AvatarRenderer",
     "AvatarDesktopController",
