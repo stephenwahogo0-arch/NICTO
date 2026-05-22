@@ -1,6 +1,6 @@
 import asyncio, json, time, uuid
 from enum import Enum
-from typing import Any, AsyncGenerator, Callable, Optional
+from typing import Any, AsyncGenerator, Callable, Optional, List
 
 from pydantic import BaseModel, Field
 
@@ -48,6 +48,10 @@ class AgentConfig(BaseModel):
     system_prompt: Optional[str] = None
     stream: bool = True
     thinking: bool = False
+    # Swarming configuration
+    enable_swarming: bool = False
+    max_swarm_depth: int = 2
+    swarm_size: int = 2
 
 
 class Agent:
@@ -126,6 +130,14 @@ class Agent:
     async def run(
         self, task: str, stream: Optional[bool] = None
     ) -> AsyncGenerator[dict, None]:
+        # Check if swarming is enabled and task is complex enough to warrant swarming
+        if (self.agent_config.enable_swarming and 
+            self._should_swarm(task) and 
+            self.turn_count < self.agent_config.max_swarm_depth):
+            async for result in self._run_swarm(task, stream):
+                yield result
+            return
+            
         self._running = True
         self.state = AgentState.THINKING
         self.turn_count = 0
@@ -220,6 +232,125 @@ class Agent:
         self._running = False
         if self.turn_count >= self.agent_config.max_turns:
             yield {"type": "limit_reached", "message": "Max turns reached"}
+
+    def _should_swarm(self, task: str) -> bool:
+        """Determine if a task is complex enough to warrant swarming."""
+        # Simple heuristic: longer tasks or tasks with multiple sentences are more complex
+        word_count = len(task.split())
+        sentence_count = len([s for s in task.split('.') if s.strip()])
+        
+        # Swarm if task is longer than 20 words or has multiple sentences
+        return word_count > 20 or sentence_count > 2
+
+    async def _run_swarm(self, task: str, stream: Optional[bool] = None) -> AsyncGenerator[dict, None]:
+        """Run a task using a swarm of sub-agents."""
+        yield {
+            "type": "swarm_start",
+            "content": f"Starting swarm with {self.agent_config.swarm_size} agents for complex task..."
+        }
+        
+        # Decompose the task into subtasks
+        subtasks = self._decompose_task(task, self.agent_config.swarm_size)
+        
+        # Create sub-agents
+        sub_agents = []
+        for i, subtask in enumerate(subtasks):
+            sub_agent_config = AgentConfig(
+                enable_swarming=self.agent_config.enable_swarming,
+                max_swarm_depth=max(0, self.agent_config.max_swarm_depth - 1),
+                swarm_size=self.agent_config.swarm_size,
+                stream=self.agent_config.stream,
+                thinking=self.agent_config.thinking
+            )
+            
+            sub_agent = Agent(
+                config=self.config,
+                agent_config=sub_agent_config,
+                tool_registry=self.tool_registry,
+                memory=self.memory,
+                skill_runtime=self.skill_runtime,
+                variant=self.variant
+            )
+            sub_agents.append((sub_agent, subtask))
+        
+        # Run all sub-agents concurrently and collect results
+        results = []
+        for i, (sub_agent, subtask) in enumerate(sub_agents):
+            async for chunk in sub_agent.run(subtask, stream):
+                # Relay chunks from sub-agents with metadata
+                yield {
+                    "type": "swarm_chunk",
+                    "agent_index": i,
+                    "subtask": subtask[:100] + "..." if len(subtask) > 100 else subtask,
+                    "chunk": chunk
+                }
+                
+                if chunk.get("type") == "done":
+                    results.append({
+                        "agent_index": i,
+                        "subtask": subtask,
+                        "result": chunk.get("content", "")
+                    })
+        
+        # Synthesize results from all sub-agents
+        yield {
+            "type": "swarm_synthesizing",
+            "content": f"Synthesizing results from {len(results)} sub-agents..."
+        }
+        
+        # Simple synthesis: concatenate results
+        synthesized_result = self._synthesize_results(results, task)
+        
+        yield {
+            "type": "swarm_complete",
+            "content": synthesized_result
+        }
+
+    def _decompose_task(self, task: str, num_agents: int) -> List[str]:
+        """Decompose a complex task into subtasks for swarming."""
+        # Simple decomposition: split by sentences or create equal parts
+        sentences = [s.strip() for s in task.split('.') if s.strip()]
+        
+        if len(sentences) >= num_agents:
+            # Distribute sentences among agents
+            subtasks = []
+            sentences_per_agent = max(1, len(sentences) // num_agents)
+            
+            for i in range(num_agents):
+                start_idx = i * sentences_per_agent
+                end_idx = start_idx + sentences_per_agent if i < num_agents - 1 else len(sentences)
+                subtask = '. '.join(sentences[start_idx:end_idx]) + ('.' if end_idx < len(sentences) else '')
+                subtasks.append(subtask)
+                
+            return subtasks
+        else:
+            # Fallback: create similar tasks with different focuses
+            base_task = task.strip()
+            subtasks = []
+            for i in range(num_agents):
+                subtasks.append(f"{base_task} (focus area {i+1} of {num_agents})")
+            return subtasks
+
+    def _synthesize_results(self, results: List[dict], original_task: str) -> str:
+        """Synthesize results from multiple sub-agents into a coherent response."""
+        if not results:
+            return "No results generated from swarm."
+        
+        if len(results) == 1:
+            return results[0]["result"]
+        
+        # Simple synthesis: combine results with clear attribution
+        synthesis = f"Swarm Results for: {original_task}\n\n"
+        
+        for result in results:
+            synthesis += f"Sub-agent {result['agent_index'] + 1}:\n"
+            synthesis += f"Task: {result['subtask']}\n"
+            synthesis += f"Result: {result['result']}\n\n"
+        
+        synthesis += "\n--- Synthesis Complete ---\n"
+        synthesis += "All sub-agents have completed their tasks. Results above show individual contributions."
+        
+        return synthesis
 
     async def run_sync(self, task: str) -> str:
         result = ""
