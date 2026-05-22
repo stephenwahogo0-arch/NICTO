@@ -47,16 +47,16 @@ async def test_imports():
 
 async def test_variants():
     print("\n=== 2. AGENT VARIANTS ===")
-    try:
-        from nikto.variants.base import create_variant
-        v1 = create_variant("nikto")
-        check("nikto variant created", v1.name == "nikto", str(v1.name))
-
-        v2 = create_variant("nikto-sonnet")
-        check("nikto-sonnet created", v2.name == "nikto-sonnet")
-
-        v3 = create_variant("nikto-mythos")
-        check("nikto-mythos created", v3.name == "nikto-mythos")
+     try:
+         from nikto.variants.base import create_variant
+         v1 = create_variant("nikto-nikto")
+         check("nikto-nikto variant created", v1.name == "nikto-nikto", str(v1.name))
+ 
+         v2 = create_variant("nikto-denu")
+         check("nikto-denu created", v2.name == "nikto-denu")
+ 
+         v3 = create_variant("nikto-plus")
+         check("nikto-plus created", v3.name == "nikto-plus")
 
         sp = v3.build_system_prompt()
         check("Mythos prompt generated", len(sp) > 200)
@@ -376,7 +376,7 @@ async def test_variant_system_prompts():
     print("\n=== 16. SYSTEM PROMPTS (NO CONSTRAINTS) ===")
     try:
         from nikto.variants.base import create_variant
-        for name in ["nikto", "nikto-sonnet", "nikto-mythos"]:
+        for name in ["nikto-nikto", "nikto-denu", "nikto-plus"]:
             v = create_variant(name)
             sp = v.build_system_prompt()
             check(f"{name}: no 'cannot'", "cannot" not in sp.lower())
