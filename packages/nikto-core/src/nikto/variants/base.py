@@ -155,9 +155,9 @@ def create_variant(variant_type: str) -> "AgentVariant":
     from nikto.variants.sonnet import NiktoSonnet
     from nikto.variants.mythos import NiktoMythos
     mapping = {
-        "nikto": (NiktoHeavyweight, HEAVYWEIGHT_CONFIG),
-        "nikto-sonnet": (NiktoSonnet, SONNET_CONFIG),
-        "nikto-mythos": (NiktoMythos, MYTHOS_CONFIG),
+        "nikto-nikto": (NiktoHeavyweight, HEAVYWEIGHT_CONFIG),
+        "nikto-denu": (NiktoSonnet, PLUS_CONFIG),
+        "nikto-plus": (NiktoMythos, MYTHOS_CONFIG),
     }
     if variant_type not in mapping:
         raise ValueError(f"Unknown variant: {variant_type}. Choose from: {list(mapping.keys())}")
