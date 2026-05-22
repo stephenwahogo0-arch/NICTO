@@ -76,7 +76,7 @@ try:
     font_med = ImageFont.truetype("arialbd.ttf", 16)
     font_small = ImageFont.truetype("arial.ttf", 13)
     font_tiny = ImageFont.truetype("arial.ttf", 11)
-except:
+except Exception:
     font_large = ImageFont.load_default()
     font_med = font_small = font_tiny = font_large
 

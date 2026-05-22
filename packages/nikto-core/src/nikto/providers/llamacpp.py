@@ -65,7 +65,7 @@ class LLaMACPPProvider:
         try:
             total = os.cpu_count() or 4
             return max(1, total - 2)
-        except:
+        except Exception:
             return 2
 
     def _compute_gpu_layers(self) -> int:
@@ -80,7 +80,7 @@ class LLaMACPPProvider:
             )
             if result.returncode == 0:
                 return 999  # Offload all layers
-        except:
+        except Exception:
             pass
         # Check for Apple Metal
         if platform.system() == "Darwin":
@@ -134,7 +134,7 @@ class LLaMACPPProvider:
         try:
             r = httpx.get("http://127.0.0.1:11434/api/tags", timeout=2)
             return r.status_code == 200
-        except:
+        except Exception:
             pass
         return False
 
@@ -263,7 +263,7 @@ class LLaMACPPProvider:
             if self._model is not None:
                 try:
                     self._model.close()
-                except:
+                except Exception:
                     pass
                 self._model = None
 
@@ -307,7 +307,7 @@ def check_hardware_capability() -> dict:
         else:
             import psutil
             info["ram_gb"] = psutil.virtual_memory().total // (1024**3)
-    except:
+    except Exception:
         info["ram_gb"] = 2  # Conservative default
     
     # Detect GPU
@@ -319,7 +319,7 @@ def check_hardware_capability() -> dict:
         if result.returncode == 0 and result.stdout.strip():
             info["gpu_available"] = True
             info["gpu_name"] = result.stdout.strip()
-    except:
+    except Exception:
         pass
     
     # Recommend tier

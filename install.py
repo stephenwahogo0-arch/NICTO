@@ -32,7 +32,7 @@ def main():
         print(f"  RAM: {hw['ram_gb']} GB")
         print(f"  GPU: {hw.get('gpu_name', 'None')}")
         print(f"  Recommended Tier: {hw['recommended_tier']}")
-    except:
+    except Exception:
         hw = {"ram_gb": 2, "recommended_tier": "tier1", "cpu_cores": 4}
         print(f"  RAM: (detection failed, assuming 2GB)")
         print(f"  Recommended Tier: tier1")
@@ -49,7 +49,7 @@ def main():
     # Try to install llama-cpp-python (the real LLM engine)
     try:
         run("pip install llama-cpp-python --quiet", "llama.cpp engine (CPU)")
-    except:
+    except Exception:
         print("  llama-cpp-python install skipped (optional)")
 
     # Check if Ollama is installed
@@ -57,7 +57,7 @@ def main():
         subprocess.run(["ollama", "--version"], capture_output=True, timeout=5)
         print("  Ollama: OK (already installed)")
         has_ollama = True
-    except:
+    except Exception:
         print("  Ollama: NOT FOUND")
         print("    Recommended: https://ollama.com (free, local LLMs)")
         has_ollama = False
@@ -85,7 +85,7 @@ def main():
         from PIL import Image
         subprocess.run([sys.executable, "generate_logo.py"], capture_output=True)
         print("OK")
-    except:
+    except Exception:
         print("SKIPPED")
 
     print()

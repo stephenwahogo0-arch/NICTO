@@ -88,14 +88,14 @@ class ModelManager:
         try:
             if self.config_file.exists():
                 return json.loads(self.config_file.read_text())
-        except:
+        except Exception:
             pass
         return {"current_model": None, "tier": None}
 
     def _save_config(self):
         try:
             self.config_file.write_text(json.dumps(self._config, indent=2))
-        except:
+        except Exception:
             pass
 
     def detect_hardware_tier(self) -> str:
@@ -122,7 +122,7 @@ class ModelManager:
             else:
                 import psutil
                 ram_gb = psutil.virtual_memory().total // (1024**3)
-        except:
+        except Exception:
             ram_gb = 2
 
         # Check disk space
@@ -138,7 +138,7 @@ class ModelManager:
                 disk_free = free_bytes.value // (1024**3)
             else:
                 disk_free = 10  # Assume enough
-        except:
+        except Exception:
             disk_free = 10
 
         if ram_gb >= 16 and disk_free >= 8:
