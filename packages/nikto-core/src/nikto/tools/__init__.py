@@ -5,6 +5,7 @@ from nikto.tools.web import WebFetchTool, WebSearchTool
 from nikto.tools.self_review import NiktoReadOwnTool, NiktoWriteOwnTool, NiktoSelfReviewTool
 from nikto.tools.image_gen import ImageGenerateTool, PatternGenerateTool
 from nikto.tools.video_gen import GifGenerateTool, VideoGenerateTool
+from nikto.tools.video_read import VideoReadTool
 from nikto.tools.tts import SpeakTool, SpeakDirectTool, ListVoicesTool
 from nikto.tools.autopilot_control import (
     AutopilotStartTool, AutopilotStopTool, AutopilotStatusTool,
@@ -47,7 +48,7 @@ __all__ = [
     "WebFetchTool", "WebSearchTool",
     "NiktoReadOwnTool", "NiktoWriteOwnTool", "NiktoSelfReviewTool",
     "ImageGenerateTool", "PatternGenerateTool",
-    "GifGenerateTool", "VideoGenerateTool",
+    "GifGenerateTool", "VideoGenerateTool", "VideoReadTool",
     "SpeakTool", "SpeakDirectTool", "ListVoicesTool",
     "AutopilotStartTool", "AutopilotStopTool", "AutopilotStatusTool",
     "AutopilotReportTool", "AutopilotConnectTool", "AutopilotEarningsTool",
