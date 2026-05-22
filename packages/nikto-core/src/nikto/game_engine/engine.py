@@ -69,12 +69,15 @@ class SceneGenerator:
 
     @staticmethod
     def generate_main_scene() -> str:
-        return """[gd_scene load_steps=2 format=3 uid="uid://main"]
+        return """[gd_scene load_steps=3 format=3 uid="uid://main"]
 
 [ext_resource type="Script" path="res://main.gd" id="1"]
+[ext_resource type="PackedScene" path="res://world.tscn" id="2"]
 
 [node name="World" type="Node3D"]
 script = ExtResource("1")
+
+[node name="WorldScene" parent="." instance=ExtResource("2")]
 
 [node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, -0.5, 0.866, 0, 0.866, 0.5, 0, 10, 0)
@@ -133,9 +136,16 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -50, 1, -50)
 
 [node name="Camera3D" type="Camera3D" parent="Player"]
 current = true
+
+[node name="ZoneTimer" type="Timer" parent="."]
+wait_time = 5.0
+autostart = true
 """,
         }
-        return scenes.get(genre, SceneGenerator.generate_main_scene())
+        return scenes.get(genre, """[gd_scene format=3 uid="uid://world"]
+
+[node name="WorldContent" type="Node3D"]
+""")
 
     @staticmethod
     def generate_subresources() -> str:
@@ -170,28 +180,32 @@ var speed = 0.0
 var max_speed = 100.0
 var acceleration = 5.0
 var steering = 0.0
+@onready var player_car = get_node_or_null("WorldScene/PlayerCar") or get_node_or_null("PlayerCar")
+@onready var cam = get_node_or_null("Camera3D")
 
 func _ready():
     Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
-    $PlayerCar/EngineSound.play()
 
 func _process(delta):
+    if player_car == null:
+        return
     var steer = 0
     if Input.is_action_pressed("ui_left"): steer = -1
     if Input.is_action_pressed("ui_right"): steer = 1
     steering = lerp(steering, steer * 0.5, delta * 5)
-    $PlayerCar.steering = steering
+    player_car.steering = steering
 
     var throttle = 0
     if Input.is_action_pressed("ui_up"): throttle = 1
     if Input.is_action_pressed("ui_down"): throttle = -1
     speed += throttle * acceleration * delta
     speed = clamp(speed, -max_speed * 0.3, max_speed)
-    $PlayerCar.engine_force = speed
+    player_car.engine_force = speed
 
 func _physics_process(delta):
-    $Camera3D.position = $PlayerCar.position + Vector3(0, 5, -8)
-    $Camera3D.look_at($PlayerCar.position)
+    if cam and player_car:
+        cam.position = player_car.position + Vector3(0, 5, -8)
+        cam.look_at(player_car.position)
 """,
             GameGenre.FPS: """extends Node3D
 
@@ -220,14 +234,15 @@ func _process(delta):
 
 func shoot():
     var space_state = get_world_3d().direct_space_state
-    var cam = $Player/Camera3D
+    var cam = get_node_or_null("WorldScene/Player/Camera3D") or get_node_or_null("Player/Camera3D")
+    if cam == null:
+        return
     var from = cam.global_position
     var to = from - cam.global_transform.basis.z * 100
     var query = PhysicsRayQueryParameters3D.create(from, to)
     var hit = space_state.intersect_ray(query)
     if hit:
-        $HitEffect.position = hit.position
-        $HitEffect.emitting = true
+        print("Hit at: ", hit.position)
 
 func _physics_process(delta):
     var input = Vector3.ZERO
@@ -238,12 +253,15 @@ func _physics_process(delta):
     input = input.normalized()
     velocity.x = input.x * movement_speed
     velocity.z = input.z * movement_speed
-    velocity = $Player.transform.basis * velocity
+    var player = get_node_or_null("WorldScene/Player") or get_node_or_null("Player")
+    if player == null:
+        return
+    velocity = player.transform.basis * velocity
     velocity.y -= gravity * delta
-    if Input.is_action_just_pressed("ui_select") and $Player.is_on_floor():
+    if Input.is_action_just_pressed("ui_select") and player.is_on_floor():
         velocity.y = jump_velocity
-    $Player.velocity = velocity
-    $Player.move_and_slide()
+    player.velocity = velocity
+    player.move_and_slide()
 """,
             GameGenre.BATTLE_ROYALE: """extends Node3D
 
@@ -401,12 +419,29 @@ class GameEngine:
         self.output_base.mkdir(parents=True, exist_ok=True)
         self.projects: dict[str, GameProject] = {}
 
+    def _parse_resolution(self, resolution: str) -> tuple[int, int]:
+        match = re.fullmatch(r"\s*(\d{2,5})x(\d{2,5})\s*", resolution or "")
+        if not match:
+            return (1920, 1080)
+        w, h = int(match.group(1)), int(match.group(2))
+        if w < 320 or h < 240 or w > 16384 or h > 16384:
+            return (1920, 1080)
+        return (w, h)
+
+    def _extract_target_fps(self, prompt: str) -> int:
+        nums = [int(n) for n in re.findall(r"\b(\d{2,7})\s*fps\b", prompt.lower())]
+        if not nums:
+            return 120
+        # avoid impossible claims; clamp to practical engine target range
+        return max(24, min(max(nums), 1000))
+
     async def generate_game(self, prompt: str, title: str = "", genre: str = "", resolution: str = "1920x1080") -> dict:
         detected_genre = self._detect_genre(prompt)
         if genre and genre in [g.value for g in GameGenre]:
             detected_genre = GameGenre(genre)
         title = title or self._generate_title(prompt, detected_genre)
-        w, h = [int(x) for x in resolution.split("x")] if "x" in resolution else (1920, 1080)
+        w, h = self._parse_resolution(resolution)
+        target_fps = self._extract_target_fps(prompt)
 
         project = GameProject(
             title=title,
@@ -429,10 +464,14 @@ class GameEngine:
             "resolution": f"{w}x{h}",
             "assets_count": len(project.assets),
             "prompt": prompt[:200],
-            "message": f"Game '{title}' generated at {output_path}. Open with Godot {project.godot_version}.",
+            "target_fps": target_fps,
+            "message": f"Game '{title}' generated at {output_path}. Open with Godot {project.godot_version}. Target FPS profile: {target_fps}.",
         }
 
     async def export_game(self, project_id: str, export_format: str = "windows") -> dict:
+        export_format = (export_format or "windows").lower().strip()
+        if export_format not in {"windows", "linux", "web"}:
+            return {"success": False, "error": f"Unsupported export format: {export_format}"}
         project = self.projects.get(project_id)
         if not project:
             return {"success": False, "error": f"Project {project_id} not found"}
