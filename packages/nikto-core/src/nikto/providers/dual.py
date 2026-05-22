@@ -48,7 +48,7 @@ class DualEngineProvider:
             async with httpx.AsyncClient(timeout=5) as client:
                 resp = await client.get(f"{self.config.api_base}/health")
                 self._online_available = resp.status_code == 200
-        except:
+        except Exception:
             self._online_available = False
 
         return self._online_available
@@ -183,10 +183,10 @@ class DualEngineProvider:
                                     text = data.get("response", "")
                                     if text:
                                         yield text
-                                except:
+                                except Exception:
                                     pass
                 return
-            except:
+            except Exception:
                 pass
 
         async for text in self.local.stream_generate(

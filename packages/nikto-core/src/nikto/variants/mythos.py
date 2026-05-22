@@ -110,7 +110,7 @@ if __name__ == "__main__":
                 deps = {**data.get("dependencies", {}), **data.get("devDependencies", {})}
                 for name, ver in deps.items():
                     sbom["dependencies"].append({"file": str(dep_file), "dep": f"{name}=={ver}"})
-            except: pass
+            except Exception: pass
 
         for dep_file in path.rglob("Cargo.toml"):
             content = dep_file.read_text()
@@ -176,13 +176,13 @@ if __name__ == "__main__":
         try:
             r = subprocess.run(["file", binary_path], capture_output=True, text=True, timeout=5)
             result["architecture"] = r.stdout.strip()
-        except: pass
+        except Exception: pass
 
         try:
             r = subprocess.run(["strings", binary_path], capture_output=True, text=True, timeout=10)
             strings_out = r.stdout.splitlines()
             result["strings"] = strings_out[:100]
-        except: pass
+        except Exception: pass
 
         try:
             r = subprocess.run(["objdump", "-t", binary_path], capture_output=True, text=True, timeout=10)
@@ -191,7 +191,7 @@ if __name__ == "__main__":
                     parts = line.split()
                     if len(parts) >= 6:
                         result["extracted_functions"].append(parts[5])
-        except: pass
+        except Exception: pass
 
         result["extracted_functions"] = result["extracted_functions"][:200]
         return result

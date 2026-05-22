@@ -115,11 +115,16 @@ async def chat(req: ChatRequest):
 async def memory_search(q: str = "", limit: int = 10):
     from nikto.config.settings import MemoryConfig
     from nikto.memory.base import MemorySystem
-    mem = MemorySystem(MemoryConfig())
-    if q:
-        results = mem.search(q, limit=limit)
+    
+    if _ensure_agent():
+        mem = _agent.memory
     else:
-        results = mem.recent(limit=limit)
+        mem = MemorySystem(MemoryConfig())
+    
+    if q:
+        results = await mem.search(q, limit=limit)
+    else:
+        results = await mem.recent(limit=limit)
     return {"results": results}
 
 
@@ -127,8 +132,13 @@ async def memory_search(q: str = "", limit: int = 10):
 async def memory_store(key: str, value: str):
     from nikto.config.settings import MemoryConfig
     from nikto.memory.base import MemorySystem
-    mem = MemorySystem(MemoryConfig())
-    mem.store(key, value, {"source": "api"})
+    
+    if _ensure_agent():
+        mem = _agent.memory
+    else:
+        mem = MemorySystem(MemoryConfig())
+    
+    await mem.store(key, value, {"source": "api"})
     return {"stored": key}
 
 
@@ -308,3 +318,113 @@ async def engine_info():
     if hasattr(_agent, 'provider') and hasattr(_agent.provider, 'get_info'):
         return _agent.provider.get_info()
     return {"error": "Engine info not available"}
+
+
+# === GAME ENGINE API ===
+
+_game_engine = None
+
+
+def _ensure_game_engine():
+    global _game_engine
+    if _game_engine is None:
+        try:
+            from nikto.game_engine.core import NIKTOCoreEngine
+            _game_engine = NIKTOCoreEngine()
+        except Exception as e:
+            return None
+    return _game_engine
+
+
+@app.get("/game/status")
+async def game_status():
+    eng = _ensure_game_engine()
+    if eng is None:
+        return {"status": "not_initialized", "modules": []}
+    return {
+        "status": "ready",
+        "modules": [
+            "core", "renderer", "physics", "audio", "ai", "vfx", "animation", "visual_script",
+        ],
+        "pygame_available": True,
+    }
+
+
+@app.post("/game/build")
+async def game_build(prompt: str = "platformer"):
+    from nikto.game_engine.builder import GameBuilder
+    builder = GameBuilder()
+    result = builder.build_game(prompt)
+    return {"game": result}
+
+
+@app.get("/game/templates")
+async def game_templates():
+    from nikto.game_engine.builder import GameBuilder
+    builder = GameBuilder()
+    return {"templates": list(builder.templates.keys())}
+
+
+@app.get("/game/physics")
+async def game_physics_info():
+    return {
+        "physics_world": True,
+        "rigid_body": True,
+        "soft_body": True,
+        "joints": ["distance", "spring", "hinge"],
+        "materials": ["wood", "metal", "rubber", "glass", "ice"],
+        "destruction": True,
+        "gravity_wells": True,
+        "raycasting": True,
+        "aabb_query": True,
+        "a_star_pathfinding": True,
+        "dijkstra_pathfinding": True,
+    }
+
+
+@app.get("/game/audio")
+async def game_audio_info():
+    return {
+        "3d_audio": True,
+        "doppler_effect": True,
+        "audio_buses": ["master", "music", "sfx", "voice", "ambient"],
+        "effects": ["lowpass", "highpass", "reverb", "chorus", "delay"],
+        "synthesizer": True,
+        "waveforms": ["sine", "square", "sawtooth", "triangle", "noise"],
+    }
+
+
+@app.get("/game/ai")
+async def game_ai_info():
+    return {
+        "behavior_trees": True,
+        "state_machine": True,
+        "utility_ai": True,
+        "pathfinding": ["a_star", "dijkstra"],
+        "nav_grid": True,
+        "sensor_system": True,
+    }
+
+
+@app.get("/game/vfx")
+async def game_vfx_info():
+    return {
+        "particle_system": True,
+        "emitter_modules": True,
+        "presets": ["fire", "smoke", "explosion", "spark", "magic", "rain", "snow"],
+    }
+
+
+@app.get("/game/animation")
+async def game_animation_info():
+    return {
+        "skeleton_rigging": True,
+        "humanoid_skeleton": True,
+        "fk_ik_solver": True,
+        "animation_clips": True,
+        "blend_trees": True,
+        "state_machine": True,
+        "motion_warping": True,
+        "sprite_sheet": True,
+        "walk_cycle": True,
+    }

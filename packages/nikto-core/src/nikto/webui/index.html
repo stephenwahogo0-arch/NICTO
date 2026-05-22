@@ -181,15 +181,36 @@ input:focus{border-color:#333}
     <!-- GAMES PANEL -->
     <div class="panel" id="panel-games">
       <div class="panel-content">
-        <h2>🎮 Games</h2>
-        <p style="color:#666;font-size:13px;line-height:1.6">NIKTO can create and play Pong, Snake, Tetris, Platformer, and RPG. Type "play pong" or "create snake game" in chat to start.</p>
-        <div class="grid">
-          <div class="card"><div class="label">Pong</div><div class="value">↔</div><div class="sub">2-player paddle game</div></div>
-          <div class="card"><div class="label">Snake</div><div class="value">🐍</div><div class="sub">Classic snake</div></div>
-          <div class="card"><div class="label">Tetris</div><div class="value">▣</div><div class="sub">Block stacking</div></div>
-          <div class="card"><div class="label">Platformer</div><div class="value">🏃</div><div class="sub">Side-scrolling</div></div>
-          <div class="card"><div class="label">RPG</div><div class="value">⚔</div><div class="sub">Dungeon crawler</div></div>
+        <h2>🎮 Game Engine</h2>
+        <p style="color:#666;font-size:13px;line-height:1.6">NIKTO Engine — real-time ECS game engine with advanced physics, animation, VFX, AI, audio, and visual scripting.</p>
+        <div id="gameEngineStatus"><div class="card"><div class="value">Loading...</div></div></div>
+        <div class="grid" style="margin-top:12px">
+          <div class="card"><div class="label">Physics</div><div class="value">⚡</div><div class="sub" id="gamePhysics">Rigid/soft body, joints, destruction</div></div>
+          <div class="card"><div class="label">Animation</div><div class="value">🦴</div><div class="sub" id="gameAnim">Skeleton rigging, IK, blend trees</div></div>
+          <div class="card"><div class="label">VFX</div><div class="value">✨</div><div class="sub" id="gameVFX">Niagara-like particle system</div></div>
+          <div class="card"><div class="label">AI</div><div class="value">🧠</div><div class="sub" id="gameAI">Behavior trees, utility AI, A*</div></div>
+          <div class="card"><div class="label">Audio</div><div class="value">🔊</div><div class="sub" id="gameAudio">3D audio, DSP, synthesis</div></div>
+          <div class="card"><div class="label">Rendering</div><div class="value">🎨</div><div class="sub">Bloom, shadows, post-processing</div></div>
         </div>
+        <h3>Game Templates</h3>
+        <div class="grid" id="gameTemplates">
+          <div class="card"><div class="label">Platformer</div><div class="value">🏃</div><div class="sub">Side-scrolling with physics + enemies</div></div>
+          <div class="card"><div class="label">RPG</div><div class="value">⚔</div><div class="sub">Top-down dungeon crawler</div></div>
+          <div class="card"><div class="label">FPS</div><div class="value">🎯</div><div class="sub">First-person shooter</div></div>
+          <div class="card"><div class="label">Racing</div><div class="value">🏎</div><div class="sub">Top-down racing with AI</div></div>
+          <div class="card"><div class="label">Puzzle</div><div class="value">🧩</div><div class="sub">Logic puzzle game</div></div>
+          <div class="card"><div class="label">Strategy</div><div class="value">♟</div><div class="sub">RTS with AI opponents</div></div>
+          <div class="card"><div class="label">Fighting</div><div class="value">🥊</div><div class="sub">2D fighter with combos</div></div>
+          <div class="card"><div class="label">Stealth</div><div class="value">🥷</div><div class="sub">Stealth action game</div></div>
+          <div class="card"><div class="label">Shooter</div><div class="value">🔫</div><div class="sub">Top-down shooter</div></div>
+          <div class="card"><div class="label">Simulation</div><div class="value">🌍</div><div class="sub">Life simulation</div></div>
+        </div>
+        <h3>Build a Game</h3>
+        <div class="row">
+          <input id="gamePrompt" placeholder="e.g. racing game with drifting mechanics" style="flex:1">
+          <button class="btn" onclick="buildGame()">Build</button>
+        </div>
+        <div id="gameResult" style="margin-top:8px"></div>
       </div>
     </div>
 
@@ -376,6 +397,31 @@ async function transfer() {
   const data = await resp.json();
   document.getElementById('finResult').textContent = data.success ? `Transferred $${amount}` : `Error: ${data.error}`;
   refreshFinance();
+}
+
+async function refreshGameEngine() {
+  try {
+    const resp = await fetch('/game/status'); const data = await resp.json();
+    document.getElementById('gameEngineStatus').innerHTML = `<div class="card"><div class="label">Engine Status</div><div class="value">${data.status}</div><div class="sub">${(data.modules||[]).join(', ')}</div></div>`;
+  } catch(e) {
+    document.getElementById('gameEngineStatus').innerHTML = `<div class="card"><div class="label">Engine</div><div class="value">Requires pygame-ce</div></div>`;
+  }
+}
+
+async function buildGame() {
+  const prompt = document.getElementById('gamePrompt').value.trim();
+  if (!prompt) return;
+  const el = document.getElementById('gameResult');
+  el.innerHTML = '<div class="card"><div class="value">Building...</div></div>';
+  try {
+    const resp = await fetch('/game/build', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({prompt:prompt}) });
+    const data = await resp.json();
+    el.innerHTML = data.game
+      ? `<div class="card"><div class="label">Game Created</div><div class="value">${data.game}</div></div>`
+      : `<div class="card error">Build failed</div>`;
+  } catch(e) {
+    el.innerHTML = `<div class="card"><div class="value">Engine not available — install pygame-ce</div></div>`;
+  }
 }
 </script>
 </body>

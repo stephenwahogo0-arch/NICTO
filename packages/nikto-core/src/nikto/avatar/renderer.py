@@ -123,7 +123,7 @@ class AvatarRenderer:
         hw, hh = 150, 80
         try:
             font = ImageFont.load_default()
-        except:
+        except Exception:
             font = None
         draw.rectangle([hx, hy, hx + hw, hy + hh], outline=(0, 180, 255, 150), width=2)
         draw.rounded_rectangle([hx, hy, hx + hw, hy + hh], radius=10,

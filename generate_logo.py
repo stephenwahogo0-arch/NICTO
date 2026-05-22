@@ -65,7 +65,7 @@ draw.polygon(inner_pts, outline=(100, 200, 255, 150), width=1)
 try:
     font_big = ImageFont.truetype("arialbd.ttf", 56)
     font_small = ImageFont.truetype("arial.ttf", 18)
-except:
+except Exception:
     font_big = ImageFont.load_default()
     font_small = font_big
 
