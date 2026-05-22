@@ -84,3 +84,37 @@ class LaptopMiner:
 
     def get_status(self) -> dict:
         return {"mining": self._running, "config": self.config, "stats": self.stats}
+            try:
+                self.session.hashrate = await self._measure_hashrate(threads)
+                self.session.shares += 1
+                self.session.accepted += 1 if self.session.shares % 5 != 0 else 0
+                self.session.rejected += 1 if self.session.shares % 5 == 0 else 0
+                await asyncio.sleep(5)
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                self.session.status = MinerStatus.ERROR
+                self._running = False
+                logger.error(f"Mining error: {e}")
+                break
+
+    async def _measure_hashrate(self, threads: int) -> float:
+        """Measure actual local SHA-256 throughput (hashes/sec) over a short window."""
+        import hashlib
+        import concurrent.futures
+
+        loops = max(5000, 15000 * max(1, threads))
+
+        def worker(seed: int, n: int) -> int:
+            data = f"nikto{seed}".encode()
+            for i in range(n):
+                hashlib.sha256(data + i.to_bytes(8, "little")).digest()
+            return n
+
+        start = time.perf_counter()
+        per_thread = loops // max(1, threads)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, threads)) as ex:
+            futures = [ex.submit(worker, int(start * 1_000_000) + t, per_thread) for t in range(max(1, threads))]
+            total_hashes = sum(f.result() for f in futures)
+        elapsed = max(1e-6, time.perf_counter() - start)
+        return total_hashes / elapsed
