@@ -1,0 +1,403 @@
+{
+  "llm_architecture": {
+    "content": "The Transformer architecture consists of stacked encoder-decoder or decoder-only layers. Each layer contains multi-head self-attention, feed-forward networks, and layer normalization with residual connections. Modern LLMs use decoder-only architectures with causal masking, pre-norm layer ordering, and SwiGLU activations in feed-forward networks for improved training stability.",
+    "metadata": {
+      "category": "ai_specialization",
+      "tags": [
+        "llm",
+        "transformer",
+        "architecture"
+      ]
+    }
+  },
+  "model_training": {
+    "content": "LLM pre-training uses autoregressive language modeling on large text corpora with the next-token prediction objective. Training employs gradient accumulation, mixed precision (BF16/FP16), learning rate warmup and cosine decay, and weight decay for regularization. Scaling laws guide optimal model size versus data size for given compute budgets — Chinchilla scaling suggests 20 tokens per parameter.",
+    "metadata": {
+      "category": "ai_specialization",
+      "tags": [
+        "training",
+        "pretraining",
+        "scaling"
+      ]
+    }
+  },
+  "fine_tuning": {
+    "content": "Supervised fine-tuning (SFT) adapts pre-trained models to specific tasks using labeled datasets. Parameter-efficient methods like LoRA add trainable rank-decomposition matrices to attention layers, reducing trainable parameters by 10000x while maintaining quality. QLoRA further quantizes base weights to 4-bit NormalFloat, enabling fine-tuning of 65B models on a single GPU.",
+    "metadata": {
+      "category": "ai_specialization",
+      "tags": [
+        "finetuning",
+        "lora",
+        "qlora"
+      ]
+    }
+  },
+  "rag_systems": {
+    "content": "RAG enhances LLM outputs by retrieving relevant documents from a knowledge base and injecting them into the context. Modern RAG pipelines use embedding models for dense retrieval, BM25 for sparse retrieval, cross-encoder rerankers for precision improvement, and query rewriting techniques like HyDE and step-back prompting. Chunking strategies include semantic, recursive, and fixed-size approaches with overlap for coherence.",
+    "metadata": {
+      "category": "ai_specialization",
+      "tags": [
+        "rag",
+        "retrieval",
+        "augmentation"
+      ]
+    }
+  },
+  "embeddings": {
+    "content": "Text embeddings convert text into dense vector representations that capture semantic meaning for retrieval, clustering, and classification. Models like text-embedding-3-large, E5-mistral, BGE, and GTE produce high-quality embeddings optimized for different use cases. Matryoshka embeddings learn representations at multiple granularities, enabling dimensionality reduction at inference without retraining for flexible storage/performance tradeoffs.",
+    "metadata": {
+      "category": "ai_specialization",
+      "tags": [
+        "embeddings",
+        "vectors",
+        "semantic"
+      ]
+    }
+  },
+  "tokenization": {
+    "content": "Tokenization converts text into integer token IDs using subword algorithms like Byte-Pair Encoding (BPE), WordPiece, or Unigram (SentencePiece). Modern tokenizers handle 100K+ vocabulary and use byte-level encoding for universal character coverage without OOV tokens. Tokenizer choice significantly impacts model performance, especially for multilingual and code-generation tasks — larger vocabularies reduce sequence length.",
+    "metadata": {
+      "category": "ai_specialization",
+      "tags": [
+        "tokenization",
+        "bpe",
+        "vocabulary"
+      ]
+    }
+  },
+  "attention_mechanisms": {
+    "content": "Flash Attention computes exact attention with O(N^2) complexity but dramatically faster speed and lower memory usage by tiling computation and avoiding materializing the full attention matrix. Multi-Query Attention (MQA) and Grouped-Query Attention (GQA) reduce KV cache memory by sharing key/value heads across query heads. Sliding window attention uses a fixed-size attention window for linear complexity.",
+    "metadata": {
+      "category": "ai_specialization",
+      "tags": [
+        "attention",
+        "flash_attention",
+        "gqa"
+      ]
+    }
+  },
+  "quantization": {
+    "content": "Post-training quantization reduces model size and inference latency by representing weights in lower precision (4-bit or 8-bit). GPTQ uses Optimal Brain Quantization for layer-wise compression with calibration data. AWQ scales weights by activation magnitudes for better retention of important weights. GGUF provides a unified format for CPU/GPU hybrid inference with quantization levels from Q2_K to Q8_0 for different quality/speed tradeoffs.",
+    "metadata": {
+      "category": "ai_specialization",
+      "tags": [
+        "quantization",
+        "gptq",
+        "awq",
+        "gguf"
+      ]
+    }
+  },
+  "prompt_engineering": {
+    "content": "Chain-of-thought (CoT) prompting elicits step-by-step reasoning by including reasoning traces in few-shot examples or appending 'Let's think step by step' for zero-shot CoT. Tree-of-thought generalizes CoT by exploring multiple reasoning paths with BFS/DFS search and self-evaluation of intermediate states. ReAct combines reasoning traces with action execution for agentic behavior, interleaving thinking and tool calls.",
+    "metadata": {
+      "category": "ai_specialization",
+      "tags": [
+        "prompting",
+        "cot",
+        "react"
+      ]
+    }
+  },
+  "agent_frameworks": {
+    "content": "LangChain provides a modular framework for LLM-powered applications with components for prompts, chains, agents, memory, and retrieval. LlamaIndex specializes in data indexing and retrieval with vector stores, document parsers, and query engines. OpenAI function calling enables structured tool use by generating JSON arguments for user-defined functions. CrewAI enables multi-agent collaboration with role-based agents and task delegation.",
+    "metadata": {
+      "category": "ai_specialization",
+      "tags": [
+        "agents",
+        "langchain",
+        "llamaindex"
+      ]
+    }
+  },
+  "tool_use": {
+    "content": "Function calling allows LLMs to invoke external tools by generating structured arguments (JSON) for user-defined functions described in the system prompt. The model decides when to call each tool based on conversation context. Parallel function calling enables multiple independent tool calls in a single generation step. Tool descriptions should include clear parameter names, types, descriptions, and examples for reliable invocation.",
+    "metadata": {
+      "category": "ai_specialization",
+      "tags": [
+        "tools",
+        "function_calling",
+        "structured_output"
+      ]
+    }
+  },
+  "memory_systems": {
+    "content": "Conversation memory stores recent interaction history for short-term recall as a sliding window of the last N messages. Vector memory stores embeddings of past interactions for semantic retrieval across long time spans. Entity memory extracts and stores knowledge about named entities. Summary memory compresses extended conversations into concise summaries. Hybrid memory combines multiple types to balance recency, relevance, and token efficiency.",
+    "metadata": {
+      "category": "ai_specialization",
+      "tags": [
+        "memory",
+        "conversation",
+        "vector_memory"
+      ]
+    }
+  },
+  "multi_modal": {
+    "content": "Vision-Language Models (VLMs) like CLIP, LLaVA, and GPT-4V process images and text by aligning visual features from a vision encoder with text embeddings. Speech recognition models like Whisper convert audio to text with multilingual support. Image generation models like DALL-E and Stable Diffusion use diffusion processes conditioned on text or image embeddings to generate high-quality visual content.",
+    "metadata": {
+      "category": "ai_specialization",
+      "tags": [
+        "multimodal",
+        "vision",
+        "speech",
+        "image_gen"
+      ]
+    }
+  },
+  "rlhf": {
+    "content": "RLHF aligns LLM outputs with human preferences through a three-stage process: supervised fine-tuning on demonstrations, reward model training on human preference comparisons, and PPO-based policy optimization against the reward model. DPO (Direct Preference Optimization) simplifies this by directly optimizing the policy on preference pairs without an explicit reward model, reducing training complexity while maintaining alignment quality.",
+    "metadata": {
+      "category": "ai_specialization",
+      "tags": [
+        "rlhf",
+        "alignment",
+        "dpo"
+      ]
+    }
+  },
+  "evaluation": {
+    "content": "LLM benchmarks evaluate different capability dimensions across models. MMLU measures multitask knowledge across 57 subjects. HumanEval tests code generation from docstrings with pass@k metrics. MT-Bench evaluates multi-turn conversation quality using LLM-as-judge with GPT-4 as evaluator. Chatbot Arena collects human preference judgments via Elo ratings from pairwise comparisons of anonymous model outputs.",
+    "metadata": {
+      "category": "ai_specialization",
+      "tags": [
+        "evaluation",
+        "benchmarks",
+        "mmlu"
+      ]
+    }
+  },
+  "deployment": {
+    "content": "Model serving frameworks like vLLM, TensorRT-LLM, and TGI optimize inference through continuous batching, PagedAttention for efficient KV cache management, and tensor parallelism for multi-GPU deployment. Ollama provides easy local deployment with model management and OpenAI-compatible API. Production deployments use horizontal scaling with load balancers, GPU-aware Kubernetes scheduling, and autoscaling based on queue depth.",
+    "metadata": {
+      "category": "ai_specialization",
+      "tags": [
+        "deployment",
+        "serving",
+        "inference"
+      ]
+    }
+  },
+  "distillation": {
+    "content": "Knowledge distillation trains a smaller student model to mimic a larger teacher model's behavior using output logits or hidden states as training targets. Dataset distillation generates training data from the teacher for efficient learning. Distilled models retain much of the teacher's capability at a fraction of the inference cost, enabling deployment on resource-constrained devices with acceptable quality loss.",
+    "metadata": {
+      "category": "ai_specialization",
+      "tags": [
+        "distillation",
+        "compression",
+        "student_teacher"
+      ]
+    }
+  },
+  "retrieval": {
+    "content": "Dense retrieval uses embedding models to index documents as vectors, retrieving the nearest neighbors to a query embedding for semantic matching. Sparse retrieval methods like BM25 use term frequency-inverse document frequency weighting for exact keyword matching without requiring training data. Hybrid retrieval combines both approaches, merging results through reciprocal rank fusion (RRF) or learned weighting for optimal recall and precision across query types.",
+    "metadata": {
+      "category": "ai_specialization",
+      "tags": [
+        "retrieval",
+        "dense",
+        "sparse",
+        "bm25"
+      ]
+    }
+  },
+  "vector_databases": {
+    "content": "Vector databases index and search embedding vectors using ANN algorithms. HNSW (Hierarchical Navigable Small World) graphs provide excellent search speed at higher memory cost. IVF (Inverted File Index) clusters vectors for approximate search with tunable accuracy. ChromaDB provides a lightweight embedded vector database for development. Pinecone, Weaviate, Qdrant, and Milvus offer production-grade distributed search at billion-vector scale.",
+    "metadata": {
+      "category": "ai_specialization",
+      "tags": [
+        "vector_db",
+        "chromadb",
+        "pinecone",
+        "weaviate"
+      ]
+    }
+  },
+  "guardrails": {
+    "content": "LLM guardrails ensure safe operation through input/output validation, content filtering, prompt injection detection, and topic restriction. NeMo Guardrails provides colang-based policy definition for conversational guardrails. Guardrails AI offers programmatic guardrail definition with correction and exception handling. Effective guardrails balance safety with usability by validating outputs against defined constraints before returning them to users.",
+    "metadata": {
+      "category": "ai_specialization",
+      "tags": [
+        "guardrails",
+        "safety",
+        "content_filtering"
+      ]
+    }
+  },
+  "caching": {
+    "content": "Semantic caching stores LLM responses for semantically similar queries using embedding similarity to detect cache hits instead of exact string matching. KV caching stores key-value tensors from attention computations to avoid recomputation during autoregressive generation. Prefix caching shares KV cache across requests with identical system prompt prefixes. Prompt caching (as in Anthropic API) caches frequently used context across multiple API calls.",
+    "metadata": {
+      "category": "ai_specialization",
+      "tags": [
+        "caching",
+        "kv_cache",
+        "semantic_cache"
+      ]
+    }
+  },
+  "streaming": {
+    "content": "Token streaming sends generated tokens to clients as they are produced, reducing perceived latency. Server-Sent Events (SSE) provide browser-native streaming over HTTP with automatic reconnection. WebSocket streaming enables bidirectional streaming for interactive applications. Proper streaming requires handling partial responses, backpressure, error recovery, and consistent state tracking for interrupted generations.",
+    "metadata": {
+      "category": "ai_specialization",
+      "tags": [
+        "streaming",
+        "sse",
+        "token_generation"
+      ]
+    }
+  },
+  "context_windows": {
+    "content": "Long context windows of 128K-1M tokens require efficient attention mechanisms. RoPE supports position interpolation for extending context beyond training length by scaling position indices. Ring Attention distributes attention computation across devices for extremely long sequences. Sparse attention patterns (sliding window, dilated, global+local) reduce complexity from O(n²) to O(n√n) or O(n), enabling practical long-context inference.",
+    "metadata": {
+      "category": "ai_specialization",
+      "tags": [
+        "context",
+        "long_context",
+        "rope"
+      ]
+    }
+  },
+  "synthetic_data": {
+    "content": "Synthetic data generation creates training datasets using LLMs, reducing dependence on expensive human annotation. Self-Instruct generates instruction-following data by having the model create new tasks and output examples. Evol-Instruct iteratively evolves instructions for increasing complexity. Data augmentation techniques like back-translation, paraphrasing, and entity substitution expand limited seed datasets while preserving task semantics and label quality.",
+    "metadata": {
+      "category": "ai_specialization",
+      "tags": [
+        "synthetic_data",
+        "data_generation",
+        "augmentation"
+      ]
+    }
+  },
+  "multilingual": {
+    "content": "Multilingual LLMs process text across hundreds of languages using shared tokenization and embedding spaces. Cross-lingual transfer allows models trained primarily on English to perform in other languages through aligned sentence representations. Language identification models detect input language using character n-grams or neural classifiers. Training on mixed-language corpora with language balancing improves multilingual capability without sacrificing English performance.",
+    "metadata": {
+      "category": "ai_specialization",
+      "tags": [
+        "multilingual",
+        "translation",
+        "language_detection"
+      ]
+    }
+  },
+  "code_generation": {
+    "content": "Code LLMs like DeepSeek-Coder, CodeLlama, and StarCoder are trained on code-heavy corpora (GitHub, Stack Overflow) and excel at program synthesis, code completion, and bug fixing. Execution feedback allows models to iteratively refine code by running it and incorporating error messages. Test-driven generation asks models to first write tests, then implement code passing them, improving functional correctness of generated code.",
+    "metadata": {
+      "category": "ai_specialization",
+      "tags": [
+        "code_gen",
+        "program_synthesis",
+        "deepseek"
+      ]
+    }
+  },
+  "reasoning": {
+    "content": "Chain-of-thought reasoning improves performance on multi-step problems by encouraging step-by-step deduction with explicit reasoning traces. Self-consistency generates multiple reasoning paths and selects the most consistent answer through majority voting, improving robustness over single-path CoT. Tree-of-thought explores multiple reasoning branches with BFS/DFS search and self-evaluation at each step for problems requiring exploration and backtracking.",
+    "metadata": {
+      "category": "ai_specialization",
+      "tags": [
+        "reasoning",
+        "cot",
+        "self_consistency"
+      ]
+    }
+  },
+  "planning": {
+    "content": "Task decomposition breaks complex goals into sequentially or parallelly executable subtasks. ReAct agents interleave reasoning traces with action execution for effective task completion with dynamic planning. Hierarchical planning organizes tasks at multiple abstraction levels, with high-level plans decomposed into low-level actions. Plan-and-Solve prompting explicitly generates a plan before execution, improving success rates on multi-step tasks.",
+    "metadata": {
+      "category": "ai_specialization",
+      "tags": [
+        "planning",
+        "decomposition",
+        "react"
+      ]
+    }
+  },
+  "knowledge_graphs": {
+    "content": "Knowledge graphs represent entities and their relationships as graph structures, enabling structured reasoning and retrieval. Graph RAG combines knowledge graphs with vector retrieval by first retrieving relevant subgraphs, then using them to augment LLM context. Automatic knowledge graph construction extracts entities and relations from text using LLMs or NLP pipelines, creating structured knowledge from unstructured documents.",
+    "metadata": {
+      "category": "ai_specialization",
+      "tags": [
+        "knowledge_graphs",
+        "graph_rag",
+        "entity_extraction"
+      ]
+    }
+  },
+  "hallucination": {
+    "content": "Hallucination occurs when LLMs generate factually incorrect content with high confidence. SelfCheckGPT detects hallucination by generating multiple responses and measuring consistency between them. Retrieval grounding compares model outputs against retrieved documents to verify factual claims. Mitigation strategies include temperature reduction, constrained decoding with vocabulary masks, retrieval augmentation, and prompt-level factuality instructions.",
+    "metadata": {
+      "category": "ai_specialization",
+      "tags": [
+        "hallucination",
+        "factuality",
+        "grounding"
+      ]
+    }
+  },
+  "mixture_of_experts": {
+    "content": "MoE architecture uses multiple FFN experts with a learned router that selects top-k experts per token. This increases total model capacity without proportionally increasing computation since only a subset of experts activates per token. Design considerations include expert capacity factor, load balancing loss for uniform expert utilization, auxiliary losses, token dropping at capacity limits, and expert parallelism for distributed training of large MoE models.",
+    "metadata": {
+      "category": "ai_specialization",
+      "tags": [
+        "moe",
+        "mixture_of_experts",
+        "sparse"
+      ]
+    }
+  },
+  "speculative_decoding": {
+    "content": "Speculative decoding accelerates LLM inference by using a small draft model to generate candidate tokens verified in parallel by the large target model. Since verification runs in a single parallel forward pass, effective speedup depends on the draft model's acceptance rate and relative speed ratio. Medusa adds multiple prediction heads to the target model itself for speculative generation without a separate draft model, achieving 2-3x speedup.",
+    "metadata": {
+      "category": "ai_specialization",
+      "tags": [
+        "speculative_decoding",
+        "inference",
+        "acceleration"
+      ]
+    }
+  },
+  "long_context": {
+    "content": "Position interpolation extends RoPE-based models to longer contexts by linearly scaling position indices to fit within original training range. YaRN (Yet another RoPE extensioN) improves on this with NTK-aware scaling for better high-frequency position encoding. The Needle-in-a-Haystack test evaluates long-context recall ability by inserting a specific fact into a large context and querying for it.",
+    "metadata": {
+      "category": "ai_specialization",
+      "tags": [
+        "long_context",
+        "position_interpolation",
+        "ring_attention"
+      ]
+    }
+  },
+  "model_merging": {
+    "content": "Model merging combines multiple fine-tuned models without additional training through weight-space operations. Linear averaging merges weights with optional task-specific scaling coefficients. TIES-Merging resolves parameter sign conflicts by trimming low-magnitude changes and resolving sign disagreements through majority vote. DARE applies random dropout to delta parameters before merging to reduce interference between specialized capabilities.",
+    "metadata": {
+      "category": "ai_specialization",
+      "tags": [
+        "model_merging",
+        "ties",
+        "dare"
+      ]
+    }
+  },
+  "open_source_llms": {
+    "content": "Major open-source LLM families include LLaMA 3 (Meta, 8B/70B/405B), Mistral (7B, 8x7B MoE, Large), Qwen 2.5 (Alibaba, 0.5B-72B), DeepSeek V2 (236B MoE, 21B active), Gemma 2 (Google, 2B/9B/27B), and Phi-3 (Microsoft, 3.8B/14B). Each family differs in architecture, training data, license terms, and capability profiles. The open-weight ecosystem enables local deployment, fine-tuning, and customization.",
+    "metadata": {
+      "category": "ai_specialization",
+      "tags": [
+        "open_source",
+        "llama",
+        "mistral",
+        "deepseek"
+      ]
+    }
+  },
+  "neural_architecture_search": {
+    "content": "NAS automates neural network design by searching over possible architectures. Methods include evolutionary algorithms evolving network topologies, RL-based search with policy gradients, and differentiable NAS (DARTS) with continuous architecture relaxation. Efficient NAS techniques like weight sharing, one-shot models, and predictor-guided search reduce computational cost from thousands of GPU-days to a single training run.",
+    "metadata": {
+      "category": "ai_specialization",
+      "tags": [
+        "nas",
+        "neural_architecture",
+        "automl"
+      ]
+    }
+  }
+}

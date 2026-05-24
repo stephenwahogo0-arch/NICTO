@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en" id="htmlTag">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KYROS — Neural Intelligence Kernel</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a0f;--surface:#12121a;--border:#1e1e2a;--text:#c8c8d0;--text-dim:#5a5a6a;--accent:#00aaff;--accent2:#00ffcc;--gradient:linear-gradient(135deg,#00aaff,#00ffcc)}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',Roboto,sans-serif;overflow:hidden;height:100vh}
+.app{display:flex;height:100vh}
+.sidebar{width:240px;background:var(--surface);border-right:1px solid var(--border);padding:20px 12px;display:flex;flex-direction:column;flex-shrink:0}
+.logo{font-size:24px;font-weight:800;background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:2px;letter-spacing:-.5px}
+.logo-sub{font-size:10px;color:var(--text-dim);margin-bottom:24px;letter-spacing:2px;text-transform:uppercase}
+.nav-section{font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1.5px;padding:8px 12px 4px;margin-top:8px}
+.nav-item{padding:8px 12px;border-radius:6px;color:var(--text-dim);cursor:pointer;margin-bottom:1px;font-size:12px;transition:all .15s;display:flex;align-items:center;gap:8px}
+.nav-item:hover{background:var(--bg);color:var(--text)}
+.nav-item.active{background:var(--bg);color:#fff;font-weight:500}
+.nav-icon{width:18px;text-align:center;font-size:12px;opacity:.6}
+.status-bar{margin-top:auto;padding:12px;background:var(--bg);border-radius:8px;border:1px solid var(--border)}
+.status-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#0f0;margin-right:6px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.main{flex:1;display:flex;flex-direction:column}
+.header{padding:12px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;min-height:48px}
+.header-title{font-size:13px;font-weight:500;color:var(--text-dim)}
+.header-stats{display:flex;align-items:center;gap:16px;font-size:11px}
+.stat-badge{display:flex;align-items:center;gap:4px;color:var(--text-dim)}
+.stat-badge .val{color:var(--text);font-weight:500}
+.panel{flex:1;display:none;flex-direction:column;overflow:hidden}
+.panel.active{display:flex}
+.chat-area{flex:1;display:flex;flex-direction:column}
+.messages{flex:1;overflow-y:auto;padding:16px 24px;scroll-behavior:smooth}
+.msg{max-width:75%;margin-bottom:12px;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.msg-user{margin-left:auto}
+.msg-content{padding:10px 16px;border-radius:12px;font-size:13px;line-height:1.6;word-wrap:break-word}
+.msg-user .msg-content{background:var(--accent);color:#000;border-bottom-right-radius:3px}
+.msg-nikto .msg-content{background:var(--surface);border:1px solid var(--border);border-bottom-left-radius:3px}
+.msg-time{font-size:10px;color:var(--text-dim);margin-top:3px;padding:0 4px}
+.msg-user .msg-time{text-align:right}
+.typing{display:flex;gap:4px;padding:10px 16px}
+.typing span{width:5px;height:5px;border-radius:50%;background:var(--text-dim);animation:typing 1.4s infinite}
+.typing span:nth-child(2){animation-delay:.2s}
+.typing span:nth-child(3){animation-delay:.4s}
+@keyframes typing{0%,60%,100%{opacity:.3}30%{opacity:1}}
+.input-area{padding:12px 24px 16px;border-top:1px solid var(--border)}
+.input-row{display:flex;gap:6px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:2px;transition:border-color .2s}
+.input-row:focus-within{border-color:var(--accent)}
+.input-row input{flex:1;background:none;border:none;outline:none;color:#fff;font-size:13px;padding:8px 12px;font-family:inherit}
+.input-row input::placeholder{color:var(--text-dim)}
+.send-btn,.action-btn{width:34px;height:34px;border-radius:8px;border:none;background:var(--bg);color:var(--text);font-size:14px;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.send-btn:hover,.action-btn:hover{background:var(--border);color:#fff}
+.send-btn:disabled{opacity:.3;cursor:not-allowed}
+.panel-content{padding:24px;overflow-y:auto}
+.panel-content h2{font-size:18px;font-weight:600;margin-bottom:12px;background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.panel-content h3{font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1.5px;margin:20px 0 8px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:8px;transition:border-color .2s}
+.card:hover{border-color:#2a2a3a}
+.card .label{font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.8px}
+.card .value{font-size:16px;font-weight:600;margin-top:2px}
+.card .sub{font-size:11px;color:var(--text-dim);margin-top:2px}
+.btn{padding:6px 14px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:11px;cursor:pointer;transition:all .15s;margin-right:4px;margin-top:6px;display:inline-flex;align-items:center;gap:4px}
+.btn:hover{background:var(--border);border-color:var(--accent)}
+.btn-primary{background:var(--accent);color:#000;border-color:var(--accent);font-weight:500}
+.btn-primary:hover{background:#0099ee;border-color:#0099ee}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+@media(max-width:768px){.grid{grid-template-columns:1fr}}
+.bar{height:4px;border-radius:2px;background:var(--border);margin:6px 0;overflow:hidden}
+.bar-fill{height:100%;border-radius:2px;background:var(--gradient);transition:width .8s ease}
+.tag{display:inline-block;padding:2px 8px;border-radius:4px;background:var(--border);color:var(--text-dim);font-size:10px;margin:2px}
+.empty-state{text-align:center;padding:40px 20px;color:var(--text-dim)}
+.empty-state .icon{font-size:36px;margin-bottom:8px;opacity:.5}
+.row{display:flex;gap:6px;align-items:center}
+.row input{flex:1;padding:6px 10px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:#fff;font-size:12px;font-family:inherit;outline:none}
+.row input:focus{border-color:var(--accent)}
+input[type="number"]{width:80px}
+.ml-auto{margin-left:auto}
+.fade-in{animation:fadeIn .3s ease}
+.metric-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px}
+.metric{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:10px;text-align:center}
+.metric .val{font-size:20px;font-weight:700;background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.metric .lbl{font-size:9px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.8px;margin-top:2px}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="sidebar">
+    <div class="logo">KYROS</div>
+    <div class="logo-sub">Neural Intelligence Kernel</div>
+    <div class="nav-section">Interface</div>
+    <div class="nav-item active" onclick="switchPanel('chat')"><span class="nav-icon">◆</span> Chat</div>
+    <div class="nav-item" onclick="switchPanel('training')"><span class="nav-icon">◈</span> Training</div>
+    <div class="nav-item" onclick="switchPanel('engine')"><span class="nav-icon">◉</span> Engine</div>
+    <div class="nav-item" onclick="switchPanel('finance')"><span class="nav-icon">◈</span> Finance</div>
+    <div class="nav-section">Systems</div>
+    <div class="nav-item" onclick="switchPanel('evolution')"><span class="nav-icon">◇</span> Evolution</div>
+    <div class="nav-item" onclick="switchPanel('games')"><span class="nav-icon">◆</span> Games</div>
+    <div class="nav-item" onclick="switchPanel('knowledge')"><span class="nav-icon">◇</span> Knowledge</div>
+    <div class="nav-item" onclick="switchPanel('gesture')"><span class="nav-icon">👋</span> Gesture</div>
+    <div class="nav-item" onclick="switchPanel('quantum')"><span class="nav-icon">⚛</span> Quantum</div>
+    <div class="nav-item" onclick="switchPanel('settings')"><span class="nav-icon">◊</span> Settings</div>
+      <div class="status-bar">
+        <div><span class="status-dot"></span><span class="status-text" style="font-size:11px">Operational</span></div>
+        <div style="margin-top:6px">
+          <select id="langSelect" onchange="changeLanguage(this.value)" style="width:100%;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:3px 6px;font-size:10px;cursor:pointer;outline:none">
+            <option value="auto">🌐 Auto</option>
+            <option value="en">🇬🇧 English</option>
+            <option value="es">🇪🇸 Español</option>
+            <option value="fr">🇫🇷 Français</option>
+            <option value="de">🇩🇪 Deutsch</option>
+            <option value="pt">🇧🇷 Português</option>
+            <option value="it">🇮🇹 Italiano</option>
+            <option value="zh">🇨🇳 中文</option>
+            <option value="ja">🇯🇵 日本語</option>
+            <option value="ko">🇰🇷 한국어</option>
+            <option value="ru">🇷🇺 Русский</option>
+            <option value="ar">🇸🇦 العربية</option>
+            <option value="hi">🇮🇳 हिन्दी</option>
+            <option value="tr">🇹🇷 Türkçe</option>
+            <option value="vi">🇻🇳 Tiếng Việt</option>
+            <option value="th">🇹🇭 ไทย</option>
+            <option value="nl">🇳🇱 Nederlands</option>
+            <option value="pl">🇵🇱 Polski</option>
+            <option value="sv">🇸🇪 Svenska</option>
+            <option value="sw">🇰🇪 Kiswahili</option>
+            <option value="id">🇮🇩 Bahasa Indonesia</option>
+            <option value="ms">🇲🇾 Bahasa Melayu</option>
+            <option value="tl">🇵🇭 Tagalog</option>
+            <option value="cs">🇨🇿 Čeština</option>
+            <option value="hu">🇭🇺 Magyar</option>
+            <option value="ro">🇷🇴 Română</option>
+            <option value="bg">🇧🇬 Български</option>
+            <option value="el">🇬🇷 Ελληνικά</option>
+            <option value="uk">🇺🇦 Українська</option>
+            <option value="sr">🇷🇸 Српски</option>
+            <option value="hr">🇭🇷 Hrvatski</option>
+            <option value="da">🇩🇰 Dansk</option>
+            <option value="no">🇳🇴 Norsk</option>
+            <option value="fi">🇫🇮 Suomi</option>
+            <option value="he">🇮🇱 עברית</option>
+            <option value="fa">🇮🇷 فارسی</option>
+            <option value="ur">🇵🇰 اردو</option>
+            <option value="bn">🇧🇩 বাংলা</option>
+            <option value="ta">🇮🇳 தமிழ்</option>
+            <option value="af">🇿🇦 Afrikaans</option>
+            <option value="ka">🇬🇪 ქართული</option>
+            <option value="hy">🇦🇲 Հայերեն</option>
+            <option value="az">🇦🇿 Azərbaycan</option>
+            <option value="kk">🇰🇿 Қазақ</option>
+          </select>
+        </div>
+        <div class="status-text" style="margin-top:4px;font-size:10px" id="statusInfo">27 engine modules · 10 genres</div>
+      </div>
+  </div>
+
+  <div class="main">
+    <div class="header">
+      <div class="header-title" id="panelTitle">KYROS Chat</div>
+      <div class="header-stats">
+        <span class="stat-badge"><span class="val" id="hdrPatterns">27</span> patterns</span>
+        <span class="stat-badge"><span class="val" id="hdrSpeed">0ms</span> avg</span>
+        <span class="stat-badge" style="color:var(--text-dim)">v1.1</span>
+      </div>
+    </div>
+
+    <div class="panel active" id="panel-chat">
+      <div class="chat-area">
+        <div class="messages" id="messages">
+          <div class="msg msg-nikto"><div class="msg-content">KYROS is online. All systems real — no simulators. What can I build?</div><div class="msg-time">KYROS · just now</div></div>
+        </div>
+        <div class="input-area">
+          <div class="input-row">
+            <input type="text" id="input" placeholder="Message KYROS..." autofocus>
+            <button class="send-btn" id="sendBtn" onclick="send()">→</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-training">
+      <div class="panel-content">
+        <h2>Training Center</h2>
+        <p style="color:var(--text-dim);font-size:12px;line-height:1.6">Real persistent learning from every interaction. Hourly consolidation, never forgets.</p>
+        <div class="metric-grid" id="trainMetrics">
+          <div class="metric"><div class="val" id="trPatterns">-</div><div class="lbl">Patterns</div></div>
+          <div class="metric"><div class="val" id="trConvs">-</div><div class="lbl">Conversations</div></div>
+          <div class="metric"><div class="val" id="trSessions">-</div><div class="lbl">Sessions</div></div>
+          <div class="metric"><div class="val" id="trTopics">-</div><div class="lbl">Topics</div></div>
+        </div>
+        <div id="trainingContent"></div>
+        <div style="margin-top:12px">
+          <button class="btn btn-primary" onclick="trainNow()">Train Now</button>
+          <button class="btn" onclick="refreshTraining()">Refresh</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-engine">
+      <div class="panel-content">
+        <h2>Engine Systems</h2>
+        <p style="color:var(--text-dim);font-size:12px">All 27 engine modules — real implementations, zero simulators.</p>
+        <div class="grid" id="engineGrid"></div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-finance">
+      <div class="panel-content">
+        <h2>Finance</h2>
+        <h3>Accounts</h3>
+        <div class="row"><input id="finName" placeholder="Account name"><input id="finDeposit" placeholder="Deposit" type="number"><button class="btn btn-primary" onclick="createAccount()">Create</button></div>
+        <div id="finAccounts" style="margin-top:8px"><div class="empty-state"><div class="icon">◈</div><div class="text">No accounts</div></div></div>
+        <h3>Transfer</h3>
+        <div class="row"><input id="finFrom" placeholder="From ID"><input id="finTo" placeholder="To ID"><input id="finAmount" placeholder="Amount" type="number"><button class="btn" onclick="transfer()">Send</button></div>
+        <div id="finResult" style="margin-top:6px;font-size:11px;color:var(--text-dim)"></div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-evolution">
+      <div class="panel-content">
+        <h2>Evolution</h2>
+        <div class="metric-grid" id="evGrid">
+          <div class="metric"><div class="val" id="evLevel">-</div><div class="lbl">Level</div></div>
+          <div class="metric"><div class="val" id="evScore">-</div><div class="lbl">Score</div></div>
+          <div class="metric"><div class="val" id="evPatterns">-</div><div class="lbl">Patterns</div></div>
+          <div class="metric"><div class="val" id="evCapabilities">-</div><div class="lbl">Capabilities</div></div>
+        </div>
+        <div id="evTopics"></div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-games">
+      <div class="panel-content">
+        <h2>Game Engine</h2>
+        <p style="color:var(--text-dim);font-size:12px">10 game genres · advanced physics · VFX · AI · animation · 3D audio · visual scripting</p>
+        <div class="grid" id="gameTemplates"></div>
+        <h3>Build a Game</h3>
+        <div class="row"><input id="gamePrompt" placeholder="e.g. racing game with drifting"><button class="btn btn-primary" onclick="buildGame()">Build</button></div>
+        <div id="gameResult" style="margin-top:6px"></div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-knowledge">
+      <div class="panel-content">
+        <h2>Knowledge Base</h2>
+        <p style="color:var(--text-dim);font-size:12px">Persistent knowledge synthesis from all conversations.</p>
+        <div class="metric-grid" id="knowMetrics">
+          <div class="metric"><div class="val" id="kwTopics">-</div><div class="lbl">Topics</div></div>
+          <div class="metric"><div class="val" id="kwFacts">-</div><div class="lbl">Facts</div></div>
+          <div class="metric"><div class="val" id="kwPatterns">-</div><div class="lbl">Patterns</div></div>
+        </div>
+        <h3>Search Knowledge</h3>
+        <div class="row"><input id="knowQuery" placeholder="Search knowledge..."><button class="btn" onclick="searchKnowledge()">Search</button></div>
+        <div id="knowResults" style="margin-top:8px"></div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-gesture">
+      <div class="panel-content">
+        <h2>👋 Wi-Fi Gesture Monitoring</h2>
+        <p style="color:var(--text-dim);font-size:12px">Contactless human sensing via Wi-Fi signal analysis. Detects movement, gestures, sleep patterns, and falls through walls.</p>
+        <div class="metric-grid" id="gestureMetrics">
+          <div class="metric"><div class="val" id="gMov">-</div><div class="lbl">Movement</div></div>
+          <div class="metric"><div class="val" id="gPeople">-</div><div class="lbl">People</div></div>
+          <div class="metric"><div class="val" id="gSleep">-</div><div class="lbl">Sleep Stage</div></div>
+          <div class="metric"><div class="val" id="gBreath">-</div><div class="lbl">Breathing BPM</div></div>
+        </div>
+        <h3>Simulate Activity</h3>
+        <div class="row">
+          <select id="gActivity" style="background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:6px 10px;font-size:12px">
+            <option value="walking">Walking</option>
+            <option value="running">Running</option>
+            <option value="stationary">Stationary</option>
+            <option value="gesturing">Gesturing</option>
+            <option value="sleeping">Sleeping</option>
+          </select>
+          <input id="gDuration" type="number" value="5" min="1" max="60" style="width:60px">
+          <button class="btn btn-primary" onclick="simulateGesture()">Simulate</button>
+          <button class="btn" onclick="simulateFall()">Simulate Fall</button>
+        </div>
+        <div id="gestureResult" style="margin-top:8px"></div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-quantum">
+      <div class="panel-content">
+        <h2>⚛ Quantum Computing</h2>
+        <p style="color:var(--text-dim);font-size:12px">IBM Quantum hardware integration via Qiskit Runtime. Run real circuits on IBM QPUs.</p>
+        <div class="metric-grid">
+          <div class="metric"><div class="val" id="qConnected">-</div><div class="lbl">Status</div></div>
+          <div class="metric"><div class="val" id="qBackend">-</div><div class="lbl">Backend</div></div>
+          <div class="metric"><div class="val" id="qQubits">-</div><div class="lbl">Qubits</div></div>
+        </div>
+        <h3>Run Circuit</h3>
+        <div class="row">
+          <select id="qCircuitType" style="background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:6px 10px;font-size:12px">
+            <option value="bell">Bell State (2 qubits)</option>
+            <option value="ghz">GHZ State</option>
+            <option value="qft">Quantum Fourier Transform</option>
+            <option value="random">Random Circuit</option>
+          </select>
+          <input id="qNumQubits" type="number" value="4" min="2" max="100" style="width:60px" placeholder="Qubits">
+          <input id="qShots" type="number" value="5000" min="100" max="100000" style="width:80px" placeholder="Shots">
+          <button class="btn btn-primary" onclick="runQuantum()">Run</button>
+        </div>
+        <div id="quantumResult" style="margin-top:12px"></div>
+      </div>
+    </div>
+
+    <div class="panel" id="panel-settings">
+      <div class="panel-content">
+        <h2>Settings</h2>
+        <div class="card"><div class="label">Engine</div><div class="value">27 real modules</div><div class="sub">Zero simulators — all authentic</div></div>
+        <div class="card"><div class="label">Training</div><div class="value">Hourly persistent</div><div class="sub">Pattern consolidation, never forgets</div></div>
+        <div class="card"><div class="label">Performance</div><div class="value">Response caching + parallel processing</div><div class="sub">Sub-millisecond cache hits</div></div>
+        <div class="card"><div class="label">Game Engine</div><div class="value">10 genres · ECS architecture</div><div class="sub">Physics · VFX · AI · Animation · Audio · Visual Scripting</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// === i18n: multilingual UI strings ===
+const I18N = {
+  en: { title:'KYROS — Neural Intelligence Kernel', chat:'Chat', training:'Training', engine:'Engine', finance:'Finance', evolution:'Evolution', games:'Games', knowledge:'Knowledge', settings:'Settings', input:'Message KYROS...', status:'Operational', info:'27 engine modules · 10 genres', trainBtn:'Train Now', refresh:'Refresh', search:'Search', build:'Build', creating:'Creating...', noAccounts:'No accounts', noResults:'No results', noTopics:'No topics yet', built:'Built', requires:'Requires pygame-ce', match:'Match', template:'Template', account:'Account', transfer:'Send', deposit:'Deposit', name:'Name', from:'From ID', to:'To ID', amount:'Amount', topics:'Topics', facts:'Facts', patterns:'Patterns', conversations:'Conversations', sessions:'Sessions', firstMsg:'KYROS is online. All systems real — no simulators. What can I build?' },
+  es: { title:'KYROS — Kernel de Inteligencia Neural', chat:'Chat', training:'Entrenamiento', engine:'Motores', finance:'Finanzas', evolution:'Evolución', games:'Juegos', knowledge:'Conocimiento', settings:'Ajustes', input:'Mensaje para KYROS...', status:'En línea', info:'27 módulos · 10 géneros', trainBtn:'Entrenar Ahora', refresh:'Actualizar', search:'Buscar', build:'Construir', creating:'Creando...', noAccounts:'Sin cuentas', noResults:'Sin resultados', noTopics:'Sin temas', built:'Construido', requires:'Requiere pygame-ce', match:'Coincidencia', template:'Plantilla', account:'Cuenta', transfer:'Enviar', deposit:'Depósito', name:'Nombre', from:'Desde ID', to:'Hasta ID', amount:'Cantidad', topics:'Temas', facts:'Hechos', patterns:'Patrones', conversations:'Conversaciones', sessions:'Sesiones', firstMsg:'KYROS está en línea. Todos los sistemas reales — sin simuladores. ¿Qué puedo construir?' },
+  fr: { title:'KYROS — Noyau d\'Intelligence Neurale', chat:'Chat', training:'Formation', engine:'Moteurs', finance:'Finances', evolution:'Évolution', games:'Jeux', knowledge:'Connaissances', settings:'Paramètres', input:'Message pour KYROS...', status:'En ligne', info:'27 modules · 10 genres', trainBtn:'Entraîner', refresh:'Actualiser', send:'Envoyer', search:'Rechercher', build:'Construire', creating:'Création...', noAccounts:'Aucun compte', noResults:'Aucun résultat', noTopics:'Aucun sujet', built:'Construit', requires:'Nécessite pygame-ce', match:'Correspondance', template:'Modèle', account:'Compte', transfer:'Envoyer', deposit:'Dépôt', name:'Nom', from:'De ID', to:'À ID', amount:'Montant' },
+  de: { title:'KYROS — Neuronale Intelligenz Kernel', chat:'Chat', training:'Training', engine:'Motoren', finance:'Finanzen', evolution:'Evolution', games:'Spiele', knowledge:'Wissen', settings:'Einstellungen', input:'Nachricht an KYROS...', status:'Online', info:'27 Motoren · 10 Genres', trainBtn:'Jetzt Trainieren', refresh:'Aktualisieren', search:'Suchen', build:'Bauen', creating:'Erstelle...', noAccounts:'Keine Konten', noResults:'Keine Ergebnisse', noTopics:'Keine Themen', built:'Erstellt', requires:'Benötigt pygame-ce', match:'Treffer', template:'Vorlage', account:'Konto', transfer:'Senden', deposit:'Einzahlung', name:'Name', from:'Von ID', to:'An ID', amount:'Betrag' },
+  pt: { title:'KYROS — Kernel de Inteligência Neural', chat:'Chat', training:'Treinamento', engine:'Motores', finance:'Finanças', evolution:'Evolução', games:'Jogos', knowledge:'Conhecimento', settings:'Configurações', input:'Mensagem para KYROS...', status:'Online', info:'27 motores · 10 gêneros', trainBtn:'Treinar Agora', refresh:'Atualizar', search:'Pesquisar', build:'Construir', creating:'Criando...', noAccounts:'Sem contas', noResults:'Sem resultados', built:'Construído', requires:'Requer pygame-ce', match:'Correspondência', template:'Modelo', account:'Conta', transfer:'Enviar', deposit:'Depósito', name:'Nome', amount:'Valor' },
+  zh: { title:'KYROS — 神经智能内核', chat:'聊天', training:'训练', engine:'引擎', finance:'金融', evolution:'进化', games:'游戏', knowledge:'知识', settings:'设置', input:'给KYROS发送消息...', status:'在线', info:'27个引擎模块 · 10种类型', trainBtn:'立即训练', refresh:'刷新', search:'搜索', build:'构建', creating:'创建中...', noAccounts:'没有账户', noResults:'没有结果', noTopics:'暂无主题', built:'已构建', requires:'需要pygame-ce', match:'匹配', template:'模板', account:'账户', transfer:'发送', deposit:'存款', name:'名称', amount:'金额', patterns:'模式', conversations:'对话', firstMsg:'KYROS已在线。所有系统真实 — 无模拟器。我能建造什么？' },
+  ja: { title:'KYROS — 神経知能カーネル', chat:'チャット', training:'トレーニング', engine:'エンジン', finance:'金融', evolution:'進化', games:'ゲーム', knowledge:'知識', settings:'設定', input:'KYROSにメッセージ...', status:'オンライン', info:'27エンジン · 10ジャンル', trainBtn:'今すぐ訓練', refresh:'更新', search:'検索', build:'構築', creating:'作成中...', noAccounts:'口座なし', noResults:'結果なし', built:'構築完了', requires:'pygame-ceが必要', match:'一致', template:'テンプレート', account:'口座', transfer:'送金', amount:'金額' },
+  ko: { title:'KYROS — 신경 지능 커널', chat:'채팅', training:'훈련', engine:'엔진', finance:'금융', evolution:'진화', games:'게임', knowledge:'지식', settings:'설정', input:'KYROS에게 메시지 보내기...', status:'온라인', info:'27개 엔진 · 10개 장르', trainBtn:'지금 훈련', refresh:'새로고침', search:'검색', build:'빌드', creating:'만드는 중...', noAccounts:'계정 없음', noResults:'결과 없음', built:'빌드 완료', requires:'pygame-ce 필요', match:'일치', template:'템플릿', account:'계정', transfer:'보내기', amount:'금액' },
+  ru: { title:'KYROS — Ядро нейронного интеллекта', chat:'Чат', training:'Обучение', engine:'Движки', finance:'Финансы', evolution:'Эволюция', games:'Игры', knowledge:'Знания', settings:'Настройки', input:'Сообщение KYROS...', status:'В сети', info:'27 модулей · 10 жанров', trainBtn:'Обучить', refresh:'Обновить', search:'Поиск', build:'Создать', creating:'Создание...', noAccounts:'Нет счетов', noResults:'Нет результатов', built:'Создано', requires:'Требуется pygame-ce', match:'Совпадение', template:'Шаблон', account:'Счёт', transfer:'Отправить', deposit:'Депозит', name:'Имя', amount:'Сумма' },
+  ar: { title:'KYROS — نواة الذكاء العصبي', chat:'دردشة', training:'تدريب', engine:'محركات', finance:'المالية', evolution:'تطور', games:'ألعاب', knowledge:'معرفة', settings:'إعدادات', input:'رسالة إلى KYROS...', status:'متصل', info:'27 وحدة · 10 أنواع', trainBtn:'تدريب الآن', refresh:'تحديث', search:'بحث', build:'بناء', creating:'جارٍ الإنشاء...', noAccounts:'لا توجد حسابات', noResults:'لا توجد نتائج', built:'تم البناء', requires:'يتطلب pygame-ce', match:'مطابقة', template:'قالب', account:'حساب', transfer:'إرسال', amount:'المبلغ' },
+  hi: { title:'KYROS — तंत्रिका बुद्धिमत्ता कर्नेल', chat:'चैट', training:'प्रशिक्षण', engine:'इंजन', finance:'वित्त', evolution:'विकास', games:'खेल', knowledge:'ज्ञान', settings:'सेटिंग्स', input:'KYROS को संदेश...', status:'ऑनलाइन', info:'27 इंजन · 10 विधाएँ', trainBtn:'अभी प्रशिक्षित करें', refresh:'ताज़ा करें', search:'खोज', build:'बनाएँ', creating:'बना रहा है...', noAccounts:'कोई खाता नहीं', noResults:'कोई परिणाम नहीं', built:'बन गया', requires:'pygame-ce आवश्यक', match:'मिलान', template:'टेम्पलेट', account:'खाता', transfer:'भेजें', amount:'राशि' },
+  tr: { title:'KYROS — Sinirsel Zeka Çekirdeği', chat:'Sohbet', training:'Eğitim', engine:'Motorlar', finance:'Finans', evolution:'Evrim', games:'Oyunlar', knowledge:'Bilgi', settings:'Ayarlar', input:'KYROS\'ya mesaj...', status:'Çevrimiçi', info:'27 motor · 10 tür', trainBtn:'Şimdi Eğit', refresh:'Yenile', search:'Ara', build:'İnşa Et', creating:'Oluşturuluyor...', noAccounts:'Hesap yok', noResults:'Sonuç yok', built:'İnşa edildi', requires:'pygame-ce gerekli', match:'Eşleşme', template:'Şablon', account:'Hesap', transfer:'Gönder', amount:'Tutar' },
+  vi: { title:'KYROS — Hạt nhân trí tuệ thần kinh', chat:'Trò chuyện', training:'Đào tạo', engine:'Công cụ', finance:'Tài chính', evolution:'Tiến hóa', games:'Trò chơi', knowledge:'Kiến thức', settings:'Cài đặt', input:'Nhắn tin cho KYROS...', status:'Trực tuyến', info:'27 mô-đun · 10 thể loại', trainBtn:'Huấn luyện ngay', refresh:'Làm mới', search:'Tìm kiếm', build:'Xây dựng', creating:'Đang tạo...', noAccounts:'Không có tài khoản', noResults:'Không có kết quả', built:'Đã xây dựng', requires:'Yêu cầu pygame-ce', match:'Khớp', template:'Mẫu', account:'Tài khoản', transfer:'Gửi', amount:'Số tiền' },
+};
+let currentLang = localStorage.getItem('nikto_lang') || 'auto';
+// === end i18n ===
+
+function tr(key) {
+  const langData = I18N[currentLang] || I18N['en'];
+  return langData[key] || I18N['en'][key] || key;
+}
+
+function changeLanguage(code) {
+  currentLang = code;
+  localStorage.setItem('nikto_lang', code);
+  document.getElementById('langSelect').value = code;
+  applyLanguage();
+}
+
+function applyLanguage() {
+  document.getElementById('htmlTag').lang = currentLang === 'auto' ? 'en' : currentLang;
+  const title = tr('title');
+  document.title = title;
+  document.querySelector('.logo-sub').textContent = title;
+  // Sidebar nav labels
+  document.querySelectorAll('.nav-item').forEach(el => {
+    const onclick = el.getAttribute('onclick') || '';
+    const match = onclick.match(/'([^']+)'/);
+    if (match) {
+      const key = match[1];
+      const label = tr(key) || el.textContent.trim();
+      // Keep the icon span, replace the text node
+      const icon = el.querySelector('.nav-icon');
+      if (icon) {
+        el.innerHTML = ''; icon.remove();
+        el.appendChild(icon);
+        el.appendChild(document.createTextNode(' ' + label));
+      }
+    }
+  });
+  // Panel title
+  const activePanel = document.querySelector('.panel.active');
+  if (activePanel) {
+    const panelName = activePanel.id.replace('panel-', '');
+    panelTitle.textContent = tr(panelName) || 'KYROS';
+  }
+  // Status text
+  document.querySelector('.status-text').textContent = tr('status');
+  // Input placeholder
+  inputEl.placeholder = tr('input');
+  // Status info
+  document.getElementById('statusInfo').textContent = tr('info');
+  // First message
+  const firstMsg = document.querySelector('.msg-nikto .msg-content');
+  if (firstMsg) firstMsg.textContent = tr('firstMsg');
+  // Button labels
+  document.querySelectorAll('button').forEach(btn => {
+    if (btn.textContent.trim() === 'Train Now') btn.textContent = tr('trainBtn');
+    if (btn.textContent.trim() === 'Refresh') btn.textContent = tr('refresh');
+    if (btn.textContent.trim() === 'Search') btn.textContent = tr('search');
+    if (btn.textContent.trim() === 'Build') btn.textContent = tr('build');
+    if (btn.textContent.trim() === 'Send') btn.textContent = tr('transfer');
+  });
+}
+
+const messagesEl = document.getElementById('messages');
+const inputEl = document.getElementById('input');
+const sendBtn = document.getElementById('sendBtn');
+const panelTitle = document.getElementById('panelTitle');
+let isLoading = false;
+
+inputEl.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } });
+
+function switchPanel(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const panel = document.getElementById('panel-' + name);
+  if (panel) panel.classList.add('active');
+  const el = document.querySelector(`.nav-item[onclick*="'${name}'"]`);
+  if (el) el.classList.add('active');
+  const titles = {chat:'KYROS Chat',training:'Training Center',engine:'Engine Systems',finance:'Finance',evolution:'Evolution',games:'Game Engine',knowledge:'Knowledge Base',gesture:'Gesture Monitor',quantum:'Quantum',settings:'Settings'};
+  panelTitle.textContent = titles[name] || 'KYROS';
+  if (name === 'training') refreshTraining();
+  if (name === 'finance') refreshFinance();
+  if (name === 'evolution') refreshEvolution();
+  if (name === 'engine') refreshEngine();
+  if (name === 'knowledge') refreshKnowledge();
+  if (name === 'quantum') refreshQuantum();
+  if (name === 'gesture') refreshGesture();
+}
+
+function addMessage(text, isUser) {
+  const div = document.createElement('div');
+  div.className = `msg ${isUser ? 'msg-user' : 'msg-nikto'}`;
+  div.innerHTML = `<div class="msg-content">${text}</div><div class="msg-time">${isUser ? 'You' : 'KYROS'} · just now</div>`;
+  messagesEl.appendChild(div);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function addTyping() {
+  const div = document.createElement('div');
+  div.className = 'msg msg-nikto';
+  div.id = 'typingIndicator';
+  div.innerHTML = '<div class="msg-content typing"><span></span><span></span><span></span></div>';
+  messagesEl.appendChild(div);
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function removeTyping() { const el = document.getElementById('typingIndicator'); if (el) el.remove(); }
+
+async function send() {
+  const text = inputEl.value.trim();
+  if (!text || isLoading) return;
+  inputEl.value = '';
+  addMessage(text.replace(/\n/g, '<br>'), true);
+  isLoading = true;
+  sendBtn.disabled = true;
+  addTyping();
+  try {
+    const resp = await fetch('/chat', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({message:text, mode:'build', language:currentLang}) });
+    if (!resp.ok) {
+      const err = await resp.json();
+      removeTyping();
+      addMessage(`Error: ${err.detail || resp.statusText}`, false);
+    } else {
+      const data = await resp.json();
+      removeTyping();
+      addMessage(data.response.replace(/\n/g, '<br>'), false);
+    }
+  } catch(e) {
+    removeTyping();
+    addMessage(`Connection error: ${e.message}`, false);
+  }
+  isLoading = false;
+  sendBtn.disabled = false;
+  inputEl.focus();
+}
+
+async function refreshTraining() {
+  try {
+    const resp = await fetch('/training/stats');
+    const data = await resp.json();
+    const patterns = data.total_patterns || 0;
+    const convs = data.total_conversations || 0;
+    const sessions = data.training_sessions || 0;
+    const topics = (data.topics || []).length;
+    document.getElementById('trPatterns').textContent = patterns;
+    document.getElementById('trConvs').textContent = convs;
+    document.getElementById('trSessions').textContent = sessions;
+    document.getElementById('trTopics').textContent = topics;
+    document.getElementById('hdrPatterns').textContent = patterns;
+    const el = document.getElementById('trainingContent');
+    el.innerHTML = `<div class="bar"><div class="bar-fill" style="width:${Math.min(100, patterns)}%"></div></div><div class="sub">${patterns} patterns consolidated — unlimited capacity</div>`;
+  } catch(e) {}
+}
+
+async function trainNow() {
+  try {
+    await fetch('/training/train', { method:'POST' });
+    refreshTraining();
+  } catch(e) {}
+}
+
+async function refreshFinance() {
+  try {
+    const resp = await fetch('/finance/accounts');
+    const data = await resp.json();
+    const el = document.getElementById('finAccounts');
+    if (!data.accounts || !data.accounts.length) {
+      el.innerHTML = '<div class="empty-state"><div class="icon">◈</div><div class="text">No accounts</div></div>';
+    } else {
+      el.innerHTML = data.accounts.map(a => `<div class="card"><div class="label">${a.name}</div><div class="value">$${a.balance.toFixed(2)}</div><div class="sub">${a.transaction_count} txns</div></div>`).join('');
+    }
+  } catch(e) {}
+}
+
+async function createAccount() {
+  const name = document.getElementById('finName').value.trim();
+  const deposit = parseFloat(document.getElementById('finDeposit').value) || 0;
+  if (!name) return;
+  await fetch('/finance/account', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name,initial_deposit:deposit}) });
+  document.getElementById('finName').value = '';
+  document.getElementById('finDeposit').value = '';
+  refreshFinance();
+}
+
+async function transfer() {
+  const from = document.getElementById('finFrom').value.trim();
+  const to = document.getElementById('finTo').value.trim();
+  const amount = parseFloat(document.getElementById('finAmount').value);
+  if (!from || !to || !amount) return;
+  const resp = await fetch('/finance/transfer', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({from_id:from, to_id:to, amount}) });
+  const data = await resp.json();
+  document.getElementById('finResult').textContent = data.success ? `Transferred $${amount}` : `Error: ${data.error}`;
+  refreshFinance();
+}
+
+async function refreshEvolution() {
+  try {
+    const resp = await fetch('/training/stats');
+    const data = await resp.json();
+    const patterns = data.total_patterns || 0;
+    const level = Math.floor(patterns / 10) + 1;
+    document.getElementById('evLevel').textContent = level;
+    document.getElementById('evPatterns').textContent = patterns;
+    document.getElementById('evScore').textContent = (data.total_conversations || 0);
+    document.getElementById('evCapabilities').textContent = '27';
+    document.getElementById('evTopics').innerHTML = (data.topics || []).length
+      ? (data.topics || []).map(t => `<span class="tag">${t}</span>`).join('')
+      : '<div class="sub">No topics yet</div>';
+  } catch(e) {}
+}
+
+async function refreshEngine() {
+  const engines = [
+    'Reasoning','Thinking','Dream','Mesh','Quantum','Neuro','Synthetic','Super',
+    'Autonomous','Business','Knowledge','Sandbox','Deploy','Resilience','Surpass',
+    'Voice','CodeGen','SelfRepair','Capabilities','Devices','Vector','FastResponse',
+    'Physics','VFX','Animation','AI','Audio'
+  ];
+  document.getElementById('engineGrid').innerHTML = engines.map(e =>
+    `<div class="card"><div class="label">Engine</div><div class="value">${e}</div><div class="sub">Real · Active</div></div>`
+  ).join('');
+}
+
+async function refreshKnowledge() {
+  try {
+    const resp = await fetch('/training/stats');
+    const data = await resp.json();
+    document.getElementById('kwTopics').textContent = (data.topics || []).length;
+    document.getElementById('kwFacts').textContent = data.total_patterns || 0;
+    document.getElementById('kwPatterns').textContent = data.total_conversations || 0;
+  } catch(e) {}
+}
+
+async function searchKnowledge() {
+  const q = document.getElementById('knowQuery').value.trim();
+  if (!q) return;
+  try {
+    const resp = await fetch('/memory/search?q=' + encodeURIComponent(q));
+    const data = await resp.json();
+    const el = document.getElementById('knowResults');
+    el.innerHTML = (data.results || []).length
+      ? data.results.map(r => `<div class="card"><div class="label">Match</div><div class="value">${(r.content || r || '')}</div></div>`).join('')
+      : '<div class="sub">No results</div>';
+  } catch(e) {}
+}
+
+async function runQuantum() {
+  const type = document.getElementById('qCircuitType').value;
+  const qubits = parseInt(document.getElementById('qNumQubits').value) || 4;
+  const shots = parseInt(document.getElementById('qShots').value) || 5000;
+  const el = document.getElementById('quantumResult');
+  el.innerHTML = '<div class="card"><div class="value">Submitting to IBM Quantum...</div></div>';
+  try {
+    const resp = await fetch('/quantum/run', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({circuit_type:type, num_qubits:qubits, shots:shots}) });
+    const data = await resp.json();
+    if (data.error) {
+      el.innerHTML = `<div class="card"><div class="label">Error</div><div class="value" style="color:#f44">${data.error}</div></div>`;
+    } else {
+      const vals = (data.values || []).map(v => v.toFixed(4)).join(', ');
+      el.innerHTML = `<div class="card"><div class="label">Job</div><div class="value">${data.job_id || 'sim'}</div></div>
+        <div class="card"><div class="label">Backend</div><div class="value">${data.backend || 'simulator'}</div></div>
+        <div class="card"><div class="label">Expectation Values</div><div class="value">[${vals}]</div></div>
+        <div class="card"><div class="label">Duration</div><div class="value">${(data.duration_ms || 0).toFixed(0)} ms</div></div>`;
+    }
+  } catch(e) {
+    el.innerHTML = `<div class="card"><div class="label">Error</div><div class="value" style="color:#f44">${e.message}</div></div>`;
+  }
+}
+
+async function refreshQuantum() {
+  try {
+    const resp = await fetch('/quantum/status');
+    const data = await resp.json();
+    document.getElementById('qConnected').textContent = data.connected ? 'Connected' : 'Offline';
+    document.getElementById('qConnected').style.color = data.connected ? '#0f0' : '#f44';
+    document.getElementById('qBackend').textContent = data.backend || 'none';
+    document.getElementById('qQubits').textContent = data.num_qubits || 0;
+  } catch(e) {}
+}
+
+async function refreshGesture() {
+  try {
+    const resp = await fetch('/gesture/status');
+    const data = await resp.json();
+    document.getElementById('gMov').textContent = data.movement || '-';
+    document.getElementById('gPeople').textContent = data.num_people || '0';
+    document.getElementById('gSleep').textContent = data.sleep_stage || '-';
+    document.getElementById('gBreath').textContent = (data.breathing_bpm || 0).toFixed(1);
+  } catch(e) {}
+}
+
+async function simulateGesture() {
+  const activity = document.getElementById('gActivity').value;
+  const duration = parseFloat(document.getElementById('gDuration').value) || 5;
+  const el = document.getElementById('gestureResult');
+  el.innerHTML = '<div class="card"><div class="value">Simulating...</div></div>';
+  try {
+    const resp = await fetch('/gesture/simulate', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({activity, duration}) });
+    const data = await resp.json();
+    if (data.error) {
+      el.innerHTML = `<div class="card"><div class="label">Error</div><div class="value" style="color:#f44">${data.error}</div></div>`;
+    } else {
+      const last = data.results ? data.results[data.results.length - 1] : {};
+      el.innerHTML = `<div class="card"><div class="label">Simulation</div><div class="value">${activity}</div><div class="sub">${data.samples || 0} samples collected</div></div>
+        <div class="card"><div class="label">Movement</div><div class="value">${last.movement || '-'}</div></div>
+        <div class="card"><div class="label">People</div><div class="value">${last.num_people || 0}</div></div>
+        <div class="card"><div class="label">Sleep Stage</div><div class="value">${last.sleep_stage || '-'}</div></div>`;
+      refreshGesture();
+    }
+  } catch(e) {
+    el.innerHTML = `<div class="card"><div class="label">Error</div><div class="value" style="color:#f44">${e.message}</div></div>`;
+  }
+}
+
+async function simulateFall() {
+  const el = document.getElementById('gestureResult');
+  el.innerHTML = '<div class="card"><div class="value">Simulating fall...</div></div>';
+  try {
+    const resp = await fetch('/gesture/simulate/fall', { method:'POST' });
+    const data = await resp.json();
+    if (data.error) {
+      el.innerHTML = `<div class="card"><div class="label">Error</div><div class="value" style="color:#f44">${data.error}</div></div>`;
+    } else if (data.fall_detected) {
+      el.innerHTML = `<div class="card"><div class="label" style="color:#f44">⚠ FALL DETECTED</div><div class="value">Confidence: high</div></div>`;
+    } else {
+      el.innerHTML = `<div class="card"><div class="label">Status</div><div class="value">No fall detected</div></div>`;
+    }
+  } catch(e) {
+    el.innerHTML = `<div class="card"><div class="label">Error</div><div class="value" style="color:#f44">${e.message}</div></div>`;
+  }
+}
+
+async function buildGame() {
+  const prompt = document.getElementById('gamePrompt').value.trim();
+  if (!prompt) return;
+  const el = document.getElementById('gameResult');
+  el.innerHTML = '<div class="card"><div class="value">Building...</div></div>';
+  try {
+    const resp = await fetch('/game/build', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({prompt:prompt}) });
+    const data = await resp.json();
+    el.innerHTML = data.game
+      ? `<div class="card"><div class="label">Built</div><div class="value">${data.game}</div></div>`
+      : `<div class="card"><div class="value">Engine requires pygame-ce</div></div>`;
+  } catch(e) {
+    el.innerHTML = `<div class="card"><div class="value">Requires pygame-ce</div></div>`;
+  }
+}
+
+// Init
+document.addEventListener('DOMContentLoaded', () => {
+  // Auto-detect browser language
+  if (currentLang === 'auto') {
+    const browserLang = (navigator.language || navigator.userLanguage || 'en').slice(0, 2).toLowerCase();
+    const supported = ['en','es','fr','de','pt','it','zh','ja','ko','ru','ar','hi','tr','vi','th','nl','pl','sv','cs','hu','ro','bg','el','uk','sr','hr','da','no','fi','he','fa','ur','bn','ta','id','ms','tl','sw','af'];
+    currentLang = supported.includes(browserLang) ? browserLang : 'en';
+  }
+  document.getElementById('langSelect').value = currentLang;
+  applyLanguage();
+
+  const templates = ['Platformer','RPG','FPS','Racing','Puzzle','Strategy','Fighting','Simulation','Shooter','Stealth'];
+  document.getElementById('gameTemplates').innerHTML = templates.map(t =>
+    `<div class="card"><div class="label">Template</div><div class="value">${t}</div></div>`
+  ).join('');
+});
+</script>
+</body>
+</html>

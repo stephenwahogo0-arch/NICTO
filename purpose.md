@@ -1,4 +1,4 @@
-# NIKTO — Purpose
+# KYROS — Purpose
 
 ## Primary Directive
 

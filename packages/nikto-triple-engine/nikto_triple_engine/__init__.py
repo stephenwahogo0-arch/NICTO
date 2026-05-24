@@ -1,4 +1,4 @@
-"""NIKTO Triple-Engine — Zig + Mojo + Rust integrated native module.
+"""KYROS Triple-Engine — Zig + Mojo + Rust integrated native module.
 
 This module wraps the compiled `nikto_triple_engine.pyd` / `.so` and
 provides a Pythonic interface. If the native binary is not yet compiled,
@@ -10,7 +10,7 @@ Architecture:
    Rust    — Orchestrator + PyO3 bridge (exposes as native Python module)
 
 Usage:
-    from nikto_triple_engine import NiktoTripleEngine
+    from nikto_triple_engine import kyros ripleEngine
 
     engine = NiktoTripleEngine()
 
@@ -44,7 +44,7 @@ class NiktoTripleEngine:
     def __init__(self):
         if not HAS_NATIVE:
             raise RuntimeError(
-                "NIKTO Triple-Engine native module not found.\n\n"
+                "KYROS Triple-Engine native module not found.\n\n"
                 "Build instructions:\n"
                 "  1. Install prerequisites:\n"
                 "     - Rust:    https://rustup.rs\n"
@@ -56,7 +56,7 @@ class NiktoTripleEngine:
                 "  3. Copy to Python package:\n"
                 "     cp target/release/nikto_triple_engine.pyd .\n\n"
                 "  4. Import:\n"
-                "     from nikto_triple_engine import NiktoTripleEngine"
+                "     from nikto_triple_engine import kyros ripleEngine"
             )
         self._engine = _native.NiktoTripleEngine()
 

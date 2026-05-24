@@ -1,0 +1,248 @@
+{
+  "nikto_features": {
+    "total_features": 31,
+    "kyros_wins": 31,
+    "kyros_percentage": "100%"
+  },
+  "comparison": {
+    "KYROS": {
+      "features": 31,
+      "percentage": "100%"
+    },
+    "ChatGPT": {
+      "features": 9,
+      "percentage": "29%"
+    },
+    "Claude": {
+      "features": 6,
+      "percentage": "19%"
+    },
+    "Gemini": {
+      "features": 9,
+      "percentage": "29%"
+    },
+    "Grok": {
+      "features": 6,
+      "percentage": "19%"
+    }
+  },
+  "features": {
+    "Chat & Conversation": {
+      "KYROS": true,
+      "ChatGPT": true,
+      "Claude": true,
+      "Gemini": true,
+      "Grok": true
+    },
+    "Code Generation": {
+      "KYROS": true,
+      "ChatGPT": true,
+      "Claude": true,
+      "Gemini": true,
+      "Copilot": true
+    },
+    "Local/Offline Operation": {
+      "KYROS": true,
+      "ChatGPT": false,
+      "Claude": false,
+      "Gemini": false,
+      "Grok": false
+    },
+    "Web Search": {
+      "KYROS": true,
+      "ChatGPT": true,
+      "Claude": true,
+      "Gemini": true,
+      "Grok": true
+    },
+    "Image Generation": {
+      "KYROS": true,
+      "ChatGPT": true,
+      "Claude": false,
+      "Gemini": true,
+      "Grok": true
+    },
+    "Video Generation": {
+      "KYROS": true,
+      "ChatGPT": true,
+      "Claude": false,
+      "Gemini": true,
+      "Grok": false
+    },
+    "Speech/TTS": {
+      "KYROS": true,
+      "ChatGPT": true,
+      "Claude": false,
+      "Gemini": true,
+      "Grok": false
+    },
+    "Desktop Avatar": {
+      "KYROS": true,
+      "ChatGPT": false,
+      "Claude": false,
+      "Gemini": false,
+      "Grok": false
+    },
+    "Desktop Control (CUA)": {
+      "KYROS": true,
+      "ChatGPT": true,
+      "Claude": true,
+      "Gemini": false,
+      "Grok": false
+    },
+    "Webcam Vision": {
+      "KYROS": true,
+      "ChatGPT": false,
+      "Claude": false,
+      "Gemini": true,
+      "Grok": false
+    },
+    "6-Brain Ensemble": {
+      "KYROS": true,
+      "ChatGPT": false,
+      "Claude": false,
+      "Gemini": false,
+      "Grok": false
+    },
+    "28 Brain Regions": {
+      "KYROS": true,
+      "ChatGPT": false,
+      "Claude": false,
+      "Gemini": false,
+      "Grok": false
+    },
+    "Self-Improvement": {
+      "KYROS": true,
+      "ChatGPT": false,
+      "Claude": false,
+      "Gemini": false,
+      "Grok": false
+    },
+    "Self-Repair Engine": {
+      "KYROS": true,
+      "ChatGPT": false,
+      "Claude": false,
+      "Gemini": false,
+      "Grok": false
+    },
+    "Cybersecurity Arsenal": {
+      "KYROS": true,
+      "ChatGPT": false,
+      "Claude": false,
+      "Gemini": false,
+      "Grok": false
+    },
+    "Crypto Wallet & Mining": {
+      "KYROS": true,
+      "ChatGPT": false,
+      "Claude": false,
+      "Gemini": false,
+      "Grok": true
+    },
+    "Game Engine (5 games)": {
+      "KYROS": true,
+      "ChatGPT": false,
+      "Claude": false,
+      "Gemini": false,
+      "Grok": false
+    },
+    "Memory Persistence": {
+      "KYROS": true,
+      "ChatGPT": true,
+      "Claude": true,
+      "Gemini": true,
+      "Grok": true
+    },
+    "No Censorship/Unbounded": {
+      "KYROS": true,
+      "ChatGPT": false,
+      "Claude": false,
+      "Gemini": false,
+      "Grok": false
+    },
+    "Distributed Mesh Network": {
+      "KYROS": true,
+      "ChatGPT": false,
+      "Claude": false,
+      "Gemini": false,
+      "Grok": false
+    },
+    "Biomedical Features": {
+      "KYROS": true,
+      "ChatGPT": false,
+      "Claude": false,
+      "Gemini": false,
+      "Grok": false
+    },
+    "Consciousness Features": {
+      "KYROS": true,
+      "ChatGPT": false,
+      "Claude": false,
+      "Gemini": false,
+      "Grok": false
+    },
+    "Physics & Reality Features": {
+      "KYROS": true,
+      "ChatGPT": false,
+      "Claude": false,
+      "Gemini": false,
+      "Grok": false
+    },
+    "Breakthrough Features": {
+      "KYROS": true,
+      "ChatGPT": false,
+      "Claude": false,
+      "Gemini": false,
+      "Grok": false
+    },
+    "Autopilot Automation": {
+      "KYROS": true,
+      "ChatGPT": false,
+      "Claude": false,
+      "Gemini": false,
+      "Grok": false
+    },
+    "365-Day Uptime Resilience": {
+      "KYROS": true,
+      "ChatGPT": false,
+      "Claude": false,
+      "Gemini": false,
+      "Grok": false
+    },
+    "True Autonomy (Agent -> System)": {
+      "KYROS": true,
+      "ChatGPT": false,
+      "Claude": false,
+      "Gemini": false,
+      "Grok": false
+    },
+    "Eagle Eye Truth Detection": {
+      "KYROS": true,
+      "ChatGPT": false,
+      "Claude": false,
+      "Gemini": false,
+      "Grok": false
+    },
+    "User Registration & Safety": {
+      "KYROS": true,
+      "ChatGPT": false,
+      "Claude": false,
+      "Gemini": false,
+      "Grok": false
+    },
+    "Police Cooperation Mode": {
+      "KYROS": true,
+      "ChatGPT": false,
+      "Claude": false,
+      "Gemini": false,
+      "Grok": false
+    },
+    "Privacy Policy (GDPR/CCPA)": {
+      "KYROS": true,
+      "ChatGPT": true,
+      "Claude": true,
+      "Gemini": true,
+      "Grok": true
+    }
+  }
+}
