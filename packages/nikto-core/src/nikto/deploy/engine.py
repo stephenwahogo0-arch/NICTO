@@ -94,43 +94,9 @@ class DeployEngine:
                 record.error = str(e)
                 return False
         return False
-            target_enum = DeploymentTarget(target)
-        except ValueError:
-            return {"success": False, "error": f"Invalid target: {target}. Valid: {[t.value for t in DeploymentTarget]}"}
 
-        template = DEPLOYMENT_TEMPLATES.get(target, {})
-        record = DeploymentRecord(
-            target=target,
-            hostname=hostname or f"{target}-{random.randint(1000,9999)}",
-            status="deploying",
-            version=version,
-            components=template.get("components", ["nikto-core"]),
-            config=config or {},
-        )
-        validation = self._validate_deployment_target(target_enum, hostname, config or {})
-        if validation["ok"]:
-            record.status = "running"
-            record.installed_at = time.time()
-            record.last_heartbeat = time.time()
-            record.metadata["validation"] = validation
-        else:
-            record.status = "failed"
-            record.metadata["validation"] = validation
 
-        self.deployments[record.id] = record
-        self._save()
-        return {
-            "success": record.status == "running",
-            "deployment_id": record.id,
-            "target": target,
-            "hostname": record.hostname,
-            "status": record.status,
-            "components": record.components,
-            "description": template.get("description", ""),
-            "validation": record.metadata.get("validation", {}),
-        }
-
-    def _validate_deployment_target(self, target: DeploymentTarget, hostname: str, config: dict[str, Any]) -> dict:
+    def _validate_deployment_target(self, target: DeploymentTarget, hostname: str, config: dict) -> dict:
         issues = []
         host = (hostname or "").strip()
         if host and not re.fullmatch(r"[a-zA-Z0-9.-]{1,253}", host):
@@ -140,41 +106,36 @@ class DeployEngine:
                 issues.append("docker_binary_not_found")
             if not shutil.which("kubectl") and target == DeploymentTarget.KUBERNETES:
                 issues.append("kubectl_binary_not_found")
-        if target in {DeploymentTarget.LINUX_SERVER, DeploymentTarget.CLOUD_VM, DeploymentTarget.EDGE_DEVICE} and not host:
+        if target in {DeploymentTarget.LINUX_SERVER, DeploymentTarget.RASPBERRY_PI} and not host:
             issues.append("hostname_required")
         return {"ok": len(issues) == 0, "issues": issues, "checked_at": time.time()}
 
     def uninstall(self, deployment_id: str) -> dict:
-        if deployment_id not in self.deployments:
+        if deployment_id not in self.records:
             return {"success": False, "error": "Deployment not found"}
-        self.deployments[deployment_id].status = "uninstalled"
-        self._save()
+        self.records[deployment_id].status = "uninstalled"
         return {"success": True, "deployment_id": deployment_id}
 
     def heartbeat(self, deployment_id: str) -> dict:
-        if deployment_id not in self.deployments:
+        if deployment_id not in self.records:
             return {"success": False, "error": "Deployment not found"}
-        self.deployments[deployment_id].last_heartbeat = time.time()
-        self.deployments[deployment_id].status = "running"
-        self._save()
+        self.records[deployment_id].last_heartbeat = time.time()
+        self.records[deployment_id].status = "running"
         return {"success": True, "deployment_id": deployment_id, "status": "running"}
 
     def update(self, deployment_id: str, new_version: str) -> dict:
-        if deployment_id not in self.deployments:
+        if deployment_id not in self.records:
             return {"success": False, "error": "Deployment not found"}
-        d = self.deployments[deployment_id]
-        old_ver = d.version
+        d = self.records[deployment_id]
         d.version = new_version
         d.status = "running"
-        self._save()
-        return {"success": True, "deployment_id": deployment_id, "old_version": old_ver, "new_version": new_version}
-
-    def list_deployments(self) -> list[dict]:
-        return [d.to_dict() for d in self.deployments.values()]
+        return {"success": True, "deployment_id": deployment_id, "old_version": d.version, "new_version": new_version}
 
     def get_deployment(self, deployment_id: str) -> Optional[dict]:
-        d = self.deployments.get(deployment_id)
-        return d.to_dict() if d else None
+        d = self.records.get(deployment_id)
+        if not d:
+            return None
+        return {"id": d.id, "target": d.target.value, "hostname": d.hostname, "status": d.status}
 
     def remote_command(self, deployment_id: str, command: str) -> dict:
         record = self.records.get(deployment_id)
@@ -201,3 +162,12 @@ class DeployEngine:
 
     def list_deployments(self) -> list:
         return [{"id": rid, "target": r.target.value, "hostname": r.hostname, "status": r.status} for rid, r in self.records.items()]
+
+
+DEPLOYMENT_TEMPLATES = {
+    "linux_server": {"components": ["nikto-core", "nikto-web", "nginx"], "min_ram": 2},
+    "raspberry_pi": {"components": ["nikto-core"], "min_ram": 1, "arch": "arm64"},
+    "docker": {"components": ["nikto-core", "nikto-web"], "image": "nikto:latest"},
+    "kubernetes": {"components": ["nikto-core", "nikto-web", "redis"], "replicas": 3},
+    "android": {"components": ["nikto-mobile"], "min_sdk": 26},
+}
