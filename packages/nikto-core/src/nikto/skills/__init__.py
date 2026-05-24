@@ -1,3 +1,3 @@
-from nikto.skills.base import SkillRuntime, Skill
+from nikto.skills.base import SkillRuntime
 
-__all__ = ["SkillRuntime", "Skill"]
+__all__ = ["SkillRuntime"]

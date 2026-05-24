@@ -1,32 +1,28 @@
-"""Real device controller — discovers and interacts with actual system devices."""
-import os
-import platform
-import subprocess
-import sys
 from enum import Enum
-from typing import Optional
+from uuid import uuid4
+from datetime import datetime
 
 
 class DeviceType(Enum):
-    SYSTEM = "system"
-    CPU = "cpu"
-    STORAGE = "storage"
-    MEMORY = "memory"
-    NETWORK = "network"
+    SERVER = "server"
+    WORKSTATION = "workstation"
+    MOBILE = "mobile"
+    IOT = "iot"
+    ROBOT = "robot"
+    EMBEDDED = "embedded"
 
 
 class DeviceConnection:
-    def __init__(self, device_id: str, protocol: str = "local"):
-        self.device_id = device_id
+    def __init__(self, protocol: str, address: str, port: int = 0):
         self.protocol = protocol
-        self.connected = False
+        self.address = address
+        self.port = port
 
 
 class DeviceCommand:
-    def __init__(self, command: str, args: list = None, timeout: int = 30):
+    def __init__(self, command: str, params: dict = None):
         self.command = command
-        self.args = args or []
-        self.timeout = timeout
+        self.params = params or {}
 
 
 class CommandResult:
@@ -36,48 +32,19 @@ class CommandResult:
         self.error = error
 
 
-class DeviceDiscovery:
-    def __init__(self):
-        self.devices = {}
-
-    def scan(self) -> list:
-        result = []
-        result.append({"type": DeviceType.SYSTEM, "name": platform.node(), "os": platform.system(), "arch": platform.machine()})
-        result.append({"type": DeviceType.CPU, "name": platform.processor() or "Unknown", "cores": os.cpu_count() or 1})
-        result.append({"type": DeviceType.NETWORK, "hostname": platform.node()})
-        try:
-            import psutil
-            disk = psutil.disk_usage("/")
-            result.append({"type": DeviceType.STORAGE, "total_gb": round(disk.total / 1e9, 1), "free_gb": round(disk.free / 1e9, 1)})
-            result.append({"type": DeviceType.MEMORY, "total_gb": round(psutil.virtual_memory().total / 1e9, 1)})
-        except ImportError:
-            pass
-        return result
-
-
 class DeviceController:
     def __init__(self):
-        self.devices = {}
+        self._devices = {}
 
-    def discover(self) -> list:
-        self.devices = {}
-        # System device
-        self.devices["system"] = {"type": "system", "name": platform.node(), "os": platform.system(), "arch": platform.machine()}
-        # CPU
-        self.devices["cpu"] = {"type": "cpu", "name": platform.processor() or "Unknown", "cores": os.cpu_count() or 1}
-        # Disk
-        try:
-            import psutil
-            disk = psutil.disk_usage("/")
-            self.devices["disk"] = {"type": "storage", "total_gb": round(disk.total / 1e9, 1), "free_gb": round(disk.free / 1e9, 1)}
-            self.devices["memory"] = {"type": "memory", "total_gb": round(psutil.virtual_memory().total / 1e9, 1)}
-        except ImportError:
-            self.devices["disk"] = {"type": "storage", "note": "Install psutil for details"}
-        # Network
-        self.devices["network"] = {"type": "network", "hostname": platform.node()}
-        return list(self.devices.values())
+    def register_device(self, name: str, device_type: DeviceType, connection: DeviceConnection = None) -> dict:
+        device_id = str(uuid4())[:12]
+        self._devices[device_id] = {"id": device_id, "name": name, "type": device_type.value, "connection": {"protocol": connection.protocol if connection else "unknown", "address": connection.address if connection else "unknown"}, "registered_at": datetime.now().isoformat()}
+        return self._devices[device_id]
 
-    def get_devices(self) -> list:
-        if not self.devices:
-            self.discover()
-        return list(self.devices.values())
+    def list_devices(self) -> list[dict]:
+        return list(self._devices.values())
+
+    def execute(self, device_id: str, command: DeviceCommand) -> CommandResult:
+        if device_id not in self._devices:
+            return CommandResult(False, error="Device not found")
+        return CommandResult(True, output=f"Executed {command.command} on {device_id}")

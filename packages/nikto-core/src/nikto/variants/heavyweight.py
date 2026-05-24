@@ -1,32 +1,12 @@
-import logging
-from typing import Any, Optional
-
 from nikto.variants.base import AgentVariant, HEAVYWEIGHT_CONFIG
-
-logger = logging.getLogger(__name__)
 
 
 class NiktoHeavyweight(AgentVariant):
-    """nikto-nikto — The Powerhouse Specialist.
-    Excels at deep reasoning, complex problem-solving, and comprehensive analysis.
-    """
+    def __init__(self):
+        super().__init__("nikto-heavyweight", HEAVYWEIGHT_CONFIG)
 
-    def __init__(self, config=None):
-        super().__init__(config or HEAVYWEIGHT_CONFIG)
+    async def cross_ecosystem_sync(self) -> dict:
+        return {"success": True, "variant": "heavyweight", "action": "cross_ecosystem_sync", "synced": True}
 
-    def analyze_vision_data(self, image_data: str, prompt: str = "Analyze this image in detail") -> str:
-        """Ultra-Deep Vision Intelligence — analyze high-res images up to 2576px."""
-        return f"[NIKTO VISION] Analyzing image ({len(image_data)} bytes): {prompt}"
-
-    def cross_ecosystem_sync(self, workspaces: list[str], intent: str) -> dict:
-        """Cross-Ecosystem Workspaces — sync context across enterprise tools."""
-        return {
-            "status": "synced",
-            "workspaces": workspaces,
-            "intent": intent,
-            "result": f"Context synchronized across {len(workspaces)} workspaces for: {intent}"
-        }
-
-    def literary_write(self, topic: str, style: str = "literary", tone: str = "sophisticated") -> str:
-        """Nuanced Literary Writing — human-like voice with subtext and humor."""
-        return f"[NIKTO LITERARY] Writing on '{topic}' in {style} style with {tone} tone."
+    async def literary_write(self, topic: str) -> dict:
+        return {"success": True, "variant": "heavyweight", "action": "literary_write", "topic": topic, "content": f"# {topic}\n\nDeep analysis and literary exploration of {topic}."}
