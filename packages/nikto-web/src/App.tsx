@@ -1,16 +1,18 @@
 import { Routes, Route, NavLink } from 'react-router-dom'
-import { Terminal, Cpu, Shield, Wallet, Activity, Settings } from 'lucide-react'
+import { Terminal, Cpu, Shield, Wallet, Activity, Settings, Hand } from 'lucide-react'
 import Dashboard from './pages/Dashboard'
 import Agents from './pages/Agents'
 import Security from './pages/Security'
 import Crypto from './pages/Crypto'
 import TerminalPage from './pages/Terminal'
+import GesturePage from './pages/Gesture'
 
 const nav = [
   { to: '/', icon: Activity, label: 'Dashboard' },
   { to: '/agents', icon: Cpu, label: 'Agents' },
   { to: '/security', icon: Shield, label: 'Security' },
   { to: '/crypto', icon: Wallet, label: 'Crypto' },
+  { to: '/gesture', icon: Hand, label: 'Gesture' },
   { to: '/terminal', icon: Terminal, label: 'Terminal' },
 ]
 
@@ -41,6 +43,7 @@ export default function App() {
           <Route path="/agents" element={<Agents />} />
           <Route path="/security" element={<Security />} />
           <Route path="/crypto" element={<Crypto />} />
+          <Route path="/gesture" element={<GesturePage />} />
           <Route path="/terminal" element={<TerminalPage />} />
         </Routes>
       </main>

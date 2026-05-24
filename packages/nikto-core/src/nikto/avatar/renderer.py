@@ -1,4 +1,10 @@
-"""Desktop overlay renderer — smooth 60fps transparent always-on-top avatar window."""
+"""DEPRECATED — Desktop overlay renderer using Tkinter.
+
+WARNING: This renderer causes thermal spikes due to Tkinter's lack of
+vsync / triple-buffering. For 365-day runtime, use QtAvatarRenderer
+from qt_renderer.py instead (PyQt6 with adaptive framerate).
+This module is kept only as a reference and fallback.
+"""
 import math
 import os
 import threading

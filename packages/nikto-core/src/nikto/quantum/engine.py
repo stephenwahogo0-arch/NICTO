@@ -1,122 +1,195 @@
-"""Real quantum engine — actual quantum gate simulation via numpy matrices."""
-import cmath
-import math
-import random
+"""IBM Quantum Engine — real QPU access via Qiskit Runtime.
+
+Authenticates to IBM Quantum, submits circuits to least-busy backend,
+returns expectation values and measurement results.
+"""
+import json
+import logging
 import time
-from dataclasses import dataclass, field
 from typing import Optional
-import numpy as np
+
+from qiskit import QuantumCircuit
+from qiskit.transpiler import generate_preset_pass_manager
+from qiskit.quantum_info import SparsePauliOp
+
+logger = logging.getLogger(__name__)
 
 
-@dataclass
-class QuantumGate:
-    name: str
-    matrix: np.ndarray
-    targets: list = field(default_factory=list)
+class QuantumResult:
+    """Result from a quantum circuit execution."""
+    def __init__(self, job_id: str, values: list, stds: list, 
+                 metadata: dict, backend_name: str, duration_ms: float):
+        self.job_id = job_id
+        self.values = values
+        self.stds = stds
+        self.metadata = metadata
+        self.backend_name = backend_name
+        self.duration_ms = duration_ms
 
-@dataclass
-class QuantumCircuit:
-    qubits: int
-    gates: list = field(default_factory=list)
+    def to_dict(self) -> dict:
+        return {
+            "job_id": self.job_id,
+            "values": [float(v) for v in self.values],
+            "stds": [float(s) for s in self.stds],
+            "metadata": self.metadata,
+            "backend": self.backend_name,
+            "duration_ms": self.duration_ms,
+        }
+
+    def __repr__(self) -> str:
+        vals = ", ".join(f"{v:.4f}" for v in self.values[:6])
+        return f"QuantumResult(job={self.job_id[:12]}..., backend={self.backend_name}, values=[{vals}...])"
 
 
-class QuantumEngine:
-    def __init__(self, n_qubits: int = 4):
-        self.n_qubits = n_qubits
-        self.H = np.array([[1, 1], [1, -1]]) / math.sqrt(2)
-        self.X = np.array([[0, 1], [1, 0]])
-        self.Y = np.array([[0, -1j], [1j, 0]])
-        self.Z = np.array([[1, 0], [0, -1]])
-        self.CNOT = np.array([[1,0,0,0],[0,1,0,0],[0,0,0,1],[0,0,1,0]])
-        self.T = np.array([[1, 0], [0, cmath.exp(1j * math.pi / 4)]])
-        self.S = np.array([[1, 0], [0, 1j]])
+class IBMQuantumEngine:
+    """Real IBM Quantum computer interface via Qiskit Runtime.
 
-    def create_circuit(self, n_qubits: int) -> QuantumCircuit:
-        return QuantumCircuit(qubits=n_qubits)
+    Automatically discovers the least-busy backend with sufficient qubits.
+    Falls back to local fake backend if IBM Quantum is unavailable.
+    """
+    def __init__(self, min_qubits: int = 2):
+        self._service = None
+        self._backend = None
+        self._min_qubits = min_qubits
+        self._connected = False
+        self._connect()
 
-    def add_gate(self, circuit: QuantumCircuit, gate: QuantumGate):
-        circuit.gates.append(gate)
+    def _connect(self):
+        try:
+            from qiskit_ibm_runtime import QiskitRuntimeService
+            self._service = QiskitRuntimeService()
+            if self._service:
+                self._backend = self._service.least_busy(
+                    simulator=False, operational=True, min_num_qubits=self._min_qubits
+                )
+                self._connected = True
+                logger.info(f"IBM Quantum connected: {self._backend.name}")
+        except Exception as e:
+            logger.warning(f"IBM Quantum connection failed: {e}")
+            self._service = None
+            self._connected = False
 
-    def simulate(self, circuit: QuantumCircuit) -> dict:
-        n = circuit.qubits
-        dim = 2 ** n
-        state = np.zeros(dim, dtype=complex)
-        state[0] = 1.0 + 0.0j
+    @property
+    def connected(self) -> bool:
+        return self._connected
+
+    @property
+    def backend_name(self) -> str:
+        if self._backend:
+            return self._backend.name
+        return "none"
+
+    @property
+    def num_qubits(self) -> int:
+        if self._backend:
+            return self._backend.num_qubits
+        return 0
+
+    def run_circuit(self, circuit: QuantumCircuit, observables: Optional[list] = None,
+                    shots: int = 5000, resilience: int = 1) -> QuantumResult:
+        """Run a quantum circuit on IBM hardware or simulator.
+
+        Args:
+            circuit: Qiskit QuantumCircuit to execute.
+            observables: List of Pauli operator strings (e.g. ["ZZ", "XI"]).
+                         If None, defaults to Z on each qubit.
+            shots: Number of measurement shots (default 5000).
+            resilience: Error mitigation level (0=none, 1=default, 2=higher).
+
+        Returns:
+            QuantumResult with expectation values and standard deviations.
+        """
+        from qiskit_ibm_runtime import EstimatorV2 as Estimator
+
+        n = circuit.num_qubits
+        if observables is None:
+            observables = [f"{'Z' * n}"]
+
+        ops = [SparsePauliOp(op) for op in observables]
         start = time.time()
-        for gate in circuit.gates:
-            if gate.name == "H":
-                for t in gate.targets:
-                    state = self._apply_single(state, self.H, t, n)
-            elif gate.name == "X":
-                for t in gate.targets:
-                    state = self._apply_single(state, self.X, t, n)
-            elif gate.name == "Y":
-                for t in gate.targets:
-                    state = self._apply_single(state, self.Y, t, n)
-            elif gate.name == "Z":
-                for t in gate.targets:
-                    state = self._apply_single(state, self.Z, t, n)
-            elif gate.name == "CNOT":
-                state = self._apply_cnot(state, gate.targets[0], gate.targets[1], n)
-            elif gate.name == "T":
-                for t in gate.targets:
-                    state = self._apply_single(state, self.T, t, n)
-            elif gate.name == "S":
-                for t in gate.targets:
-                    state = self._apply_single(state, self.S, t, n)
-        elapsed = int((time.time() - start) * 1000)
-        probs = np.abs(state) ** 2
-        measured = np.argmax(probs)
-        return {"statevector": [round(abs(s), 4) for s in state[:min(16, dim)]],
-                "probabilities": [round(float(p), 4) for p in probs[:min(16, dim)]],
-                "measured": int(measured), "n_qubits": n, "n_gates": len(circuit.gates),
-                "simulation_time_ms": elapsed}
 
-    def _apply_single(self, state, gate, target, n):
-        dim = 2 ** n
-        new_state = np.zeros(dim, dtype=complex)
-        for i in range(dim):
-            if ((i >> target) & 1) == 0:
-                partner = i | (1 << target)
-                new_state[i] = gate[0, 0] * state[i] + gate[0, 1] * state[partner]
-            else:
-                partner = i & ~(1 << target)
-                new_state[i] = gate[1, 0] * state[partner] + gate[1, 1] * state[i]
-        return new_state
+        if self._connected and self._backend:
+            # Real hardware path
+            pm = generate_preset_pass_manager(backend=self._backend, optimization_level=1)
+            isa_circuit = pm.run(circuit)
+            mapped_ops = [op.apply_layout(isa_circuit.layout) for op in ops]
+            estimator = Estimator(mode=self._backend)
+            estimator.options.resilience_level = resilience
+            estimator.options.default_shots = shots
+            job = estimator.run([(isa_circuit, mapped_ops)])
+            result = job.result()[0]
+            duration = (time.time() - start) * 1000
+            return QuantumResult(
+                job_id=job.job_id(),
+                values=result.data.evs,
+                stds=result.data.stds,
+                metadata={"shots": shots, "resilience": resilience, "mode": "real"},
+                backend_name=self._backend.name,
+                duration_ms=duration,
+            )
+        else:
+            # Simulator fallback
+            from qiskit_ibm_runtime.fake_provider import FakeBelemV2
+            backend = FakeBelemV2()
+            pm = generate_preset_pass_manager(backend=backend, optimization_level=1)
+            isa_circuit = pm.run(circuit)
+            mapped_ops = [op.apply_layout(isa_circuit.layout) for op in ops]
+            estimator = Estimator(backend)
+            job = estimator.run([(isa_circuit, mapped_ops)])
+            result = job.result()[0]
+            duration = (time.time() - start) * 1000
+            return QuantumResult(
+                job_id="sim_" + str(int(time.time())),
+                values=result.data.evs,
+                stds=result.data.stds,
+                metadata={"shots": shots, "resilience": resilience, "mode": "simulator"},
+                backend_name=backend.name,
+                duration_ms=duration,
+            )
 
-    def _apply_cnot(self, state, control, target, n):
-        dim = 2 ** n
-        new_state = state.copy()
-        for i in range(dim):
-            if (i >> control) & 1:
-                partner = i ^ (1 << target)
-                new_state[i] = state[partner]
-        return new_state
+    def run_bell_state(self) -> QuantumResult:
+        """Run a Bell state circuit: two entangled qubits."""
+        qc = QuantumCircuit(2)
+        qc.h(0)
+        qc.cx(0, 1)
+        return self.run_circuit(qc, observables=["IZ", "IX", "ZI", "XI", "ZZ", "XX"])
 
-    def grover_search(self, n_items: int, target_item: int) -> dict:
-        n_qubits = max(2, math.ceil(math.log2(n_items)))
-        circuit = self.create_circuit(n_qubits)
-        for q in range(n_qubits):
-            self.add_gate(circuit, QuantumGate("H", self.H, [q]))
-        iterations = int(math.pi / 4 * math.sqrt(2 ** n_qubits))
-        for _ in range(max(1, iterations)):
-            self.add_gate(circuit, QuantumGate("Z", self.Z, [target_item % n_qubits]))
-            for q in range(n_qubits):
-                self.add_gate(circuit, QuantumGate("H", self.H, [q]))
-            for q in range(n_qubits):
-                self.add_gate(circuit, QuantumGate("X", self.X, [q]))
-            self.add_gate(circuit, QuantumGate("CNOT", self.CNOT, [0, n_qubits - 1]))
-            for q in range(n_qubits):
-                self.add_gate(circuit, QuantumGate("X", self.X, [q]))
-            for q in range(n_qubits):
-                self.add_gate(circuit, QuantumGate("H", self.H, [q]))
-        return self.simulate(circuit)
+    def run_ghz_state(self, n: int = 10) -> QuantumResult:
+        """Run an n-qubit GHZ state circuit."""
+        qc = QuantumCircuit(n)
+        qc.h(0)
+        for i in range(n - 1):
+            qc.cx(i, i + 1)
+        ops = ["Z" + "I" * i + "Z" + "I" * (n - 2 - i) for i in range(n - 1)]
+        return self.run_circuit(qc, observables=ops)
 
-    def shor_factor(self, n: int) -> dict:
-        start = time.time()
-        if n % 2 == 0:
-            return {"factors": [2, n // 2], "algorithm": "trial_division", "time_ms": int((time.time()-start)*1000)}
-        for i in range(3, int(math.sqrt(n)) + 1, 2):
-            if n % i == 0:
-                return {"factors": [i, n // i], "algorithm": "trial_division", "time_ms": int((time.time()-start)*1000)}
-        return {"factors": [1, n], "algorithm": "trial_division", "time_ms": int((time.time()-start)*1000)}
+    def run_qft(self, n: int = 4) -> QuantumResult:
+        """Run a Quantum Fourier Transform circuit."""
+        from qiskit.circuit.library import QFT
+        qc = QFT(n)
+        ops = [f"{'Z' * n}"]
+        return self.run_circuit(qc, observables=ops)
+
+    def run_random_circuit(self, n: int = 5, depth: int = 10) -> QuantumResult:
+        """Run a random quantum circuit."""
+        from qiskit.circuit.random import random_circuit
+        qc = random_circuit(n, depth, seed=42)
+        ops = [f"{'Z' * n}"]
+        return self.run_circuit(qc, observables=ops)
+
+    def available_backends(self) -> list:
+        """List available IBM Quantum backends."""
+        if not self._service:
+            return []
+        return [b.name for b in self._service.backends(simulator=False, operational=True)]
+
+    def get_status(self) -> dict:
+        """Get engine status including connection state and backend info."""
+        backends = self.available_backends()
+        return {
+            "connected": self._connected,
+            "backend": self.backend_name if self._connected else "none",
+            "num_qubits": self.num_qubits,
+            "available_backends": backends,
+            "min_qubits": self._min_qubits,
+        }

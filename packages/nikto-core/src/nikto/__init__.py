@@ -28,6 +28,7 @@ from nikto.security.code_protocol import CodeSecurityProtocol
 from nikto.security.mcp_sandbox import MCPSecureSandbox
 from nikto.security.asl3_boundary import ASL3Boundary
 from nikto.security.siem_analyst import SIEMAnalyst
+from nikto.security.sandbox import PromptSanitizer, SandboxRestrictions, RuleValidator
 from nikto.autopilot.engine import AutopilotEngine, AutopilotConfig, AutopilotStatus
 from nikto.autopilot.finance import FinanceManager, PaymentMethod
 from nikto.autopilot.connections import ConnectionManager, Connection, ConnectionType
@@ -48,7 +49,6 @@ from nikto.mobile.engine import MobileCommEngine, MessageChannel
 from nikto.deploy.engine import DeployEngine, DeploymentTarget
 from nikto.surpass.engine import SurpassEngine
 from nikto.arsenal.engine import ArsenalEngine, KaliTool
-from nikto.quantum.engine import QuantumEngine
 from nikto.neuro.engine import NeuroEngine
 from nikto.api_gateway.engine import APIGateway, APIKey
 from nikto.super.engine import SuperEngine
@@ -89,8 +89,25 @@ from nikto.infinite_context import InfiniteContextEngine
 # Model Manager — Multi-tier GGUF download & management
 from nikto.model_manager import ModelManager, MODEL_REGISTRY
 
+# Predictive Intelligence — ML-based prediction engine
+from nikto.predict import PredictionEngine, EloModel, LogisticModel, XGBoostModel
+from nikto.predict import EnsembleModel, ArimaModel, FeatureEngineer, BacktestEngine
+from nikto.predict import DataFeed, MockDataFeed, REngine, JuliaEngine
+
+# Cybersecurity Scanner — native Go + Python fallback
+from nikto.arsenal.scanner import SecurityScanner
+
 # Hotkeys — Global Keyboard Shortcuts
 from nikto.avatar.hotkeys import HotkeyManager
+
+# Terminal Core — PTY driver, process monitor
+from nikto.terminal.core import TerminalSession, ProcessMonitor
+
+# Sensors — Wi-Fi gesture monitoring
+from nikto.sensors import WiFiGestureMonitor, GestureEvent, MovementClassifier, SleepMonitor
+
+# Quantum Computing — IBM Quantum integration
+from nikto.quantum import IBMQuantumEngine, QuantumResult, QuantumCircuits
 
 # Registration, Privacy & Safety
 from nikto.registration import UserRegistry, RegistrationData, RegistrationFlow
@@ -121,6 +138,7 @@ __all__ = [
     "MCPSecureSandbox",
     "ASL3Boundary",
     "SIEMAnalyst",
+    "PromptSanitizer", "SandboxRestrictions", "RuleValidator",
     "AutopilotEngine", "AutopilotConfig", "AutopilotStatus",
     "FinanceManager", "PaymentMethod",
     "ConnectionManager", "Connection", "ConnectionType",
@@ -140,8 +158,7 @@ __all__ = [
     "MobileCommEngine", "MessageChannel",
     "DeployEngine", "DeploymentTarget",
     "SurpassEngine",
-    "ArsenalEngine", "KaliTool",
-    "QuantumEngine",
+    "ArsenalEngine", "KaliTool", "SecurityScanner",
     "NeuroEngine",
     "APIGateway", "APIKey",
     "SuperEngine",
@@ -175,4 +192,14 @@ __all__ = [
     "SafetySystem", "ActivityAuditLog", "EmergencySystem",
     "AbuseReporter", "PoliceCooperationMode", "SafetyLock",
     "ContentSafetyMonitor", "LogEntry", "create_safety_system",
+    # Predictive Intelligence
+    "PredictionEngine", "EloModel", "LogisticModel", "XGBoostModel",
+    "EnsembleModel", "ArimaModel", "FeatureEngineer", "BacktestEngine",
+    "DataFeed", "MockDataFeed", "REngine", "JuliaEngine",
+    # Task Execution
+    "TerminalSession", "ProcessMonitor",
+    # Sensors
+    "WiFiGestureMonitor", "GestureEvent", "MovementClassifier", "SleepMonitor",
+    # Quantum Computing
+    "IBMQuantumEngine", "QuantumResult", "QuantumCircuits",
 ]

@@ -1,0 +1,49 @@
+[package]
+name = "nikto-core-engine"
+version = "0.2.0"
+edition = "2021"
+description = "NIKTO AI-Native Generative Engine — Rust ECS + wgpu GPU renderer + PyO3 bridge"
+authors = ["NIKTO Engineering"]
+license = "MIT"
+
+[lib]
+name = "nikto_core_engine"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = { version = "0.22", features = ["extension-module", "abi3", "abi3-py311"] }
+numpy = "0.22"
+rayon = "1.10"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+bytemuck = { version = "1.16", features = ["derive", "extern_crate_alloc"] }
+parking_lot = "0.12"
+thiserror = "2.0"
+
+# GPU rendering (Vulkan/DX12/Metal via WebGPU)
+wgpu = "22.0"
+winit = "0.30"
+
+# Asset loading
+gltf = "1.4"
+image = "0.25"
+
+# Math
+cgmath = "0.18"
+
+# Texture loading
+anyhow = "1.0"
+
+# Async executor for async wgpu init
+pollster = "0.3"
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+target-cpu = "native"
+strip = true
+
+[profile.dev]
+opt-level = 0
+debug = true

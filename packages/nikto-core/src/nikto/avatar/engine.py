@@ -1,4 +1,8 @@
-"""Avatar Engine — headless desktop avatar with movement, expressions, webcam, and desktop control."""
+"""Avatar Engine — headless desktop avatar with movement, expressions, webcam, and desktop control.
+
+Render backend: PyQt6 with adaptive framerate (4/30/60 FPS tiers)
+for 365-day thermal safety. The Tkinter renderer is deprecated.
+"""
 import os
 import threading
 import time
@@ -7,7 +11,15 @@ from typing import Optional
 
 from nikto.avatar.sprites import AVAILABLE_POSES, AVAILABLE_EXPRESSIONS
 from nikto.avatar.animations import AnimationPlayer, AnimationType, Expression
-from nikto.avatar.renderer import AvatarRenderer
+try:
+    from nikto.avatar.qt_renderer import QtAvatarRenderer
+    _HAS_QT = True
+except ImportError:
+    _HAS_QT = False
+    from nikto.avatar.renderer import AvatarRenderer as QtAvatarRenderer
+    import warnings
+    warnings.warn("PyQt6 not installed — falling back to Tkinter renderer. "
+                  "Install PyQt6 (`pip install PyQt6`) for thermal-safe 365-day runtime.")
 from nikto.avatar.desktop import DesktopController
 from nikto.avatar.webcam import WebcamEngine
 from nikto.avatar.personalize import PersonalAvatarGenerator, REF_DIR
@@ -35,7 +47,7 @@ class AvatarEngine:
     def start_avatar(self, x: int = 100, y: int = 100) -> dict:
         """Display the avatar on desktop as transparent overlay."""
         try:
-            self.renderer = AvatarRenderer()
+            self.renderer = QtAvatarRenderer()
             self.renderer.start(x, y)
             self.avatar_x = x
             self.avatar_y = y
