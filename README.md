@@ -17,10 +17,14 @@ NIKTO is a full-spectrum AI system combining capabilities from across the AI lan
 | **Chat & Assistant** | Natural conversation, brainstorming, analysis — like Gemini, ChatGPT, Claude |
 | **Code & Development** | Full software engineering, debugging, architecture — like GitHub Copilot, Devin, Cursor |
 | **Research & Search** | Live web search, data analysis, citations — like Perplexity, Cohere |
-| **Creative Generation** | Images, video, audio, 3D, music — like Midjourney, DALL·E, Sora, Suno |
+| **Creative Generation** | Images, video, audio, 3D, music — like Midjourney, DALL-E, Sora, Suno |
 | **Cybersecurity** | Full pentesting arsenal: Nmap, Gobuster, SQLMap, Metasploit, and more |
 | **Scientific Computing** | Advanced mathematics, physics, biology, chemistry simulations |
 | **Headless Avatar** | Animated desktop presence with webcam vision, screen control, natural interaction |
+| **Multilingual AI** | 55+ language auto-detection, 30+ UI i18n translations, 75+ language selector |
+| **IBM Quantum** | Real QPU access via Qiskit Runtime with automatic simulator fallback |
+| **Contactless Sensing** | Wi-Fi gesture recognition (11 gestures), sleep monitoring, fall detection |
+| **Quantum Circuits** | 13 pre-built circuit factories: Bell, GHZ, QFT, Grover, Deutsch-Jozsa, and more |
 
 ---
 
@@ -177,11 +181,26 @@ NIKTO/
 │   │   ├── webcam.py   # OpenCV face detection
 │   │   └── desktop.py  # Keyboard, mouse, app control
 │   ├── brain/          # 6-brain ensemble with 28 regions
+│   ├── language/       # Multilingual detection (55+ langs) + i18n (30+ UI langs)
+│   ├── quantum/        # IBM Quantum integration (Qiskit Runtime + circuits)
+│   ├── sensors/        # Wi-Fi gesture monitoring (C++ capture + Python AI)
+│   │   └── cpp/        # C++ WLAN API backend (wlanapi.dll)
 │   ├── skills/         # 87 production skills
 │   ├── tools/          # Tool system with security wrappers
 │   ├── memory/         # Persistent memory across sessions
 │   ├── security/       # ASL-3, SIEM, MCP sandbox
+│   ├── predict/        # Predictive modeling, backtesting, R/Julia bridge
 │   ├── ...             # Many more modules
+├── packages/nikto-web/ # React + Vite + TailwindCSS frontend
+│   └── src/gesture-ui/ # ArkTS/TypeScript gesture → visual effects engine
+├── packages/nikto-super-kernel/  # Rust + Go + Julia + R + Zig cross-language stack
+│   ├── go/scanner/     # Pure Go TCP port scanner (CLI, no CGO)
+│   ├── go/odds/        # Sports odds feed (CLI)
+│   ├── go/hsync_engine/ # SHA-256 hash + Merkle-DAG sync (CLI)
+│   ├── go/graph_core/  # Dijkstra + degree centrality (CLI)
+│   └── go/background_monitor/ # CPU/memory/goroutine monitor (CLI)
+├── packages/nikto-core-engine/  # Rust wgpu game engine (ECS + renderer + world gen)
+├── packages/nikto-triple-engine/ # Rust + Mojo + Zig physics/memory engine
 ├── test_nikto.py       # Comprehensive 745+ test suite
 ```
 
@@ -233,7 +252,44 @@ To make NIKTO a true Unreal-class competitor, focus on measurable wins instead o
 - **Days 61-90:** template system hardening, cross-platform exporter, public benchmark report + sample game.
 
 ### 6) Positioning
-NIKTO should position as **“faster iteration + predictable performance + integrated AI workflows”** rather than promising impossible “zero lag” for all cases. Shipping trustworthy benchmarks is what wins studios.
+NIKTO should position as **"faster iteration + predictable performance + integrated AI workflows"** rather than promising impossible "zero lag" for all cases. Shipping trustworthy benchmarks is what wins studios.
+
+---
+
+## Recent Upgrades (May 2026)
+
+### Multilingual AI
+- **Language detection**: auto-detects 55+ languages via `langdetect` with Unicode/heuristic fallback
+- **UI translations**: 30+ languages for the web interface, 75+ language selector with flag emojis
+- **LLM injection**: detected language is injected into the system prompt — the LLM generates responses in the user's native language without NIKTO performing translation
+
+### IBM Quantum Integration
+- **Qiskit Runtime**: connects to real IBM QPU backends with automatic `FakeBelemV2` simulator fallback
+- **13 circuit factories**: Bell state, GHZ state, QFT, inverse QFT, phase estimation, random, RealAmplitudes, EfficientSU2, Grover, Deutsch-Jozsa
+- **API**: `GET /quantum/status`, `POST /quantum/run`, `GET /quantum/backends`
+
+### Wi-Fi Contactless Gesture Monitoring
+- **11 gesture types**: wave, swipe (4 directions), push, pull, circle (CW/CCW), tap, double-tap — with directional disambiguation
+- **Movement classification**: stationary, walking, running, exercising — with multi-person separation
+- **Sleep monitoring**: sleep stage detection (awake/light/deep/REM) via breathing rate analysis
+- **Fall detection**: variance spike detection with post-impact stillness confirmation
+- **C++ backend**: hardware-level capture via Windows WLAN API (wlanapi.dll), 169 KB compiled binary
+- **SciPy signal processing**: Welch FFT, Butterworth bandpass filtering, cross-correlation, kurtosis
+- **Graceful fallback**: C++ → netsh → simulated data
+
+### ArkTS/TypeScript Visual Effects Engine
+- **GestureClient**: WebSocket connection to NIKTO server for real-time gesture events
+- **VisualEffects**: maps 11 gesture types to 16 system commands (minimize, screenshot, volume, media keys, scroll, snap, etc.)
+- **React hook**: `useGesture()` + `useEffectOverlay()` for consuming gesture events in components
+- **Gesture page**: live dashboard with configurable gesture→effect bindings, effect flash overlay
+
+### Go CLI Executables (Zero CGO)
+- **scanner.exe**: TCP port scanning + ping via `net.DialTimeout` (100 concurrent goroutines)
+- **odds.exe**: sports odds fetch + subscribe + cache via `net/http`
+- **monitor.exe**: background CPU/memory/goroutine monitor
+- **hsync.exe**: SHA-256 hash + Merkle-DAG sync
+- **graph.exe**: Dijkstra shortest path + degree centrality
+- Python calls via `subprocess.run()` with JSON I/O — works everywhere with zero C compiler
 
 ---
 

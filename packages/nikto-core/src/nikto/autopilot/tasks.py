@@ -91,6 +91,7 @@ class CryptoMarketMonitor(AutopilotTask):
             earnings=profit,
             description=f"Crypto market analysis and trade executed. Profit: ${profit}",
             reference=ref,
+            details={"run": self.run_count, "market": "real_analysis"},
             details={"run": self.run_count, "market": "live_signal", "signal_strength": round((profit / 5.0), 3)},
         )
 

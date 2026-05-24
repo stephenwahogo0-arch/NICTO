@@ -7,8 +7,8 @@ logger = logging.getLogger(__name__)
 
 
 class NiktoHeavyweight(AgentVariant):
-    """nikto — The Heavyweight Thinker.
-    Excels at complex reasoning, deep data analysis, strategy, massive multi-document synthesis.
+    """nikto-nikto — The Powerhouse Specialist.
+    Excels at deep reasoning, complex problem-solving, and comprehensive analysis.
     """
 
     def __init__(self, config=None):

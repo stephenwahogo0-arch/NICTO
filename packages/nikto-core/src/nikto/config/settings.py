@@ -22,6 +22,8 @@ class ModelConfig(BaseModel):
     model_path: Optional[str] = None
     n_gpu_layers: Optional[int] = None
     model_tier: str = "auto"  # "tier1", "tier2", "auto"
+    # Language config
+    language: str = "auto"  # "auto" = detect from user input, or ISO code like "en", "es", "zh", etc.
 
 
 class MemoryConfig(BaseModel):

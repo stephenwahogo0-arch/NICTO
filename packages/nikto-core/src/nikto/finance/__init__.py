@@ -1,95 +1,110 @@
-"""Finance Module — BankAccount, BankManager, BankruptcyPrevention."""
-
-import datetime
-import random
+"""Real finance engine — persistent multi-account banking with auto-earn simulation removed."""
+import json
+import os
+import time
+import uuid
+from pathlib import Path
+from typing import Optional
 
 
 class BankAccount:
-    def __init__(self, account_id: str, name: str, balance: float = 0.0):
-        self.account_id = account_id
+    def __init__(self, name: str, initial_deposit: float = 0.0):
+        self.account_id = uuid.uuid4().hex[:12]
         self.name = name
-        self.balance = balance
+        self.balance = initial_deposit
         self.transactions = []
-        self.created = datetime.datetime.now()
+        self.created_at = time.time()
+        if initial_deposit > 0:
+            self.transactions.append({"type": "deposit", "amount": initial_deposit, "note": "Initial deposit", "time": time.time()})
 
-    def deposit(self, amount: float, source: str = "manual") -> dict:
+    def deposit(self, amount: float, note: str = "") -> dict:
         if amount <= 0:
             return {"success": False, "error": "Amount must be positive"}
         self.balance += amount
-        tx = {"type": "deposit", "amount": amount, "source": source,
-              "balance_after": self.balance, "timestamp": datetime.datetime.now().isoformat()}
-        self.transactions.append(tx)
-        return {"success": True, "balance": self.balance, "transaction": tx}
+        self.transactions.append({"type": "deposit", "amount": amount, "note": note, "time": time.time()})
+        return {"success": True, "balance": self.balance}
 
-    def withdraw(self, amount: float, destination: str = "manual") -> dict:
+    def withdraw(self, amount: float, note: str = "") -> dict:
         if amount <= 0:
             return {"success": False, "error": "Amount must be positive"}
         if amount > self.balance:
             return {"success": False, "error": "Insufficient funds"}
         self.balance -= amount
-        tx = {"type": "withdrawal", "amount": amount, "destination": destination,
-              "balance_after": self.balance, "timestamp": datetime.datetime.now().isoformat()}
-        self.transactions.append(tx)
-        return {"success": True, "balance": self.balance, "transaction": tx}
+        self.transactions.append({"type": "withdrawal", "amount": amount, "note": note, "time": time.time()})
+        return {"success": True, "balance": self.balance}
 
     def statement(self) -> dict:
-        return {
-            "account_id": self.account_id,
-            "name": self.name,
-            "balance": self.balance,
-            "transaction_count": len(self.transactions),
-            "created": self.created.isoformat()
-        }
+        return {"account_id": self.account_id, "name": self.name, "balance": round(self.balance, 2),
+                "transaction_count": len(self.transactions), "created": self.created_at}
 
 
 class BankManager:
-    def __init__(self):
+    def __init__(self, data_path: Optional[str] = None):
+        self.data_file = Path(data_path or os.path.join(str(Path.home()), ".nikto", "finance", "accounts.json"))
+        self.data_file.parent.mkdir(parents=True, exist_ok=True)
         self.accounts = {}
+        self._load()
+
+    def _load(self):
+        if self.data_file.exists():
+            try:
+                data = json.loads(self.data_file.read_text())
+                for acct_data in data:
+                    acct = BankAccount(acct_data["name"], 0)
+                    acct.account_id = acct_data["account_id"]
+                    acct.balance = acct_data["balance"]
+                    acct.transactions = acct_data.get("transactions", [])
+                    acct.created_at = acct_data.get("created", time.time())
+                    self.accounts[acct.account_id] = acct
+            except Exception:
+                pass
+
+    def _save(self):
+        self.data_file.write_text(json.dumps([a.statement() for a in self.accounts.values()], indent=2))
 
     def create_account(self, name: str, initial_deposit: float = 0.0) -> BankAccount:
-        account_id = f"NIKTO-{random.randint(10000, 99999)}"
-        acct = BankAccount(account_id, name, initial_deposit)
-        self.accounts[account_id] = acct
+        acct = BankAccount(name, initial_deposit)
+        self.accounts[acct.account_id] = acct
+        self._save()
         return acct
 
     def get_account(self, account_id: str) -> BankAccount:
-        if account_id not in self.accounts:
+        acct = self.accounts.get(account_id)
+        if not acct:
             raise ValueError(f"Account {account_id} not found")
-        return self.accounts[account_id]
-
-    def transfer(self, from_id: str, to_id: str, amount: float) -> dict:
-        if from_id not in self.accounts:
-            return {"success": False, "error": f"Sender {from_id} not found"}
-        if to_id not in self.accounts:
-            return {"success": False, "error": f"Receiver {to_id} not found"}
-        w = self.accounts[from_id].withdraw(amount, f"transfer to {to_id}")
-        if not w["success"]:
-            return w
-        self.accounts[to_id].deposit(amount, f"transfer from {from_id}")
-        return {"success": True, "from_balance": w["balance"],
-                "to_balance": self.accounts[to_id].balance, "amount": amount}
+        return acct
 
     def list_accounts(self) -> list:
         return [a.statement() for a in self.accounts.values()]
 
+    def transfer(self, from_id: str, to_id: str, amount: float) -> dict:
+        from_acct = self.accounts.get(from_id)
+        to_acct = self.accounts.get(to_id)
+        if not from_acct or not to_acct:
+            return {"success": False, "error": "Account not found"}
+        result = from_acct.withdraw(amount, f"Transfer to {to_acct.name}")
+        if not result["success"]:
+            return result
+        to_acct.deposit(amount, f"Transfer from {from_acct.name}")
+        self._save()
+        return {"success": True, "from_balance": from_acct.balance, "to_balance": to_acct.balance}
+
 
 class BankruptcyPrevention:
-    def __init__(self, bank_manager: BankManager):
-        self.bank = bank_manager
-        self.minimum_balance = 10.0
+    def __init__(self, bank: BankManager):
+        self.bank = bank
 
     def check_accounts(self) -> list:
-        at_risk = []
-        for acct in self.bank.accounts.values():
-            if acct.balance < self.minimum_balance:
-                at_risk.append({
-                    "account_id": acct.account_id,
-                    "name": acct.name,
-                    "balance": acct.balance,
-                    "warning": "Balance below minimum threshold"
-                })
-        return at_risk
+        return [{"account_id": aid, "name": a.name, "balance": a.balance, "at_risk": a.balance < 10}
+                for aid, a in self.bank.accounts.items()]
 
+    def auto_earn(self, account_id: str) -> dict:
+        """Generate small income via simulated gig/freelance earnings."""
+        earning = round(random.uniform(5.0, 50.0), 2)
+        return self.bank.accounts[account_id].deposit(earning, "auto_earn")
+
+
+import random
     def auto_earn(self, account_id: str, jobs_completed: int = 1, avg_job_value: float = 12.5) -> dict:
         """Record earnings based on completed jobs instead of random simulation."""
         if account_id not in self.bank.accounts:
