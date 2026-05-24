@@ -50,11 +50,15 @@ app.add_middleware(
 class ChatRequest(BaseModel):
     message: str
     mode: str = "build"
+    language: str = "auto"
 
 
 class ChatResponse(BaseModel):
     response: str
     mode: str
+    language: str = "en"
+
+
 
 
 class TicketCreate(BaseModel):
@@ -103,12 +107,16 @@ async def chat(req: ChatRequest):
         raise HTTPException(503, "Agent failed to initialize")
     import time
     start = time.time()
+    # Set language on agent
+    if req.language and req.language != "auto":
+        _agent._target_language = req.language
     resp = await _agent.run_sync(req.message)
     duration = time.time() - start
     # Record for hourly training
     if hasattr(_agent, 'trainer'):
         _agent.trainer.record_interaction(req.message, resp, duration)
-    return ChatResponse(response=resp, mode=req.mode)
+    detected = getattr(_agent, '_detected_language', None) or "en"
+    return ChatResponse(response=resp, mode=req.mode, language=detected)
 
 
 @app.get("/memory/search")
@@ -428,3 +436,133 @@ async def game_animation_info():
         "sprite_sheet": True,
         "walk_cycle": True,
     }
+
+
+# ── Quantum Computing Routes ──────────────────────────────────────────
+
+_quantum_engine = None
+
+
+def _ensure_quantum():
+    global _quantum_engine
+    if _quantum_engine is None:
+        try:
+            from nikto.quantum import IBMQuantumEngine
+            _quantum_engine = IBMQuantumEngine(min_qubits=2)
+        except Exception as e:
+            logger.warning(f"Quantum engine init failed: {e}")
+            return None
+    return _quantum_engine
+
+
+class QuantumCircuitRequest(BaseModel):
+    circuit_type: str = "bell"  # bell, ghz, qft, random
+    num_qubits: int = 2
+    depth: int = 10
+    shots: int = 5000
+
+
+@app.get("/quantum/status")
+async def quantum_status():
+    engine = _ensure_quantum()
+    if not engine:
+        return {"connected": False, "error": "Quantum engine not available"}
+    return engine.get_status()
+
+
+@app.post("/quantum/run")
+async def quantum_run(req: QuantumCircuitRequest):
+    engine = _ensure_quantum()
+    if not engine:
+        return {"error": "Quantum engine not initialized"}
+    try:
+        from nikto.quantum.circuits import QuantumCircuits
+        if req.circuit_type == "bell":
+            result = engine.run_bell_state()
+        elif req.circuit_type == "ghz":
+            result = engine.run_ghz_state(n=max(2, req.num_qubits))
+        elif req.circuit_type == "qft":
+            result = engine.run_qft(n=max(2, req.num_qubits))
+        elif req.circuit_type == "random":
+            result = engine.run_random_circuit(n=max(2, req.num_qubits), depth=max(1, req.depth))
+        else:
+            return {"error": f"Unknown circuit type: {req.circuit_type}"}
+        return result.to_dict()
+    except Exception as e:
+        logger.exception("Quantum run failed")
+        return {"error": str(e)}
+
+
+@app.get("/quantum/backends")
+async def quantum_backends():
+    engine = _ensure_quantum()
+    if not engine:
+        return {"backends": []}
+    return {"backends": engine.available_backends()}
+
+
+# ── Gesture / Sensor Routes ─────────────────────────────────────────────
+
+_gesture_monitor = None
+
+
+def _ensure_gesture():
+    global _gesture_monitor
+    if _gesture_monitor is None:
+        try:
+            from nikto.sensors import WiFiGestureMonitor
+            _gesture_monitor = WiFiGestureMonitor(use_real_wifi=False)
+        except Exception as e:
+            logger.warning(f"Gesture monitor init failed: {e}")
+            return None
+    return _gesture_monitor
+
+
+@app.get("/gesture/status")
+async def gesture_status():
+    mon = _ensure_gesture()
+    if not mon:
+        return {"status": "unavailable"}
+    return mon.get_current_state()
+
+
+class GestureSimulateRequest(BaseModel):
+    activity: str = "walking"
+    duration: float = 5.0
+
+
+@app.post("/gesture/simulate")
+async def gesture_simulate(req: GestureSimulateRequest):
+    mon = _ensure_gesture()
+    if not mon:
+        return {"error": "Gesture monitor not available"}
+    try:
+        mon.simulate_activity(req.activity)
+        results = mon.monitor(duration_sec=req.duration)
+        return {"activity": req.activity, "samples": len(results), "results": results[-5:] if results else []}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@app.get("/gesture/sample")
+async def gesture_sample():
+    mon = _ensure_gesture()
+    if not mon:
+        return {"error": "Gesture monitor not available"}
+    try:
+        result = mon.process_sample()
+        return result
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@app.post("/gesture/simulate/fall")
+async def gesture_simulate_fall():
+    mon = _ensure_gesture()
+    if not mon:
+        return {"error": "Gesture monitor not available"}
+    try:
+        result = mon.fall_simulation()
+        return result or {"status": "buffering"}
+    except Exception as e:
+        return {"error": str(e)}

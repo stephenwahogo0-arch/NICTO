@@ -47,16 +47,16 @@ async def test_imports():
 
 async def test_variants():
     print("\n=== 2. AGENT VARIANTS ===")
-     try:
-         from nikto.variants.base import create_variant
-         v1 = create_variant("nikto-nikto")
-         check("nikto-nikto variant created", v1.name == "nikto-nikto", str(v1.name))
- 
-         v2 = create_variant("nikto-denu")
-         check("nikto-denu created", v2.name == "nikto-denu")
- 
-         v3 = create_variant("nikto-plus")
-         check("nikto-plus created", v3.name == "nikto-plus")
+    try:
+        from nikto.variants.base import create_variant
+        v1 = create_variant("nikto-nikto")
+        check("nikto-nikto variant created", v1.name == "nikto-nikto", str(v1.name))
+
+        v2 = create_variant("nikto-denu")
+        check("nikto-denu created", v2.name == "nikto-denu")
+
+        v3 = create_variant("nikto-plus")
+        check("nikto-plus created", v3.name == "nikto-plus")
 
         sp = v3.build_system_prompt()
         check("Mythos prompt generated", len(sp) > 200)

@@ -1,5 +1,7 @@
-"""Autonomous Self-Evolution — NIKTO reads, analyzes, tests, and rewrites itself."""
+"""Autonomous Self-Evolution — NIKTO reads, analyzes, tests, and rewrites itself.
 
+Uses the staging sandbox to avoid live memory corruption.
+Never modifies active .py files directly — all edits are staged, tested, then queued for restart."""
 import asyncio
 import importlib
 import json
@@ -14,6 +16,8 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional
+
+from nikto.sandbox.staging import StagingSandbox
 
 logger = logging.getLogger(__name__)
 
@@ -208,7 +212,12 @@ class BenchmarkSuite:
 
 
 class EvolutionEngine:
-    """Main self-evolution loop — runs periodically to improve NIKTO."""
+    """Main self-evolution loop — runs periodically to improve NIKTO.
+
+    All code modifications go through the staging sandbox to prevent
+    live memory corruption. Edits are tested in isolation before being
+    queued for the next restart.
+    """
 
     def __init__(self, config: Optional[EvolutionConfig] = None):
         self.config = config or EvolutionConfig()
@@ -216,6 +225,7 @@ class EvolutionEngine:
         self._running = False
         self._task: Optional[asyncio.Task] = None
         self.iteration_count = 0
+        self.sandbox = StagingSandbox()
 
     async def start(self):
         if self._running:
@@ -274,6 +284,66 @@ class EvolutionEngine:
         except Exception as e:
             return EvolutionResult("self", "evolution_pass", False, error=str(e))
 
+    async def stage_improvement(self, module_rel_path: str, new_content: str) -> dict:
+        """Stage a self-improvement change safely.
+
+        1. Copy module to sandbox
+        2. Write new content to sandboxed copy
+        3. Run test suite on staged code
+        4. If tests pass, promote to updates/
+        5. Return restart-required message
+
+        Args:
+            module_rel_path: path relative to nikto package root, e.g. 'avatar/qt_renderer.py'
+            new_content: the new source code
+        """
+        stage_result = self.sandbox.stage_module(module_rel_path)
+        if not stage_result.get("success"):
+            return stage_result
+
+        write_result = self.sandbox.write_staged(module_rel_path, new_content)
+        if not write_result.get("success"):
+            return write_result
+
+        test_result = await asyncio.get_event_loop().run_in_executor(
+            None, self.sandbox.run_tests
+        )
+
+        if not test_result.get("success"):
+            self.sandbox.clean_staged(module_rel_path)
+            return {
+                "success": False,
+                "module": module_rel_path,
+                "stage": "tests_failed",
+                "detail": test_result.get("error") or test_result.get("stderr", "")[:500],
+                "test_output": test_result.get("stdout", "")[-500:],
+            }
+
+        promote_result = self.sandbox.promote_to_updates(module_rel_path)
+
+        entry = EvolutionResult(
+            module=module_rel_path,
+            action="staged_improvement",
+            success=True,
+            output=promote_result.get("message", ""),
+        )
+        self.evolution_log.append(entry)
+
+        return {
+            "success": True,
+            "module": module_rel_path,
+            "stage": "pending_restart",
+            "message": "NIKTO has optimized its neural architecture. Please restart to apply updates.",
+            "update_id": promote_result.get("update_id", ""),
+        }
+
+    async def apply_pending_upgrades(self) -> dict:
+        """Apply staged upgrades on clean boot."""
+        result = await asyncio.get_event_loop().run_in_executor(
+            None, self.sandbox.apply_pending_updates
+        )
+        return result
+
     def get_history(self) -> list[dict]:
         return [r.to_dict() for r in self.evolution_log[-50:]]
 
@@ -284,4 +354,6 @@ class EvolutionEngine:
             "total_evolutions": len(self.evolution_log),
             "successful": sum(1 for r in self.evolution_log if r.success),
             "failed": sum(1 for r in self.evolution_log if not r.success),
+            "pending_restart": len(self.sandbox.list_pending_restart()),
+            "staged": len(self.sandbox.list_staged()),
         }

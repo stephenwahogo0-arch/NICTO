@@ -16,6 +16,7 @@ from nikto.voice.engine import VoiceEngine, VoiceProfile
 from nikto.evolution.protocol import EvolutionProtocol
 from nikto.infinite_context import InfiniteContextEngine
 from nikto.training.hourly import HourlyTrainer
+from nikto.language.detector import detector as lang_detector
 
 
 class AgentMode(str, Enum):
@@ -90,6 +91,8 @@ class Agent:
         self._learning_log = []
         self.trainer = HourlyTrainer(data_dir=self.config.data_dir)
         self.trainer.start_auto_train(interval_hours=1)
+        self._target_language = getattr(self.config.model, "language", None) or "auto"
+        self._detected_language = None
 
     def on_event(self, callback: Callable):
         self._callbacks.append(callback)
@@ -121,6 +124,11 @@ class Agent:
         if self.agent_config.system_prompt:
             base += f"\n## Additional Instructions\n{self.agent_config.system_prompt}\n"
 
+        # Add language instruction
+        if self._target_language and self._target_language != "auto":
+            lang_name = lang_detector.name(self._target_language)
+            base += f"\n## Language\nRespond in {lang_name} ({self._target_language}).\n"
+
         brain_context = self.brain.get_context_string()
         if brain_context:
             base += f"\n\n{brain_context}"
@@ -142,10 +150,22 @@ class Agent:
         self.state = AgentState.THINKING
         self.turn_count = 0
 
+        # Auto-detect language from user input
+        if self._target_language == "auto":
+            detected = lang_detector.detect(task)
+            self._detected_language = detected
+        else:
+            self._detected_language = self._target_language
+
         brain_result = self.brain.think(task, {"turn": self.turn_count, "session_id": self.session_id})
         self._emit("brain", {"result": brain_result})
 
         system_prompt = self._build_system_prompt()
+        # Inject detected language instruction into system prompt
+        if self._target_language == "auto":
+            lang_name = lang_detector.name(self._detected_language)
+            system_prompt += f"\n\n## Language Instruction\nDetected user language: {lang_name} ({self._detected_language}). Always respond in the same language as the user.\n"
+
         messages = [{"role": "system", "content": system_prompt}]
 
         context = await self.memory.get_context(task)
