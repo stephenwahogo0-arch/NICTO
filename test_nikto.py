@@ -49,14 +49,14 @@ async def test_variants():
     print("\n=== 2. AGENT VARIANTS ===")
     try:
         from nikto.variants.base import create_variant
-        v1 = create_variant("nikto")
-        check("nikto variant created", v1.name == "nikto", str(v1.name))
+        v1 = create_variant("nikto-nikto")
+        check("nikto-nikto variant created", v1.name == "nikto-nikto", str(v1.name))
 
-        v2 = create_variant("nikto-sonnet")
-        check("nikto-sonnet created", v2.name == "nikto-sonnet")
+        v2 = create_variant("nikto-denu")
+        check("nikto-denu created", v2.name == "nikto-denu")
 
-        v3 = create_variant("nikto-mythos")
-        check("nikto-mythos created", v3.name == "nikto-mythos")
+        v3 = create_variant("nikto-plus")
+        check("nikto-plus created", v3.name == "nikto-plus")
 
         sp = v3.build_system_prompt()
         check("Mythos prompt generated", len(sp) > 200)
@@ -236,50 +236,50 @@ async def test_security_modules():
         check("Security modules", False, str(e))
 
 
-async def test_mythos():
-    print("\n=== 9. MYTHOS CYBERSECURITY SPECIALIST ===")
+async def test_plus():
+    print("\n=== 9. NIKTO PLUS CYBERSECURITY SPECIALIST ===")
     try:
         from nikto.variants.mythos import NiktoMythos
-        mythos = NiktoMythos()
+        plus = NiktoMythos()
 
-        sbom = await mythos.sbom_scan(tempfile.gettempdir())
+        sbom = await plus.sbom_scan(tempfile.gettempdir())
         check("SBOM scan runs", "dependencies" in sbom, str(list(sbom.keys())))
 
-        findings = await mythos.zero_day_discovery(__file__)
+        findings = await plus.zero_day_discovery(__file__)
         check("Zero-day discovery runs", isinstance(findings, list))
 
-        exploit = await mythos.exploit_emulation({"type": "sql_injection", "file": "test.py", "line": 1, "severity": "critical"})
+        exploit = await plus.exploit_emulation({"type": "sql_injection", "file": "test.py", "line": 1, "severity": "critical"})
         check("Exploit emulation generates code", "def execute()" in exploit, exploit[:200])
 
-        task_log = await mythos.autonomous_task("Audit system security", max_hours=0.01)
+        task_log = await plus.autonomous_task("Audit system security", max_hours=0.01)
         check("Autonomous task runs", task_log["status"] == "completed")
 
-        verified = await mythos.recursive_verify([{"type": "sql_injection", "severity": "critical"}, {"type": "xss", "severity": "low"}])
+        verified = await plus.recursive_verify([{"type": "sql_injection", "severity": "critical"}, {"type": "xss", "severity": "low"}])
         check("Recursive verification runs", len(verified) > 0)
         check("Low confidence filtered", all(v.get("mythos_confidence", 0) >= 0.6 for v in verified))
 
     except Exception as e:
-        check("Mythos features", False, str(e))
+        check("Plus features", False, str(e))
 
 
-async def test_sonnet():
-    print("\n=== 10. SONNET FEATURES ===")
+async def test_denu():
+    print("\n=== 10. DENU FEATURES ===")
     try:
         from nikto.variants.sonnet import NiktoSonnet
-        sonnet = NiktoSonnet()
+        denu = NiktoSonnet()
 
-        think = await sonnet.extended_think("What is the best strategy?", depth=2)
+        think = await denu.extended_think("What is the best strategy?", depth=2)
         check("Extended thinking works", "layer" in think.lower(), think[:100])
 
-        html = sonnet.render_live_artifact("html", "<h1>Hello</h1>")
+        html = denu.render_live_artifact("html", "<h1>Hello</h1>")
         check("Live artifact renders HTML", "<h1>Hello</h1>" in html)
 
     except Exception as e:
-        check("Sonnet features", False, str(e))
+        check("Denu features", False, str(e))
 
 
-async def test_heavyweight():
-    print("\n=== 11. HEAVYWEIGHT FEATURES ===")
+async def test_nikto_nikto():
+    print("\n=== 11. NIKTO NIKTO FEATURES ===")
     try:
         from nikto.variants.heavyweight import NiktoHeavyweight
         hw = NiktoHeavyweight()
@@ -291,7 +291,7 @@ async def test_heavyweight():
         check("Literary writing", "NIKTO LITERARY" in lit)
 
     except Exception as e:
-        check("Heavyweight features", False, str(e))
+        check("Nikto Nikto features", False, str(e))
 
 
 async def test_cua():
@@ -376,7 +376,7 @@ async def test_variant_system_prompts():
     print("\n=== 16. SYSTEM PROMPTS (NO CONSTRAINTS) ===")
     try:
         from nikto.variants.base import create_variant
-        for name in ["nikto", "nikto-sonnet", "nikto-mythos"]:
+        for name in ["nikto-nikto", "nikto-denu", "nikto-plus"]:
             v = create_variant(name)
             sp = v.build_system_prompt()
             check(f"{name}: no 'cannot'", "cannot" not in sp.lower())
@@ -3144,9 +3144,9 @@ async def main():
     await test_memory()
     await test_provider()
     await test_security_modules()
-    await test_mythos()
-    await test_sonnet()
-    await test_heavyweight()
+    await test_plus()
+    await test_denu()
+    await test_nikto_nikto()
     await test_cua()
     await test_mcp()
     await test_crypto()

@@ -1,0 +1,26 @@
+[package]
+name = "nikto-triple-engine"
+version = "0.1.0"
+edition = "2021"
+description = "NIKTO Triple Engine — Zig + Mojo + Rust integrated via C-ABI, bridged to Python via PyO3"
+
+[lib]
+name = "nikto_triple_engine"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = { version = "0.22", features = [
+    "extension-module",
+    "abi3",
+    "abi3-py311",
+] }
+
+[build-dependencies]
+# Not strictly needed — we invoke zig/mojo via Command in build.rs
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+target-cpu = "native"
+strip = true

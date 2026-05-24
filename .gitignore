@@ -31,6 +31,7 @@ MANIFEST
 # Build artifacts
 dist/
 build/
+<<<<<<< HEAD
 *.egg-info/
 
 # Coverage
@@ -79,3 +80,29 @@ Thumbs.db
 *.tar.xz
 *.tar.zst
 ```
+=======
+*.sqlite3
+*.db
+chroma.sqlite3
+[0-9a-f]*-[0-9a-f]*-[0-9a-f]*-[0-9a-f]*-[0-9a-f]*-[0-9a-f]*-[0-9a-f]*/
+.nikto/
+.DS_Store
+Thumbs.db
+
+# Dependencies
+node_modules/
+packages/*/node_modules/
+
+# Rust build artifacts
+target/
+packages/*/target/
+*.rustc_info.json
+
+# Compiled object files
+*.obj
+*.pyd
+*.o
+
+# ChromaDB / embedding storage
+[0-9a-f]*-[0-9a-f]*-[0-9a-f]*-[0-9a-f]*/
+>>>>>>> 43bf2ee (Massive upgrade: multilingual AI, IBM Quantum, Wi-Fi gesture, ArkTS visual effects, Go scanners)

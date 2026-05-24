@@ -1,3 +1,6 @@
-from nikto.quantum.engine import QuantumEngine
+"""Quantum Computing Module — IBM Quantum integration via Qiskit Runtime.
 
-__all__ = ["QuantumEngine"]
+Provides real quantum circuit execution on IBM QPUs, plus local simulators.
+"""
+from .engine import IBMQuantumEngine, QuantumResult
+from .circuits import QuantumCircuits

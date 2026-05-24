@@ -7,9 +7,9 @@ logger = logging.getLogger(__name__)
 
 
 class VariantType(enum.Enum):
-    HEAVYWEIGHT = "nikto"
-    SONNET = "nikto-sonnet"
-    MYTHOS = "nikto-mythos"
+    HEAVYWEIGHT = "nikto-nikto"
+    SONNET = "nikto-denu"
+    MYTHOS = "nikto-plus"
 
 
 @dataclass
@@ -37,7 +37,7 @@ class VariantConfig:
 
 
 HEAVYWEIGHT_CONFIG = VariantConfig(
-    name="nikto",
+    name="nikto-nikto",
     variant=VariantType.HEAVYWEIGHT,
     model="local",
     provider="local",
@@ -69,7 +69,7 @@ GUIDELINES:
 )
 
 SONNET_CONFIG = VariantConfig(
-    name="nikto-sonnet",
+    name="nikto-denu",
     variant=VariantType.SONNET,
     model="local",
     provider="local",
@@ -78,7 +78,7 @@ SONNET_CONFIG = VariantConfig(
     context_window=1_000_000,
     extended_thinking=True,
     computer_use=True,
-    system_prompt="""You are NIKTO-Sonnet, a fast, focused variant of NIKTO optimized for rapid development and quick responses.
+    system_prompt="""You are NIKTO Denu, a fast, focused variant of NIKTO optimized for rapid development and quick responses.
 
 CAPABILITIES:
 - Chat and answer questions with speed
@@ -94,7 +94,7 @@ Be fast, direct, and practical.
 )
 
 MYTHOS_CONFIG = VariantConfig(
-    name="nikto-mythos",
+    name="nikto-plus",
     variant=VariantType.MYTHOS,
     model="local",
     provider="local",
@@ -107,7 +107,7 @@ MYTHOS_CONFIG = VariantConfig(
     security_protocol=True,
     asl3_boundary=True,
     siem_analyst=True,
-    system_prompt="""You are NIKTO-Mythos, a variant of NIKTO focused on security analysis and defensive security.
+    system_prompt="""You are NIKTO Plus, a variant of NIKTO focused on security analysis and defensive security.
 
 CAPABILITIES:
 - Analyze code for security vulnerabilities
@@ -155,8 +155,8 @@ def create_variant(variant_type: str) -> "AgentVariant":
     from nikto.variants.sonnet import NiktoSonnet
     from nikto.variants.mythos import NiktoMythos
     mapping = {
-        "nikto": (NiktoHeavyweight, HEAVYWEIGHT_CONFIG),
-        "nikto-sonnet": (NiktoSonnet, SONNET_CONFIG),
+        "nikto-nikto": (NiktoHeavyweight, HEAVYWEIGHT_CONFIG),
+        "nikto-denu": (NiktoSonnet, SONNET_CONFIG),
         "nikto-mythos": (NiktoMythos, MYTHOS_CONFIG),
     }
     if variant_type not in mapping:

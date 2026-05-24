@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 class NiktoSonnet(AgentVariant):
-    """nikto-sonnet — The Fast & Intelligent All-Rounder.
+    """nikto-denu — The Fast & Intelligent All-Rounder.
     Excels at high-speed execution, daily coding, UI building, rapid task handling.
     """
 

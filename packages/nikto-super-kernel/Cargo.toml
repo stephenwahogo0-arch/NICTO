@@ -1,0 +1,42 @@
+[package]
+name = "nikto-super-kernel"
+version = "1.0.0"
+edition = "2021"
+description = "NIKTO Unified Kernel Runtime — All 8 sectors in a single cdylib"
+
+[lib]
+name = "nikto_super_kernel"
+crate-type = ["cdylib"]
+
+[build-dependencies]
+cc = "1.0"
+
+[dependencies]
+pyo3 = { version = "0.22", features = ["extension-module", "abi3", "abi3-py311"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+rayon = "1.10"
+parking_lot = "0.12"
+thiserror = "2.0"
+
+# Sector 7: Predictive Analysis
+syn = { version = "2.0", features = ["full", "extra-traits"] }
+walkdir = "2.5"
+bincode = "1.3"
+libc = "0.2"
+rand = "0.8"
+rand_distr = "0.4"
+csv = "1.3"
+chrono = "0.4"
+
+# Sector 8: Financial Engine
+reqwest = { version = "0.12", features = ["json", "blocking"] }
+rusqlite = { version = "0.32", features = ["bundled"] }
+tokio = { version = "1", features = ["full"] }
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+target-cpu = "native"
+strip = true

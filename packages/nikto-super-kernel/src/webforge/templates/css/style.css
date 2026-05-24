@@ -1,0 +1,30 @@
+:root {
+    --primary: #00d4ff;
+    --bg: #0a0a1a;
+    --surface: #12122a;
+    --text: #e0e0f0;
+    --accent: #ff6b35;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+}
+
+.container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+
+header { text-align: center; padding: 4rem 0; }
+header h1 { font-size: 3rem; background: linear-gradient(135deg, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.tagline { font-size: 1.2rem; color: #888; margin-top: 0.5rem; }
+
+.hero { background: var(--surface); border-radius: 1rem; padding: 3rem; margin: 2rem 0; }
+.hero h2 { font-size: 2rem; margin-bottom: 1rem; }
+.hero p { font-size: 1.1rem; color: #ccc; }
+
+.features { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin: 2rem 0; }
+
+footer { text-align: center; padding: 2rem; color: #666; }
