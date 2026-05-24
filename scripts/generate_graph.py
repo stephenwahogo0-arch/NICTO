@@ -1,4 +1,4 @@
-"""Generate NIKTO Performance Graph — visual comparison vs all AI models."""
+"""Generate KYROS Performance Graph — visual comparison vs all AI models."""
 import os
 from PIL import Image, ImageDraw, ImageFont
 
@@ -17,7 +17,7 @@ ORANGE = (255, 160, 40)
 
 # Model colors
 MODEL_COLORS = {
-    "NIKTO": CYAN,
+    "KYROS": CYAN,
     "ChatGPT": (25, 195, 125),
     "Claude": (200, 120, 80),
     "Gemini": (66, 133, 244),
@@ -81,11 +81,11 @@ except Exception:
     font_med = font_small = font_tiny = font_large
 
 # Title
-draw.text((40, 25), "NIKTO FEATURE COMPARISON vs OTHER AI MODELS", fill=CYAN, font=font_large)
-draw.text((40, 62), "NIKTO is not an AI agent. NIKTO is an AI system.", fill=TEAL, font=font_small)
+draw.text((40, 25), "KYROS FEATURE COMPARISON vs OTHER AI MODELS", fill=CYAN, font=font_large)
+draw.text((40, 62), "KYROS is not an AI agent. KYROS is an AI system.", fill=TEAL, font=font_small)
 
 # Legend
-models = ["NIKTO", "ChatGPT", "Claude", "Gemini", "Grok"]
+models = ["KYROS", "ChatGPT", "Claude", "Gemini", "Grok"]
 legend_x = WIDTH - 350
 legend_y = 25
 for i, m in enumerate(models):
@@ -170,8 +170,8 @@ for fi, feat in enumerate(visible_features):
 # Summary
 summary_y = max(y + 30, 620)
 draw.text((40, summary_y), "VERDICT:", fill=CYAN, font=font_med)
-draw.text((40, summary_y + 25), "NIKTO has more features than any other AI model.", fill=GREEN, font=font_small)
-draw.text((40, summary_y + 50), "NIKTO is not an AI agent. NIKTO is an AI system — a complete autonomous intelligence.", fill=TEAL, font=font_small)
+draw.text((40, summary_y + 25), "KYROS has more features than any other AI model.", fill=GREEN, font=font_small)
+draw.text((40, summary_y + 50), "KYROS is not an AI agent. KYROS is an AI system — a complete autonomous intelligence.", fill=TEAL, font=font_small)
 draw.text((40, summary_y + 75), "No other model has: 6-brain ensemble, self-repair, avatar, Eagle Eye, police mode,", fill=TEXT_DIM, font=font_tiny)
 draw.text((40, summary_y + 92), "cybersecurity arsenal, game engine, mesh network, consciousness, breakthrough features.", fill=TEXT_DIM, font=font_tiny)
 

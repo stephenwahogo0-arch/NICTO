@@ -1,5 +1,5 @@
 [project]
-name = "nikto"
+name = "kyros"
 version = "0.2.0"
 description = "Modular AI Agent Framework for Cybersecurity and Autonomous Tasks"
 requires-python = ">=3.12"
@@ -199,7 +199,7 @@ ml = [
 ]
 
 [project.scripts]
-nikto = "nikto_cli.main:cli"
+kyros = "kyros_cli.main:cli"
 
 [tool.uv]
 dev-dependencies = [
@@ -212,6 +212,6 @@ package = false
 
 [tool.hatch.build.targets.wheel]
 packages = [
-    "packages/nikto-core/src/nikto",
-    "packages/nikto-cli/src/nikto_cli"
+    "packages/kyros-core/src/kyros",
+    "packages/kyros-cli/src/kyros_cli"
 ]

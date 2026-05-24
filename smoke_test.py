@@ -1,12 +1,12 @@
-"""Smoke test: verify all NIKTO modules import correctly."""
+"""Smoke test: verify all KYROSAI modules import correctly."""
 import sys
 import os
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "packages", "nikto-core", "src"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "packages", "kyros-core", "src"))
 
-print("Testing NIKTO module imports...")
+print("Testing KYROSAI module imports...")
 
-from nikto import (
-    NiktoConfig, ModelConfig, MemoryConfig, DaemonConfig,
+from kyros import (
+    KyrosConfig, ModelConfig, MemoryConfig, DaemonConfig,
     ModelProvider, create_provider,
     MemorySystem,
     Tool, ToolRegistry,
@@ -14,16 +14,16 @@ from nikto import (
     BashTool,
     WebFetchTool, WebSearchTool,
     CryptoCreateWalletTool, CryptoBalanceTool, CryptoSendTool, CryptoAddressTool,
-    NmapScanTool, GobusterTool, SqlmapTool, NiktoWebScanTool,
+    NmapScanTool, GobusterTool, SqlmapTool, KyrosWebScanTool,
     HashcatTool, HydraTool, MetasploitTool, SearchsploitTool,
     AmassTool, DirbTool, WpscanTool, WiresharkTool, Enum4linuxTool, JohnRipperTool,
-    NiktoReadOwnTool, NiktoWriteOwnTool, NiktoSelfReviewTool,
+    KyrosReadOwnTool, KyrosWriteOwnTool, KyrosSelfReviewTool,
     ImageGenerateTool, PatternGenerateTool,
     GifGenerateTool, VideoGenerateTool,
     SpeakTool, SpeakDirectTool, ListVoicesTool,
     Orchestrator, OrchestratorConfig, TicketStatus,
     AgentVariant, create_variant, HEAVYWEIGHT_CONFIG, SONNET_CONFIG, MYTHOS_CONFIG,
-    NiktoHeavyweight, NiktoSonnet, NiktoMythos,
+    KyrosHeavyweight, KyrosSonnet, KyrosMythos,
     ScreenController, InputController,
     AutomationStep, StepType,
     MCPRegistry, mcp_registry,
@@ -42,13 +42,13 @@ from nikto import (
     LaptopMiner, MinerConfig,
     SkillRuntime,
     register_production_skills,
-    NiktoDaemon,
+    KyrosDaemon,
     app,
 )
 print("OK - all top-level imports resolved")
 
 # Verify constructor / instance creation
-assert NiktoConfig is not None
+assert KyrosConfig is not None
 assert ModelConfig() is not None
 assert MemoryConfig() is not None
 assert DaemonConfig() is not None
@@ -73,9 +73,9 @@ assert orch.report_ticket(ticket["id"], TicketStatus.RESOLVED, "done")["success"
 print("OK - Orchestrator works")
 
 # Verify variants
-assert create_variant("nikto-heavyweight")
-assert create_variant("nikto-sonnet")
-assert create_variant("nikto-mythos")
+assert create_variant("kyros-heavyweight")
+assert create_variant("kyros-sonnet")
+assert create_variant("kyros-mythos")
 print("OK - Variant factory works")
 
 # Verify cua
@@ -161,12 +161,12 @@ assert len(runtime.list_skills()) >= 15
 print("OK - Production skills registered")
 
 # Verify daemon
-daemon = NiktoDaemon(DaemonConfig())
+daemon = KyrosDaemon(DaemonConfig())
 assert daemon.daemon_id is not None
 print("OK - Daemon works")
 
 # Verify API
-assert app.title == "Nikto API"
+assert app.title == "Kyros API"
 print("OK - FastAPI app works")
 
 print("\n=== ALL 45+ TESTS PASSED ===")

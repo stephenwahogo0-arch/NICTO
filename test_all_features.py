@@ -1,26 +1,26 @@
-"""NIKTO Complete Feature Test Suite"""
+"""KYROSAI Complete Feature Test Suite"""
 import sys, os, time, threading
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'packages', 'nikto-core', 'src'))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'packages', 'kyros-core', 'src'))
 
-os.environ['NIKTO_TEST'] = '1'
+os.environ['KYROS_TEST'] = '1'
 
 # Import everything first (outside try/except so variables are accessible)
-print("Importing NIKTO modules...")
-from nikto.api.routes import app
+print("Importing KYROSAI modules...")
+from kyros.api.routes import app
 print("  [OK] FastAPI app")
-from nikto.sensors.gesture import WiFiGestureMonitor, SignalProcessor, WiFiCapture
+from kyros.sensors.gesture import WiFiGestureMonitor, SignalProcessor, WiFiCapture
 sp = SignalProcessor()
 print("  [OK] Gesture module")
-from nikto.quantum.engine import IBMQuantumEngine
+from kyros.quantum.engine import IBMQuantumEngine
 qe = IBMQuantumEngine()
 print(f"  [OK] Quantum engine (connected={qe.connected})")
-from nikto.language.detector import LanguageDetector, LANGUAGES
+from kyros.language.detector import LanguageDetector, LANGUAGES
 ld = LanguageDetector()
 print(f"  [OK] LanguageDetector ({len(LANGUAGES)} langs)")
-from nikto.finance import BankManager
+from kyros.finance import BankManager
 bm = BankManager()
 print("  [OK] BankManager")
-from nikto.model_manager import ModelManager
+from kyros.model_manager import ModelManager
 mm = ModelManager()
 hw = mm.detect_hardware_tier()
 print(f"  [OK] ModelManager (hw_tier={hw})")
@@ -40,7 +40,7 @@ def test(name, ok, detail=""):
         print(f"  [FAIL] {name} — {detail}")
 
 print("\n" + "=" * 60)
-print("  NIKTO COMPLETE FEATURE TEST")
+print("  KYROSAI COMPLETE FEATURE TEST")
 print("=" * 60)
 
 # ── Module Checks ───────────────────────────────────────
@@ -56,18 +56,18 @@ test("ModelManager hw_tier", hw in ("tier1","tier2","tier3"), f"tier={hw}")
 print("\n2. Go CLI Executables")
 root = os.path.dirname(__file__)
 go_tools = [
-    ("scanner", "packages/nikto-super-kernel/go/scanner/scanner.exe"),
-    ("odds", "packages/nikto-super-kernel/go/odds/odds.exe"),
-    ("monitor", "packages/nikto-super-kernel/go/background_monitor/monitor.exe"),
-    ("hsync", "packages/nikto-super-kernel/go/hsync_engine/hsync.exe"),
-    ("graph", "packages/nikto-super-kernel/go/graph_core/graph.exe"),
+    ("scanner", "packages/kyros-super-kernel/go/scanner/scanner.exe"),
+    ("odds", "packages/kyros-super-kernel/go/odds/odds.exe"),
+    ("monitor", "packages/kyros-super-kernel/go/background_monitor/monitor.exe"),
+    ("hsync", "packages/kyros-super-kernel/go/hsync_engine/hsync.exe"),
+    ("graph", "packages/kyros-super-kernel/go/graph_core/graph.exe"),
 ]
 for name, path in go_tools:
     test(f"Go {name}.exe", os.path.exists(os.path.join(root, path)))
 
 # ── C++ Binary ──────────────────────────────────────────
 print("\n3. C++ Wi-Fi Capture")
-cpp_path = os.path.join(root, "packages/nikto-core/src/nikto/sensors/cpp/wifi_capture.exe")
+cpp_path = os.path.join(root, "packages/kyros-core/src/kyros/sensors/cpp/wifi_capture.exe")
 test("C++ wifi_capture.exe", os.path.exists(cpp_path))
 
 # ── Start API Server ────────────────────────────────────
@@ -88,7 +88,7 @@ try:
 
     # Root
     r = c.get("/")
-    test("GET /", r.status_code == 200 and "NIKTO" in r.text)
+    test("GET /", r.status_code == 200 and "Kyros" in r.text)
 
     # Health
     r = c.get("/health")
@@ -115,7 +115,7 @@ try:
     test("POST /chat (ES detect)", "es" in detected.lower(), f"detected={detected}")
 
     # Memory
-    r = c.get("/memory/search?q=nikto")
+    r = c.get("/memory/search?q=kyros")
     test("GET /memory/search", r.status_code == 200)
 
     # Model status

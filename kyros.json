@@ -1,0 +1,32 @@
+{
+  "mode": "build",
+  "debug": false,
+  "verbose": false,
+  "workspace": ".",
+  "data_dir": "~/.kyros",
+  "model": {
+    "provider": "local",
+    "model": "local",
+    "api_key": null,
+    "api_base": null,
+    "temperature": 0.5,
+    "max_tokens": 4096,
+    "thinking_mode": false,
+    "ollama_model": "llama3.2:1b",
+    "ollama_host": "http://127.0.0.1:11434",
+    "model_path": null,
+    "n_gpu_layers": null,
+    "model_tier": "auto"
+  },
+  "memory": {
+    "type": "hybrid",
+    "sqlite_path": "~/.kyros/memory.db",
+    "chroma_path": "~/.kyros/chroma_db",
+    "vector_dimension": 768
+  },
+  "crypto": {
+    "enabled": false,
+    "wallet_name": "KyrosEarningVault",
+    "network": "bitcoin"
+  }
+}

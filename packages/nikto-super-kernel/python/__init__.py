@@ -1,4 +1,4 @@
-"""NIKTO Super Kernel — Unified Rust backend with Python bridge."""
+"""KYROS Super Kernel — Unified Rust backend with Python bridge."""
 
 try:
     import nikto_super_kernel as _native

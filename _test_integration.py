@@ -1,20 +1,20 @@
 """Full integration test for the real LLM engine."""
 import os, sys
-sys.path.insert(0, "packages/nikto-core/src")
+sys.path.insert(0, "packages/kyros-core/src")
 
 print("=== IMPORT TEST ===")
-from nikto.providers.chatml import format_chatml, format_chatml_with_context, extract_response
-from nikto.providers.llamacpp import LLaMACPPProvider, check_hardware_capability
-from nikto.providers.dual import DualEngineProvider
-from nikto.model_manager import ModelManager, MODEL_REGISTRY
-from nikto.config.settings import ModelConfig, NiktoConfig
+from kyros.providers.chatml import format_chatml, format_chatml_with_context, extract_response
+from kyros.providers.llamacpp import LLaMACPPProvider, check_hardware_capability
+from kyros.providers.dual import DualEngineProvider
+from kyros.model_manager import ModelManager, MODEL_REGISTRY
+from kyros.config.settings import ModelConfig, KyrosConfig
 print("  All imports OK")
 
 print("\n=== CHATML TEST ===")
 prompt = format_chatml_with_context(
     "Hello, what can you do?",
-    "You are NIKTO.",
-    [("Hi", "Hello! I am NIKTO.")],
+    "You are KYROS.",
+    [("Hi", "Hello! I am KYROS.")],
     "Previous topic: coding"
 )
 assert "<|im_start|>system" in prompt
@@ -66,9 +66,9 @@ for tier_name, models in MODEL_REGISTRY.items():
 print("\n=== VERIFY WEB SERVER ===")
 import subprocess, time, json, urllib.request
 proc = subprocess.Popen(
-    [sys.executable, "-m", "uvicorn", "nikto.api.routes:app",
+    [sys.executable, "-m", "uvicorn", "kyros.api.routes:app",
      "--host", "127.0.0.1", "--port", "8766", "--log-level", "warning"],
-    cwd="packages/nikto-core/src"
+    cwd="packages/kyros-core/src"
 )
 time.sleep(4)
 try:

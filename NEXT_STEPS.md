@@ -1,30 +1,30 @@
-# Next Steps for NIKTO Enhancement
+# Next Steps for KYROS Enhancement
 
 ## What Has Been Implemented
 
 ### 1. Video Processing Capabilities
-- **Video Generation**: Existing tool in `packages/nikto-core/src/nikto/tools/video_gen.py` that creates GIFs and MP4 videos from text prompts using PIL and ffmpeg.
-- **Video Reading**: New tool in `packages/nikto-core/src/nikto/tools/video_read.py` that can:
+- **Video Generation**: Existing tool in `packages/kyros-core/src/kyros/tools/video_gen.py` that creates GIFs and MP4 videos from text prompts using PIL and ffmpeg.
+- **Video Reading**: New tool in `packages/kyros-core/src/kyros/tools/video_read.py` that can:
   - Extract transcripts from YouTube videos (using youtube_transcript_api)
   - Download and transcribe audio from other video platforms (requires yt-dlp, SpeechRecognition, pydub)
   - Provide summaries of video content
-- **Tool Integration**: Both tools are registered in `packages/nikto-core/src/nikto/tools/__init__.py`
+- **Tool Integration**: Both tools are registered in `packages/kyros-core/src/kyros/tools/__init__.py`
 
 ### 2. Variant Renaming (Per User Request)
 - Nikto (formerly heavyweight) → **Nikto Nikto**
 - Nikto Sonnet → **Nikto Denu**
 - Nikto Mythos → **Nikto Plus**
 - Updated all references in:
-  - `packages/nikto-core/src/nikto/variants/base.py`
-  - `packages/nikto-core/src/nikto/variants/heavyweight.py`
-  - `packages/nikto-core/src/nikto/variants/sonnet.py`
-  - `packages/nikto-core/src/nikto/variants/mythos.py`
-  - `packages/nikto-core/src/nikto/variants/__init__.py`
+  - `packages/kyros-core/src/kyros/variants/base.py`
+  - `packages/kyros-core/src/kyros/variants/heavyweight.py`
+  - `packages/kyros-core/src/kyros/variants/sonnet.py`
+  - `packages/kyros-core/src/kyros/variants/mythos.py`
+  - `packages/kyros-core/src/kyros/variants/__init__.py`
   - `test_nikto.py`
-  - `packages/nikto-cli/src/nikto_cli/main.py`
+  - `packages/kyros-cli/src/kyros_cli/main.py`
 
 ### 3. Agent Swarming Capability
-- Added to `packages/nikto-core/src/nikto/agent/base.py`:
+- Added to `packages/kyros-core/src/kyros/agent/base.py`:
   - Swarming configuration in `AgentConfig` (enable_swarming, max_swarm_depth, swarm_size)
   - `_should_swarm()` method to detect complex tasks
   - `_run_swarm()` method to orchestrate sub-agent creation and execution
@@ -32,7 +32,7 @@
   - `_synthesize_results()` method to combine results from multiple sub-agents
 
 ### 4. Production Skill Enhancement
-- Updated `packages/nikto-core/src/nikto/skills/production.py` to:
+- Updated `packages/kyros-core/src/kyros/skills/production.py` to:
   - Require real Binance API keys (CRYPTO_API_KEY and CRYPTO_API_SECRET)
   - Execute real trades via Binance API
   - Remove simulated trading fallback
@@ -68,7 +68,7 @@
   - Real-world execution (not simulation)
 
 ### 4. Advanced Gaming Engine
-- Current game engine in `packages/nikto-core/src/nikto/games/engine.py` is basic
+- Current game engine in `packages/kyros-core/src/kyros/games/engine.py` is basic
 - Should be enhanced to:
   - Support 3D graphics
   - Physics integration
@@ -119,18 +119,18 @@ Please let us know which of these (or other features) you would like us to work 
 
 ### Video Generation
 ```bash
-python -c "import asyncio; from nikto.tools.video_gen import tool_generate_video; result = asyncio.run(tool_generate_video('A red ball bouncing on a blue background', width=320, height=240, duration_sec=2)); print(result)"
+python -c "import asyncio; from kyros.tools.video_gen import tool_generate_video; result = asyncio.run(tool_generate_video('A red ball bouncing on a blue background', width=320, height=240, duration_sec=2)); print(result)"
 ```
 
 ### Video Reading (YouTube)
 ```bash
-python -c "import asyncio, sys; sys.stdout.reconfigure(encoding='utf-8'); from nikto.tools.video_read import tool_video_read; result = asyncio.run(tool_video_read('https://www.youtube.com/watch?v=dQw4w9WgXcQ')); print('Result:', result)"
+python -c "import asyncio, sys; sys.stdout.reconfigure(encoding='utf-8'); from kyros.tools.video_read import tool_video_read; result = asyncio.run(tool_video_read('https://www.youtube.com/watch?v=dQw4w9WgXcQ')); print('Result:', result)"
 ```
 
 ### Agent Swarming (Example)
 ```python
 from nikto.agent.base import Agent, AgentConfig
-from nikto.config.settings import NiktoConfig
+from nikto.config.settings import KyrosConfig
 
 config = AgentConfig(
     enable_swarming=True,
@@ -138,7 +138,7 @@ config = AgentConfig(
     swarm_size=3
 )
 
-agent = Agent(config=NiktoConfig(), agent_config=config)
+agent = Agent(config=KyrosConfig(), agent_config=config)
 # Complex tasks will automatically trigger swarming
 ```
 

@@ -1,0 +1,291 @@
+{
+  "unreal_engine": {
+    "content": "Unreal Engine 5 provides a complete game development framework. Nanite virtualized geometry enables film-quality assets with millions of polygons rendered in real-time through software rasterization and hierarchical LOD. Lumen dynamic global illumination provides indirect lighting through software ray tracing and signed distance fields. Blueprints visual scripting enables rapid prototyping without C++. Niagara VFX creates GPU-accelerated particle systems with complex simulation patterns.",
+    "metadata": {
+      "category": "game_development",
+      "tags": [
+        "unreal",
+        "ue5",
+        "nanite",
+        "lumen"
+      ]
+    }
+  },
+  "unity_engine": {
+    "content": "Unity uses component-based architecture with GameObjects composed of reusable MonoBehaviour components. DOTS (Data-Oriented Technology Stack) enables high-performance multithreaded processing through ECS, the Job System, and Burst Compiler. The Addressables system provides efficient asset management with dependency tracking and remote content delivery. Unity's URP and HDRP render pipelines offer scalable quality from mobile to high-end console, with SRP Batcher for draw call optimization.",
+    "metadata": {
+      "category": "game_development",
+      "tags": [
+        "unity",
+        "dots",
+        "ecs"
+      ]
+    }
+  },
+  "godot_engine": {
+    "content": "Godot is a free and open-source engine using scene-tree architecture with composable Node types. GDScript provides Python-like scripting with tight engine integration, while C# and GDExtension (C++, Rust, Nim) support alternate languages. The dedicated 2D engine includes pixel-perfect rendering, tilemaps with autotiling, and 2D lighting/shadows. Godot 4 introduced Vulkan rendering (Forward+ and Mobile backends), SDFGI global illumination, and a new animation system.",
+    "metadata": {
+      "category": "game_development",
+      "tags": [
+        "godot",
+        "gdscript",
+        "open_source"
+      ]
+    }
+  },
+  "physics": {
+    "content": "Physics engines simulate realistic motion and collision. Rigid body dynamics handle movement through forces, torques, impulses, and constraints (ball joints, hinge joints, prismatic joints, springs). Collision detection uses broadphase (Sweep-and-Prune, spatial hashing, BVH) to find candidate pairs, then narrowphase (GJK, SAT, Minkowski Portal Refinement) for exact contact computation. Continuous collision detection uses CCD with swept shapes to prevent tunneling.",
+    "metadata": {
+      "category": "game_development",
+      "tags": [
+        "physics",
+        "collision",
+        "rigid_body"
+      ]
+    }
+  },
+  "rendering": {
+    "content": "Real-time rendering transforms 3D scenes to 2D images. Forward rendering processes each light per object, simple but limited to few dynamic lights. Deferred rendering accumulates lighting in G-buffers (albedo, normal, metallic/roughness, depth) for efficient many-light scenes. PBR uses Cook-Torrance microfacet BRDF with energy-conserving specular highlights. Anti-aliasing includes MSAA (multisampling), TAA (temporal accumulation), SMAA (morphological), and DLSS/FSR (AI upscaling).",
+    "metadata": {
+      "category": "game_development",
+      "tags": [
+        "rendering",
+        "pbr",
+        "deferred",
+        "antialiasing"
+      ]
+    }
+  },
+  "shaders": {
+    "content": "Shaders are GPU programs controlling the rendering pipeline. Vertex shaders transform 3D vertices to screen space with model-view-projection matrices. Pixel shaders determine final colors through lighting calculations, texture sampling, and material evaluation. Compute shaders perform general-purpose GPU computation for post-processing, physics, particle systems, and procedural generation. Shader languages include HLSL (DirectX), GLSL (OpenGL), and SPIR-V (Vulkan intermediate). Shader model 6.6+ supports ray tracing, mesh shaders, and sampler feedback.",
+    "metadata": {
+      "category": "game_development",
+      "tags": [
+        "shaders",
+        "gpu",
+        "hlsl",
+        "glsl"
+      ]
+    }
+  },
+  "animation": {
+    "content": "Character animation brings models to life. Skeletal animation uses bone hierarchies with vertex skinning (linear blend skinning, dual quaternion skinning) for deformation. Blend trees smoothly interpolate between animations (idle/walk/run/sprint) based on speed parameters. Inverse Kinematics (IK) computes joint rotations to reach target positions (foot placement on uneven terrain, hand interactions with objects). Animation blueprints (Unreal) or state machines (Unity Mechanim) organize clips with transitions.",
+    "metadata": {
+      "category": "game_development",
+      "tags": [
+        "animation",
+        "skeletal",
+        "ik",
+        "blend_trees"
+      ]
+    }
+  },
+  "ai_game": {
+    "content": "Game AI creates intelligent NPC behavior. Finite State Machines model NPC states (idle, patrol, alert, attack, flee) with event-driven transitions. Behavior Trees structure decision-making with composite nodes (selector/fallback, sequence, parallel), decorator conditions, and action/condition leaves. NavMesh defines walkable surfaces with A* pathfinding and local avoidance (RVO/ORCA for crowd simulation). Utility AI scores action options by situational factors for nuanced, context-aware decisions.",
+    "metadata": {
+      "category": "game_development",
+      "tags": [
+        "ai",
+        "behavior_trees",
+        "pathfinding",
+        "fsm"
+      ]
+    }
+  },
+  "audio_game": {
+    "content": "Game audio creates immersive soundscapes through ambient beds (wind, machinery, wildlife), sound effects (footsteps, weapons, UI), and adaptive music. Middleware like FMOD and Wwise integrates with game engines for dynamic mixing, real-time parameter control, and platform-specific audio formats. Spatial audio uses HRTF for 3D positioning over headphones or binaural rendering. Adaptive music layers transition between intensity levels (exploration, combat, victory) for responsive scoring.",
+    "metadata": {
+      "category": "game_development",
+      "tags": [
+        "audio",
+        "fmod",
+        "wwise",
+        "spatial_audio"
+      ]
+    }
+  },
+  "networking": {
+    "content": "Multiplayer networking synchronizes game state across clients. Client-server architecture has an authoritative server preventing cheating, with clients sending inputs and receiving state updates. Rollback netcode (fighting games, Riot Riot) predicts next frames locally and rolls back on server correction. State synchronization strategies: snapshot interpolation (smooth state rendering), entity interpolation (between past + present states), client-side prediction (responsive player input) with reconciliation.",
+    "metadata": {
+      "category": "game_development",
+      "tags": [
+        "networking",
+        "multiplayer",
+        "rollback",
+        "prediction"
+      ]
+    }
+  },
+  "procedural_generation": {
+    "content": "Procedural generation creates game content algorithmically. Noise functions (Perlin, simplex, cellular/Voronoi, fractal Brownian motion) generate terrain, textures, and organic patterns. Wave Function Collapse generates tile-based levels by propagating adjacency constraints from example patterns (used for buildings, dungeons, vegetation). Dungeon generation algorithms include BSP (binary space partition), random walk, cellular automata cave generation, and room-connection graphs with Delaunay triangulation and MST.",
+    "metadata": {
+      "category": "game_development",
+      "tags": [
+        "procedural",
+        "noise",
+        "wfc",
+        "dungeon_gen"
+      ]
+    }
+  },
+  "game_design": {
+    "content": "Game design creates engaging gameplay systems. Core loops define the primary gameplay cycle (e.g., Minecraft: explore resources -> craft tools -> build structures -> explore further). MDA framework breaks down games into Mechanics (rules/systems), Dynamics (emergent behavior from mechanics in play), and Aesthetics (emotional responses evoked). Design pillars provide fixed reference points for all design decisions (e.g., 'accessible', 'deep', 'social'). Game design documents formalize vision, mechanics, systems, and scope.",
+    "metadata": {
+      "category": "game_development",
+      "tags": [
+        "game_design",
+        "mda",
+        "core_loop"
+      ]
+    }
+  },
+  "level_design": {
+    "content": "Level design crafts game spaces guiding player experience. Golden path design ensures intuitive navigation through visual cues (lighting, color, landmarks), leading to the critical path without explicit waypoints. Combat encounter design balances enemy composition, placement, cover distribution, and arena geometry for tactical depth. Pacing alternates tension (combat, puzzles, chases) and release (safe zones, exploration, narrative beats). Environmental storytelling embeds narrative through props, architecture, and set dressing.",
+    "metadata": {
+      "category": "game_development",
+      "tags": [
+        "level_design",
+        "encounter_design",
+        "pacing"
+      ]
+    }
+  },
+  "optimization": {
+    "content": "Game optimization maintains frame rate through efficient resource usage. LOD reduces geometry complexity for distant objects via discrete LOD levels or continuous H-LOD. Occlusion culling (frustum + hierarchical Z-buffer + portal/ PVS) skips rendering hidden objects. Texture atlasing combines multiple textures into single GPU-friendly sheets reducing state changes. Object pooling reuses frequently created/destroyed objects reducing GC pressure. Draw call batching groups similar meshes/materials for GPU efficiency.",
+    "metadata": {
+      "category": "game_development",
+      "tags": [
+        "optimization",
+        "lod",
+        "culling",
+        "batching"
+      ]
+    }
+  },
+  "vr_ar": {
+    "content": "VR/AR development creates immersive spatial experiences. VR targets 90+ FPS with low persistence (rolling shutter reduction), asynchronous timewarp (frame reprojection for missed vsync), and fixed foveated rendering (lower resolution periphery) for comfort. OpenXR provides cross-platform VR/AR standards. Hand tracking replaces controllers with direct hand interaction through skeletal hand models (Leap Motion, Meta Quest). AR anchors virtual content to real surfaces using SLAM for persistent spatial understanding.",
+    "metadata": {
+      "category": "game_development",
+      "tags": [
+        "vr",
+        "ar",
+        "openxr",
+        "hand_tracking"
+      ]
+    }
+  },
+  "ui_ux": {
+    "content": "Game UI presents information enabling interaction without breaking immersion. Diegetic UI exists within game world (holographic displays, instrument panels, in-world signage). Non-diegetic UI overlays the game view (HUD health bars, crosshair, minimap, quest tracker). Responsive UI adapts to different screen sizes, resolutions, and aspect ratios. UI animation provides feedback through transitions, hover effects, press states, tooltips, and notifications that feel responsive and tactile.",
+    "metadata": {
+      "category": "game_development",
+      "tags": [
+        "ui",
+        "ux",
+        "hud",
+        "diegetic"
+      ]
+    }
+  },
+  "save_systems": {
+    "content": "Save systems persist player progress. Data serialization uses JSON (readable, flexible), binary (compact, fast), or Protocol Buffers (version-tolerant schema evolution). Save strategies include auto-save at checkpoints (frequent, limited slots), manual save (player-controlled, multiple slots), and quicksave (single quick slot, keyboard shortcut). Cloud save synchronization uses timestamp comparison, three-way merge, or conflict resolution UI. Save integrity verification uses checksums against corruption.",
+    "metadata": {
+      "category": "game_development",
+      "tags": [
+        "save_systems",
+        "persistence",
+        "serialization"
+      ]
+    }
+  },
+  "input_handling": {
+    "content": "Input systems translate player actions to game commands. Action mapping separates semantics (jump, shoot, interact) from physical inputs (spacebar, A button, touch tap). Input buffering queues actions during animation locks for responsive feel without punishing precise timing. Input prediction anticipates next inputs for rollback netcode. Accessibility supports re-mappable controls, alternative devices (adaptive controllers, eye-tracking), adjustable sensitivity, and toggle vs hold options for inclusive gameplay.",
+    "metadata": {
+      "category": "game_development",
+      "tags": [
+        "input",
+        "actions",
+        "accessibility"
+      ]
+    }
+  },
+  "ecs_architecture": {
+    "content": "ECS architecture decouples data from behavior for performance and flexibility. Entities are lightweight identifiers (integer IDs). Components are plain data structs (Position, Velocity, Health, Renderable). Systems iterate over entities with specific component combinations (MovementSystem processes Position+Velocity). Cache-friendly data layout (arrays of structs of component arrays) improves CPU cache utilization. ECS enables parallel system execution (each system processes its entities independently), ideal for thousands of entities.",
+    "metadata": {
+      "category": "game_development",
+      "tags": [
+        "ecs",
+        "entity",
+        "component",
+        "system"
+      ]
+    }
+  },
+  "resource_management": {
+    "content": "Resource management handles asset loading, caching, and unloading. Reference counting tracks asset usage, unloading when count reaches zero. Streaming loads assets incrementally based on proximity (distance-based streaming for open-world), gameplay need (level loading), or memory pressure. Addressable systems (Unity Addressables, Unreal Asset Manager) provide location-independent asset references with automatic dependency resolution and bundle packing. Memory budgets prevent OOM by prioritizing and preemptively unloading.",
+    "metadata": {
+      "category": "game_development",
+      "tags": [
+        "resource_management",
+        "streaming",
+        "memory"
+      ]
+    }
+  },
+  "lighting": {
+    "content": "Lighting simulates illumination for visual quality and atmosphere. Dynamic lighting computes per-frame for moving lights and objects using shadow mapping (PCF filtering, variance shadow maps, cascaded shadow maps for directional light). Baked lighting precomputes static light transport via lightmaps (irradiance caching, photon mapping) for high quality at zero runtime cost. Global illumination simulates indirect bounces — Lumen (real-time, Unreal), light probes (baked GI samples), DDGI (dynamic probe grid), and Voxel GI (cone tracing).",
+    "metadata": {
+      "category": "game_development",
+      "tags": [
+        "lighting",
+        "global_illumination",
+        "shadow_maps"
+      ]
+    }
+  },
+  "vfx": {
+    "content": "Visual effects enhance feedback through particles, shaders, and post-processing. Particle emitters control spawn rate, lifetime, velocity, color, size, rotation over lifetime with curve/preset modulation. GPU particle simulation (Niagara, VFX Graph) handles thousands of particles with collision, forces, and noise fields. Post-processing stack: bloom (bright glow), motion blur (speed lines), depth of field (focus blur), tonemapping (HDR to LDR), color grading (look-up tables), ambient occlusion (contact shadows), and screen-space reflections.",
+    "metadata": {
+      "category": "game_development",
+      "tags": [
+        "vfx",
+        "particles",
+        "post_processing"
+      ]
+    }
+  },
+  "terrain": {
+    "content": "Terrain systems render large outdoor environments. Heightmap terrain uses grayscale elevation data with LOD via quadtree/clipmap tessellation. Procedural generation combines noise layers: Perlin (base shape), ridged multifractal (mountain ridges), cellular (erosion patterns), and domain warping (organic detail). Terrain texturing blends material layers (grass, rock, snow, sand) based on slope angle, altitude, and painted mask weights with triplanar mapping for cliff faces.",
+    "metadata": {
+      "category": "game_development",
+      "tags": [
+        "terrain",
+        "heightmap",
+        "procedural"
+      ]
+    }
+  },
+  "pipeline_tools": {
+    "content": "Game asset pipelines integrate DCC tools into production. DCC software: Maya (animation, rigging), Blender (modeling, sculpting, VFX), Substance Painter/Designer (PBR material authoring), Houdini (procedural assets, VFX). Export formats: FBX (industry standard, animation support), glTF (modern, PBR, runtime-optimized). Source control: Perforce (large binary files), Git LFS (Git with large file storage). Automated build pipelines compile, cook assets, package, and deploy to test/dev/store channels.",
+    "metadata": {
+      "category": "game_development",
+      "tags": [
+        "pipeline",
+        "dcc",
+        "blender",
+        "substance"
+      ]
+    }
+  },
+  "testing": {
+    "content": "Game testing validates functionality across diverse hardware. Unit tests verify individual systems (math, physics, inventory logic). Playtesting collects qualitative feedback from target users on fun, difficulty, clarity, and frustration points. Performance profiling identifies bottlenecks: GPU (render passes, draw calls, fill rate), CPU (game logic, physics, AI), memory (texture budgets, streaming). Automated regression tests (QA test automation, runtime verification) catch regressions. Certification testing ensures platform requirements (TRC, XR, Lotcheck).",
+    "metadata": {
+      "category": "game_development",
+      "tags": [
+        "testing",
+        "playtesting",
+        "profiling",
+        "qa"
+      ]
+    }
+  }
+}

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""NIKTO Installer — installs dependencies and downloads the right model for your hardware."""
+"""KYROS Installer — installs dependencies and downloads the right model for your hardware."""
 import subprocess, sys, os, platform
 
 def run(cmd, desc, critical=False):
@@ -19,14 +19,14 @@ def run(cmd, desc, critical=False):
 
 def main():
     print("=" * 56)
-    print("  NIKTO INSTALLER")
+    print("  KYROS INSTALLER")
     print("  Auto-detecting your hardware...")
     print("=" * 56)
 
     # Detect hardware
-    sys.path.insert(0, "packages/nikto-core/src")
+    sys.path.insert(0, "packages/kyros-core/src")
     try:
-        from nikto.providers.llamacpp import check_hardware_capability
+        from kyros.providers.llamacpp import check_hardware_capability
         hw = check_hardware_capability()
         print(f"  CPU Cores: {hw['cpu_cores']}")
         print(f"  RAM: {hw['ram_gb']} GB")
@@ -40,7 +40,7 @@ def main():
     print()
 
     # Install core package
-    run("pip install -e packages/nikto-core", "Core package", critical=True)
+    run("pip install -e packages/kyros-core", "Core package", critical=True)
 
     # Install Python dependencies
     deps = "pip install fastapi uvicorn psutil pynput Pillow pyttsx3 httpx"
@@ -66,14 +66,14 @@ def main():
     print()
     print("  Checking for local GGUF models...")
     try:
-        from nikto.model_manager import ModelManager
+        from kyros.model_manager import ModelManager
         mm = ModelManager()
         mm.print_status()
         installed = mm.list_installed()
         if not installed:
             print("\n  No models found. Options:")
             print(f"    1. Install Ollama and run: ollama pull llama3.2:1b")
-            print(f"    2. Run: python -c \"from nikto.model_manager import ModelManager; ModelManager().download_model('tier1')\"")
+            print(f"    2. Run: python -c \"from kyros.model_manager import ModelManager; ModelManager().download_model('tier1')\"")
             print(f"    3. Place a .gguf file in ~/.nikto/models/")
     except Exception as e:
         print(f"  Model check skipped: {e}")
@@ -90,7 +90,7 @@ def main():
 
     print()
     print("=" * 56)
-    print("  NIKTO INSTALLED")
+    print("  KYROS INSTALLED")
     print()
     print("  Commands:")
     print("    yarn start       Install + launch web server")
@@ -98,7 +98,7 @@ def main():
     print("    yarn cli         Terminal chat mode")
     print()
     print("  To download a model, run:")
-    print("    python -c \"from nikto.model_manager import ModelManager; ModelManager().download_model()\"")
+    print("    python -c \"from kyros.model_manager import ModelManager; ModelManager().download_model()\"")
     print()
     print("  Or install Ollama for quick start:")
     print("    1. Download from https://ollama.com")

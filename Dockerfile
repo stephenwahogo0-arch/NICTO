@@ -24,14 +24,14 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 
 WORKDIR /app
 COPY pyproject.toml .
-COPY packages/nikto-core/pyproject.toml packages/nikto-core/
-COPY packages/nikto-cli/pyproject.toml packages/nikto-cli/
+COPY packages/kyros-core/pyproject.toml packages/kyros-core/
+COPY packages/kyros-cli/pyproject.toml packages/kyros-cli/
 
 RUN uv sync --frozen --no-dev
 RUN uv sync --extra ml --frozen --no-dev
 
-COPY packages/nikto-core/src packages/nikto-core/src/
-COPY packages/nikto-cli/src packages/nikto-cli/src/
+COPY packages/kyros-core/src packages/kyros-core/src/
+COPY packages/kyros-cli/src packages/kyros-cli/src/
 
 RUN uv sync --frozen --no-dev
 
@@ -40,5 +40,5 @@ RUN uv pip install --system playwright \
 
 EXPOSE 4890
 
-ENTRYPOINT ["nikto"]
+ENTRYPOINT ["kyros"]
 CMD ["daemon"]

@@ -1,1 +1,0 @@
-# NIKTO CLI

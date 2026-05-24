@@ -1,7 +1,7 @@
 """
-NIKTO — Complete Feature Inventory
+KYROS — Complete Feature Inventory
 ===================================
-NIKTO is not an AI agent. NIKTO is an AI system.
+KYROS is not an AI agent. KYROS is an AI system.
 31 feature categories, 745+ individual capabilities verified.
 
 FEATURE COMPARISON (31 features, each model shows YES/NO):
@@ -43,11 +43,11 @@ FEATURES = [
     ("True Autonomy (System)", True, False, False, False, False),
 ]
 
-models = ["NIKTO", "ChatGPT", "Claude", "Gemini", "Grok"]
+models = ["KYROS", "ChatGPT", "Claude", "Gemini", "Grok"]
 wins = {m: 0 for m in models}
 
 lines = []
-lines.append(f"{'Feature':<40} {'NIKTO':<10} {'ChatGPT':<10} {'Claude':<10} {'Gemini':<10} {'Grok':<10}")
+lines.append(f"{'Feature':<40} {'KYROS':<10} {'ChatGPT':<10} {'Claude':<10} {'Gemini':<10} {'Grok':<10}")
 lines.append("-" * 90)
 for feat in FEATURES:
     name, n, c, cl, g, gr = feat
@@ -63,8 +63,8 @@ lines.append("")
 for m in models:
     lines.append(f"{m}: {wins[m]}/{len(FEATURES)} ({100*wins[m]//len(FEATURES)}%)")
 lines.append("")
-lines.append("VERDICT: NIKTO has more features than any other AI model (31/31 = 100%).")
-lines.append("NIKTO is not an AI agent. NIKTO is an AI system — a complete autonomous intelligence.")
+lines.append("VERDICT: KYROS has more features than any other AI model (31/31 = 100%).")
+lines.append("KYROS is not an AI agent. KYROS is an AI system — a complete autonomous intelligence.")
 
 # Detailed feature breakdown
 lines.append("")
@@ -92,13 +92,13 @@ print("\n".join(lines))
 
 # Save JSON
 output = {
-    "nikto": {
-        "name": "NIKTO AI System",
+    "kyros": {
+        "name": "KYROS AI System",
         "version": "0.2.0",
-        "description": "Not an AI agent. NIKTO is an AI system.",
+        "description": "Not an AI agent. KYROS is an AI system.",
         "total_features": len(FEATURES),
         "passing_tests": 745,
-        "features_won": wins["NIKTO"],
+        "features_won": wins["KYROS"],
         "feature_percentage": "100%",
         "brains": 6,
         "brain_regions": 28,
