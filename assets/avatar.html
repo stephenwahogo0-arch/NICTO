@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NIKTO — AI Avatar System</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+  *{ margin:0; padding:0; box-sizing:border-box; }
+
+  body{
+    background:#0d1117;
+    font-family:'Inter',system-ui,sans-serif;
+    color:#e6edf3;
+    overflow:hidden;
+    height:100vh;
+  }
+
+  /* ═══ TOP NAV ═══ */
+  .topbar{
+    height:48px;
+    background:linear-gradient(135deg, #161b22, #1c2333);
+    border-bottom:1px solid #30363d;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 20px;
+    z-index:100; position:relative;
+  }
+  .topbar .logo-area{
+    display:flex; align-items:center; gap:10px;
+  }
+  .topbar .logo-area img{
+    width:28px; height:28px; border-radius:50%;
+  }
+  .topbar .logo-area span{
+    font-weight:600; font-size:14px; letter-spacing:2px;
+  }
+  .topbar .status-pill{
+    display:flex; align-items:center; gap:6px;
+    background:#1a2332; border:1px solid #30363d;
+    padding:4px 12px; border-radius:16px; font-size:11px;
+  }
+  .topbar .status-dot{
+    width:8px; height:8px; border-radius:50%;
+    animation:pulse 2s ease-in-out infinite;
+  }
+  .status-dot.active{ background:#3fb950; }
+  .status-dot.idle{ background:#d29922; }
+  .status-dot.sleeping{ background:#8b949e; }
+  @keyframes pulse{
+    0%,100%{ opacity:1; } 50%{ opacity:.4; }
+  }
+  .topbar .controls{
+    display:flex; gap:8px;
+  }
+  .topbar .controls button{
+    background:#21262d; border:1px solid #30363d; color:#8b949e;
+    padding:4px 12px; border-radius:6px; font-size:11px; cursor:pointer;
+    transition:all .2s;
+  }
+  .topbar .controls button:hover{
+    background:#30363d; color:#e6edf3;
+  }
+  .topbar .controls button.active-btn{
+    background:#1f6feb; border-color:#1f6feb; color:#fff;
+  }
+
+  /* ═══ MAIN VIEWPORT ═══ */
+  .viewport{
+    position:relative;
+    height:calc(100vh - 48px - 60px);
+    overflow:hidden;
+  }
+
+  /* ═══ SCENES ═══ */
+  .scene{
+    position:absolute; inset:0;
+    opacity:0; pointer-events:none;
+    transition:opacity .8s ease-in-out;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .scene.active{
+    opacity:1; pointer-events:all;
+  }
+  .scene-img{
+    width:100%; height:100%;
+    object-fit:contain;
+    max-height:100%;
+  }
+
+  /* ═══ SCENE 1: SLEEPING ═══ */
+  .scene-sleep{
+    background:linear-gradient(135deg, #0d1520, #1a2540, #0d1520);
+  }
+  .scene-sleep .scene-img{
+    animation:gentleFloat 6s ease-in-out infinite;
+  }
+  @keyframes gentleFloat{
+    0%,100%{ transform:translateY(0); }
+    50%{ transform:translateY(-8px); }
+  }
+
+  /* Dream particles */
+  .dream-particles{
+    position:absolute; inset:0; pointer-events:none; overflow:hidden;
+  }
+  .dream-particle{
+    position:absolute; font-size:20px;
+    opacity:0; animation:dreamFloat 4s ease-out infinite;
+  }
+  @keyframes dreamFloat{
+    0%{ opacity:0; transform:translate(0,0) scale(.5); }
+    20%{ opacity:.8; }
+    100%{ opacity:0; transform:translate(-40px,-120px) scale(1.2); }
+  }
+
+  /* Zzz animation */
+  .zzz{
+    position:absolute; top:20%; right:25%;
+    font-size:36px; font-weight:700; color:rgba(139,148,158,.5);
+    animation:zzzAnim 3s ease-in-out infinite;
+  }
+  .zzz:nth-child(2){ animation-delay:.6s; right:22%; top:15%; font-size:28px; }
+  .zzz:nth-child(3){ animation-delay:1.2s; right:19%; top:10%; font-size:22px; }
+  @keyframes zzzAnim{
+    0%,100%{ opacity:0; transform:translateY(10px); }
+    50%{ opacity:.7; transform:translateY(-10px); }
+  }
+
+  /* ═══ SCENE 2: WORKING ═══ */
+  .scene-work{
+    background:linear-gradient(135deg, #0d1117, #161b22);
+  }
+  .scene-work .scene-img{
+    animation:workBob 4s ease-in-out infinite;
+  }
+  @keyframes workBob{
+    0%,100%{ transform:translateY(0) scale(1); }
+    50%{ transform:translateY(-4px) scale(1.005); }
+  }
+
+  /* Typing indicator */
+  .typing-indicator{
+    position:absolute; bottom:18%; left:50%; transform:translateX(-50%);
+    background:rgba(31,111,235,.15); border:1px solid rgba(31,111,235,.3);
+    padding:8px 20px; border-radius:20px;
+    display:flex; align-items:center; gap:8px;
+    animation:fadeInUp 1s ease-out both;
+  }
+  .typing-indicator .dots{
+    display:flex; gap:4px;
+  }
+  .typing-indicator .dot{
+    width:6px; height:6px; border-radius:50%;
+    background:#58a6ff; animation:typeDot 1.4s ease-in-out infinite;
+  }
+  .typing-indicator .dot:nth-child(2){ animation-delay:.2s; }
+  .typing-indicator .dot:nth-child(3){ animation-delay:.4s; }
+  @keyframes typeDot{
+    0%,60%,100%{ transform:translateY(0); opacity:.4; }
+    30%{ transform:translateY(-6px); opacity:1; }
+  }
+  .typing-indicator span{
+    font-size:11px; color:#58a6ff; letter-spacing:1px;
+  }
+  @keyframes fadeInUp{
+    from{ opacity:0; transform:translateX(-50%) translateY(10px); }
+    to{ opacity:1; transform:translateX(-50%) translateY(0); }
+  }
+
+  /* Code lines flying */
+  .code-lines{
+    position:absolute; inset:0; pointer-events:none; overflow:hidden;
+  }
+  .code-line{
+    position:absolute;
+    font-family:'Courier New',monospace;
+    font-size:10px; color:rgba(88,166,255,.15);
+    white-space:nowrap;
+    animation:codeFly 8s linear infinite;
+  }
+  @keyframes codeFly{
+    from{ transform:translateX(110%); opacity:0; }
+    10%{ opacity:1; }
+    90%{ opacity:1; }
+    to{ transform:translateX(-110%); opacity:0; }
+  }
+
+  /* ═══ SCENE 3: SWARMING ═══ */
+  .scene-swarm{
+    background:linear-gradient(135deg, #0d1520, #1a2035);
+  }
+  .scene-swarm .scene-img{
+    animation:swarmPulse 5s ease-in-out infinite;
+  }
+  @keyframes swarmPulse{
+    0%,100%{ transform:scale(1); }
+    50%{ transform:scale(1.008); }
+  }
+
+  /* Agent status badges */
+  .agent-badges{
+    position:absolute; top:12%; right:5%;
+    display:flex; flex-direction:column; gap:8px;
+  }
+  .agent-badge{
+    display:flex; align-items:center; gap:8px;
+    background:rgba(22,27,34,.9); border:1px solid #30363d;
+    padding:6px 14px; border-radius:8px;
+    font-size:11px; animation:badgeSlide .6s ease-out both;
+  }
+  .agent-badge:nth-child(2){ animation-delay:.15s; }
+  .agent-badge:nth-child(3){ animation-delay:.3s; }
+  .agent-badge:nth-child(4){ animation-delay:.45s; }
+  .agent-badge .badge-dot{
+    width:6px; height:6px; border-radius:50%;
+  }
+  .badge-dot.green{ background:#3fb950; }
+  .badge-dot.blue{ background:#58a6ff; }
+  .badge-dot.yellow{ background:#d29922; }
+  .badge-dot.purple{ background:#bc8cff; }
+  @keyframes badgeSlide{
+    from{ opacity:0; transform:translateX(20px); }
+    to{ opacity:1; transform:translateX(0); }
+  }
+
+  /* ═══ SCENE 4: EMAIL ═══ */
+  .scene-email{
+    background:linear-gradient(135deg, #0d1117, #1a1f2e);
+  }
+  .scene-email .scene-img{
+    animation:emailBob 5s ease-in-out infinite;
+  }
+  @keyframes emailBob{
+    0%,100%{ transform:translateY(0); }
+    50%{ transform:translateY(-5px); }
+  }
+
+  /* ═══ SCENE 5: DESKTOP OVERLAY (avatar walking) ═══ */
+  .scene-desktop{
+    background:#1a2233;
+  }
+  .desktop-bg{
+    position:absolute; inset:0;
+    background:linear-gradient(135deg, #1e2d3d 0%, #263545 50%, #1a2a3a 100%);
+  }
+  .desktop-icons{
+    position:absolute; top:20px; left:20px;
+    display:flex; flex-direction:column; gap:20px;
+  }
+  .desktop-icon{
+    display:flex; flex-direction:column; align-items:center; gap:4px;
+  }
+  .desktop-icon .icon-box{
+    width:48px; height:48px; border-radius:10px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:22px;
+  }
+  .desktop-icon span{
+    font-size:10px; color:rgba(230,237,243,.7);
+    text-shadow:0 1px 3px rgba(0,0,0,.5);
+  }
+
+  /* Walking avatar on desktop */
+  .walking-avatar{
+    position:absolute;
+    bottom:80px;
+    width:120px; height:120px;
+    animation:walkAcross 8s ease-in-out infinite;
+  }
+  .walking-avatar img{
+    width:100%; height:100%; object-fit:contain;
+    animation:walkBounce .5s ease-in-out infinite;
+  }
+  @keyframes walkAcross{
+    0%  { left:-130px; transform:scaleX(1); }
+    45% { left:calc(50% - 60px); transform:scaleX(1); }
+    50% { left:calc(50% - 60px); transform:scaleX(1); }
+    55% { left:calc(50% - 60px); transform:scaleX(-1); }
+    95% { left:calc(100% + 10px); transform:scaleX(-1); }
+    100%{ left:calc(100% + 10px); transform:scaleX(-1); }
+  }
+  @keyframes walkBounce{
+    0%,100%{ transform:translateY(0); }
+    50%{ transform:translateY(-8px); }
+  }
+
+  /* Desktop taskbar */
+  .taskbar{
+    position:absolute; bottom:0; left:0; right:0;
+    height:48px;
+    background:rgba(22,27,34,.95);
+    border-top:1px solid #30363d;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    padding:0 16px;
+  }
+  .taskbar-icon{
+    width:36px; height:36px; border-radius:8px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:18px; cursor:pointer;
+    transition:background .2s;
+  }
+  .taskbar-icon:hover{ background:rgba(48,54,61,.8); }
+
+  /* ═══ SCENE TRANSITIONS ═══ */
+  .scene-overlay{
+    position:absolute; inset:0; z-index:50;
+    background:#0d1117;
+    opacity:0; pointer-events:none;
+    transition:opacity .4s;
+  }
+  .scene-overlay.transitioning{
+    opacity:1;
+  }
+
+  /* ═══ CHAT BAR ═══ */
+  .chatbar{
+    position:absolute; bottom:0; left:0; right:0;
+    height:60px;
+    background:linear-gradient(180deg, rgba(13,17,23,0), #0d1117 30%);
+    display:flex; align-items:center; justify-content:center;
+    padding:0 20px;
+    z-index:90;
+  }
+  .chat-input-wrap{
+    width:100%; max-width:700px;
+    display:flex; align-items:center;
+    background:#161b22; border:1px solid #30363d;
+    border-radius:24px; padding:0 6px 0 16px;
+    height:40px;
+  }
+  .chat-input-wrap input{
+    flex:1; background:none; border:none; outline:none;
+    color:#e6edf3; font-size:13px; font-family:inherit;
+  }
+  .chat-input-wrap input::placeholder{ color:#484f58; }
+  .chat-input-wrap .send-btn{
+    width:30px; height:30px; border-radius:50%;
+    background:#1f6feb; border:none; color:#fff;
+    cursor:pointer; display:flex; align-items:center; justify-content:center;
+    font-size:14px; transition:background .2s;
+  }
+  .chat-input-wrap .send-btn:hover{ background:#388bfd; }
+
+  /* ═══ INFO PANEL ═══ */
+  .info-panel{
+    position:absolute; bottom:70px; left:20px;
+    background:rgba(22,27,34,.9); border:1px solid #30363d;
+    border-radius:12px; padding:14px 18px;
+    font-size:11px; z-index:80;
+    max-width:260px;
+    animation:fadeInUp .6s ease-out both;
+  }
+  .info-panel h4{
+    font-size:12px; font-weight:600; margin-bottom:6px;
+    color:#58a6ff;
+  }
+  .info-panel p{
+    color:#8b949e; line-height:1.5;
+  }
+
+  /* ═══ METRICS PANEL ═══ */
+  .metrics{
+    position:absolute; top:10px; right:10px;
+    display:flex; flex-direction:column; gap:6px;
+    z-index:80;
+  }
+  .metric{
+    background:rgba(22,27,34,.85); border:1px solid #30363d;
+    border-radius:8px; padding:6px 12px;
+    font-size:10px; display:flex; align-items:center; gap:6px;
+  }
+  .metric .val{ color:#58a6ff; font-weight:600; }
+
+  /* ═══ PROGRESS RING ═══ */
+  .progress-ring{
+    position:absolute; top:10px; left:50%; transform:translateX(-50%);
+    z-index:80;
+  }
+  .progress-ring svg{ width:60px; height:60px; }
+  .progress-ring circle{
+    fill:none; stroke-width:4;
+  }
+  .progress-ring .bg{ stroke:#21262d; }
+  .progress-ring .fg{
+    stroke:#3fb950; stroke-linecap:round;
+    stroke-dasharray:157; stroke-dashoffset:157;
+    transform:rotate(-90deg); transform-origin:center;
+    animation:progressFill 6s ease-out forwards;
+  }
+  @keyframes progressFill{
+    to{ stroke-dashoffset:0; }
+  }
+  .progress-ring .pct{
+    position:absolute; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    font-size:12px; font-weight:700; color:#3fb950;
+  }
+
+  /* ═══ SPEECH BUBBLE ═══ */
+  .speech-bubble{
+    position:absolute;
+    background:rgba(255,255,255,.95); color:#1a1a2e;
+    padding:10px 16px; border-radius:12px;
+    font-size:12px; max-width:240px; line-height:1.4;
+    box-shadow:0 4px 20px rgba(0,0,0,.3);
+    opacity:0; animation:bubbleIn .5s ease-out forwards;
+  }
+  .speech-bubble::after{
+    content:''; position:absolute;
+    bottom:-8px; left:30px;
+    border:8px solid transparent;
+    border-top-color:rgba(255,255,255,.95);
+    border-bottom:0;
+  }
+  @keyframes bubbleIn{
+    from{ opacity:0; transform:translateY(8px) scale(.95); }
+    to{ opacity:1; transform:translateY(0) scale(1); }
+  }
+
+  /* Auto-cycle indicator */
+  .cycle-indicator{
+    position:absolute; bottom:70px; right:20px;
+    z-index:80; display:flex; align-items:center; gap:6px;
+    font-size:10px; color:#484f58;
+  }
+  .cycle-indicator .timer-bar{
+    width:60px; height:3px; background:#21262d;
+    border-radius:2px; overflow:hidden;
+  }
+  .cycle-indicator .timer-fill{
+    height:100%; background:#30363d;
+    width:0%; transition:width .1s linear;
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ TOP BAR ═══ -->
+<div class="topbar">
+  <div class="logo-area">
+    <img src="avatar/avatar-portrait.png" alt="NIKTO">
+    <span>NIKTO</span>
+  </div>
+  <div class="status-pill">
+    <div class="status-dot active" id="statusDot"></div>
+    <span id="statusText">Active — Working</span>
+  </div>
+  <div class="controls">
+    <button onclick="switchScene('sleep')" id="btn-sleep">Sleep</button>
+    <button onclick="switchScene('work')" id="btn-work" class="active-btn">Work</button>
+    <button onclick="switchScene('swarm')" id="btn-swarm">Swarm</button>
+    <button onclick="switchScene('email')" id="btn-email">Email</button>
+    <button onclick="switchScene('desktop')" id="btn-desktop">Desktop</button>
+    <button onclick="toggleAuto()" id="btn-auto">Auto</button>
+  </div>
+</div>
+
+<!-- ═══ VIEWPORT ═══ -->
+<div class="viewport">
+  <div class="scene-overlay" id="overlay"></div>
+
+  <!-- SCENE: SLEEPING -->
+  <div class="scene scene-sleep" id="scene-sleep">
+    <img class="scene-img" src="avatar/sleeping-dreaming.png" alt="NIKTO sleeping">
+    <div class="dream-particles" id="dreamParticles"></div>
+    <div class="zzz">Z</div>
+    <div class="zzz">z</div>
+    <div class="zzz">z</div>
+    <div class="speech-bubble" style="top:15%; left:55%; animation-delay:.8s;">
+      Consolidating memories... optimizing neural pathways...
+    </div>
+  </div>
+
+  <!-- SCENE: WORKING -->
+  <div class="scene scene-work active" id="scene-work">
+    <img class="scene-img" src="avatar/working-xcode.png" alt="NIKTO working">
+    <div class="code-lines" id="codeLines"></div>
+    <div class="typing-indicator">
+      <div class="dots">
+        <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      </div>
+      <span>NIKTO IS THINKING</span>
+    </div>
+    <div class="speech-bubble" style="top:10%; right:5%; left:auto; animation-delay:.5s;">
+      Analyzing architecture... building the optimal solution.
+    </div>
+  </div>
+
+  <!-- SCENE: SWARMING -->
+  <div class="scene scene-swarm" id="scene-swarm">
+    <img class="scene-img" src="avatar/swarming-labs.png" alt="NIKTO swarming">
+    <div class="agent-badges">
+      <div class="agent-badge"><div class="badge-dot green"></div>Clone #1 — Biology Lab</div>
+      <div class="agent-badge"><div class="badge-dot blue"></div>Clone #2 — Quantum UI</div>
+      <div class="agent-badge"><div class="badge-dot yellow"></div>Clone #3 — AI Sandbox</div>
+      <div class="agent-badge"><div class="badge-dot purple"></div>Clone #4 — Data Analysis</div>
+    </div>
+    <div class="speech-bubble" style="bottom:15%; left:5%; top:auto;">
+      Deploying 4 agent clones. Each specializing in a different domain.
+    </div>
+  </div>
+
+  <!-- SCENE: EMAIL -->
+  <div class="scene scene-email" id="scene-email">
+    <img class="scene-img" src="avatar/email-collab.png" alt="NIKTO helping with email">
+    <div class="speech-bubble" style="top:8%; right:5%; left:auto; animation-delay:.3s;">
+      I can help polish this draft. Let me suggest a more concise version.
+    </div>
+  </div>
+
+  <!-- SCENE: DESKTOP OVERLAY -->
+  <div class="scene scene-desktop" id="scene-desktop">
+    <div class="desktop-bg"></div>
+    <div class="desktop-icons">
+      <div class="desktop-icon">
+        <div class="icon-box" style="background:#3b82f6;">📁</div>
+        <span>Projects</span>
+      </div>
+      <div class="desktop-icon">
+        <div class="icon-box" style="background:#10b981;">💻</div>
+        <span>Terminal</span>
+      </div>
+      <div class="desktop-icon">
+        <div class="icon-box" style="background:#8b5cf6;">🧠</div>
+        <span>NIKTO AI</span>
+      </div>
+      <div class="desktop-icon">
+        <div class="icon-box" style="background:#f59e0b;">📊</div>
+        <span>Analytics</span>
+      </div>
+    </div>
+    <div class="walking-avatar">
+      <img src="avatar/avatar-portrait.png" alt="NIKTO walking">
+    </div>
+    <div class="speech-bubble" style="bottom:140px; left:calc(50% - 80px); animation-delay:2s;">
+      Moving to my next task...
+    </div>
+    <div class="taskbar">
+      <div class="taskbar-icon" style="background:#3b82f6;">🌐</div>
+      <div class="taskbar-icon" style="background:#21262d;">📂</div>
+      <div class="taskbar-icon" style="background:#21262d;">💬</div>
+      <div class="taskbar-icon" style="background:#21262d;">⚙️</div>
+      <div class="taskbar-icon" style="background:#21262d;">🎵</div>
+    </div>
+  </div>
+
+  <!-- ═══ METRICS (visible in work/swarm) ═══ -->
+  <div class="metrics" id="metricsPanel">
+    <div class="metric">🧠 Brain <span class="val" id="metricBrain">Analytical</span></div>
+    <div class="metric">⚡ ELO <span class="val" id="metricElo">1673</span></div>
+    <div class="metric">📊 Confidence <span class="val" id="metricConf">0.94</span></div>
+    <div class="metric">🔥 Tasks <span class="val" id="metricTasks">0</span></div>
+  </div>
+
+  <!-- ═══ INFO PANEL ═══ -->
+  <div class="info-panel" id="infoPanel">
+    <h4 id="infoTitle">Working Mode</h4>
+    <p id="infoDesc">NIKTO is analyzing code architecture and building the optimal solution using its 17B parameter neural network.</p>
+  </div>
+
+  <!-- ═══ PROGRESS RING ═══ -->
+  <div class="progress-ring" id="progressRing" style="display:none;">
+    <svg viewBox="0 0 60 60">
+      <circle class="bg" cx="30" cy="30" r="25"/>
+      <circle class="fg" cx="30" cy="30" r="25" id="progressCircle"/>
+    </svg>
+    <div class="pct" id="progressPct">0%</div>
+  </div>
+
+  <!-- ═══ AUTO-CYCLE INDICATOR ═══ -->
+  <div class="cycle-indicator" id="cycleIndicator" style="display:none;">
+    <span>Next scene in</span>
+    <div class="timer-bar"><div class="timer-fill" id="timerFill"></div></div>
+  </div>
+</div>
+
+<!-- ═══ CHAT BAR ═══ -->
+<div class="chatbar">
+  <div class="chat-input-wrap">
+    <input type="text" placeholder="Ask NIKTO anything..." id="chatInput">
+    <button class="send-btn" onclick="handleChat()">➤</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// NIKTO AVATAR SYSTEM — Scene Management
+// ═══════════════════════════════════════════════
+
+const SCENES = ['sleep', 'work', 'swarm', 'email', 'desktop'];
+let currentScene = 'work';
+let autoMode = false;
+let autoTimer = null;
+let autoProgress = 0;
+let taskCount = 0;
+
+const SCENE_CONFIG = {
+  sleep: {
+    status: 'Idle — Sleeping',
+    dotClass: 'sleeping',
+    info: 'Dream State',
+    desc: 'NIKTO is in dream state — consolidating memories, extracting patterns, and optimizing neural pathways while idle.',
+    brain: 'Intuitive',
+    images: ['avatar/sleeping-dreaming.png']
+  },
+  work: {
+    status: 'Active — Working',
+    dotClass: 'active',
+    info: 'Working Mode',
+    desc: 'NIKTO is analyzing code architecture and building the optimal solution using its 17B parameter neural network.',
+    brain: 'Analytical',
+    images: ['avatar/working-xcode.png', 'avatar/working-tasks.png', 'avatar/working-apps.png']
+  },
+  swarm: {
+    status: 'Active — Agent Swarming',
+    dotClass: 'active',
+    info: 'Swarm Mode',
+    desc: 'NIKTO has deployed multiple agent clones, each specializing in a different domain — Biology, Quantum UI, AI, Data Analysis.',
+    brain: 'Strategic',
+    images: ['avatar/swarming-labs.png', 'avatar/swarming-chatting.png', 'avatar/office-swarming.png']
+  },
+  email: {
+    status: 'Active — Assisting',
+    dotClass: 'active',
+    info: 'Email Assistant',
+    desc: 'NIKTO is helping refine an email draft — suggesting improvements, fixing tone, and optimizing for impact.',
+    brain: 'Creative',
+    images: ['avatar/email-collab.png', 'avatar/email-draft.png']
+  },
+  desktop: {
+    status: 'Active — Moving',
+    dotClass: 'active',
+    info: 'Desktop Mode',
+    desc: 'NIKTO is moving across your desktop, navigating between apps and tasks autonomously.',
+    brain: 'Primary',
+    images: ['avatar/avatar-portrait.png']
+  }
+};
+
+// Image rotation within scenes
+let imageIndex = {};
+SCENES.forEach(s => imageIndex[s] = 0);
+
+function switchScene(name) {
+  if (name === currentScene) return;
+
+  const overlay = document.getElementById('overlay');
+  overlay.classList.add('transitioning');
+
+  setTimeout(() => {
+    // Deactivate all scenes
+    document.querySelectorAll('.scene').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.controls button').forEach(b => b.classList.remove('active-btn'));
+
+    // Activate new scene
+    document.getElementById('scene-' + name).classList.add('active');
+    const btn = document.getElementById('btn-' + name);
+    if (btn) btn.classList.add('active-btn');
+
+    // Update status
+    const cfg = SCENE_CONFIG[name];
+    document.getElementById('statusText').textContent = cfg.status;
+    const dot = document.getElementById('statusDot');
+    dot.className = 'status-dot ' + cfg.dotClass;
+
+    // Update info panel
+    document.getElementById('infoTitle').textContent = cfg.info;
+    document.getElementById('infoDesc').textContent = cfg.desc;
+
+    // Update metrics
+    document.getElementById('metricBrain').textContent = cfg.brain;
+
+    // Show/hide elements based on scene
+    document.getElementById('metricsPanel').style.display =
+      (name === 'sleep' || name === 'desktop') ? 'none' : 'flex';
+
+    currentScene = name;
+
+    setTimeout(() => overlay.classList.remove('transitioning'), 300);
+  }, 400);
+}
+
+// Rotate images within a scene
+setInterval(() => {
+  const cfg = SCENE_CONFIG[currentScene];
+  if (cfg.images.length <= 1) return;
+
+  imageIndex[currentScene] = (imageIndex[currentScene] + 1) % cfg.images.length;
+  const sceneEl = document.getElementById('scene-' + currentScene);
+  const img = sceneEl.querySelector('.scene-img');
+  if (img) {
+    img.style.opacity = '0';
+    setTimeout(() => {
+      img.src = cfg.images[imageIndex[currentScene]];
+      img.style.opacity = '1';
+    }, 400);
+  }
+}, 6000);
+
+// Auto-cycle through scenes
+function toggleAuto() {
+  autoMode = !autoMode;
+  const btn = document.getElementById('btn-auto');
+  const indicator = document.getElementById('cycleIndicator');
+
+  if (autoMode) {
+    btn.classList.add('active-btn');
+    btn.textContent = 'Auto ●';
+    indicator.style.display = 'flex';
+    startAutoCycle();
+  } else {
+    btn.classList.remove('active-btn');
+    btn.textContent = 'Auto';
+    indicator.style.display = 'none';
+    clearInterval(autoTimer);
+  }
+}
+
+function startAutoCycle() {
+  autoProgress = 0;
+  const fill = document.getElementById('timerFill');
+  clearInterval(autoTimer);
+
+  autoTimer = setInterval(() => {
+    autoProgress += 2;
+    fill.style.width = autoProgress + '%';
+
+    if (autoProgress >= 100) {
+      autoProgress = 0;
+      const idx = (SCENES.indexOf(currentScene) + 1) % SCENES.length;
+      switchScene(SCENES[idx]);
+    }
+  }, 120); // 6s per scene
+}
+
+// Generate dream particles
+const dreamContainer = document.getElementById('dreamParticles');
+const symbols = ['✨', '🧠', '⚡', '💡', '🔬', '🌐', '📊', '🧬'];
+for (let i = 0; i < 12; i++) {
+  const p = document.createElement('div');
+  p.className = 'dream-particle';
+  p.textContent = symbols[i % symbols.length];
+  p.style.left = (20 + Math.random() * 60) + '%';
+  p.style.top = (30 + Math.random() * 40) + '%';
+  p.style.animationDelay = (Math.random() * 4) + 's';
+  p.style.animationDuration = (3 + Math.random() * 3) + 's';
+  dreamContainer.appendChild(p);
+}
+
+// Generate code lines
+const codeContainer = document.getElementById('codeLines');
+const codeSnippets = [
+  'async def build_app(self, description: str) -> dict:',
+  'const router = express.Router();',
+  'fn main() -> Result<(), Box<dyn Error>> {',
+  'class NeuralConfig(BaseModel):',
+  'SELECT * FROM users WHERE active = true;',
+  'import torch.nn as nn',
+  'go func() { ch <- result }()',
+  'pub struct BrainState { elo: f64 }',
+  '@app.post("/api/process")',
+  'model.train(epochs=200, lr=3e-4)',
+];
+for (let i = 0; i < 8; i++) {
+  const line = document.createElement('div');
+  line.className = 'code-line';
+  line.textContent = codeSnippets[i % codeSnippets.length];
+  line.style.top = (15 + i * 10) + '%';
+  line.style.animationDelay = (i * 1.5) + 's';
+  line.style.animationDuration = (6 + Math.random() * 4) + 's';
+  codeContainer.appendChild(line);
+}
+
+// Simulate ELO and task counter
+setInterval(() => {
+  if (currentScene !== 'sleep') {
+    taskCount++;
+    document.getElementById('metricTasks').textContent = taskCount;
+    const elo = 1673 + Math.floor(Math.random() * 10) - 3;
+    document.getElementById('metricElo').textContent = elo;
+    const conf = (0.90 + Math.random() * 0.08).toFixed(2);
+    document.getElementById('metricConf').textContent = conf;
+  }
+}, 3000);
+
+// Chat handler
+function handleChat() {
+  const input = document.getElementById('chatInput');
+  const msg = input.value.trim();
+  if (!msg) return;
+  input.value = '';
+
+  // Auto-detect scene from message
+  const lower = msg.toLowerCase();
+  if (lower.includes('sleep') || lower.includes('idle') || lower.includes('rest')) {
+    switchScene('sleep');
+  } else if (lower.includes('swarm') || lower.includes('clone') || lower.includes('team')) {
+    switchScene('swarm');
+  } else if (lower.includes('email') || lower.includes('draft') || lower.includes('write')) {
+    switchScene('email');
+  } else if (lower.includes('desktop') || lower.includes('move') || lower.includes('walk')) {
+    switchScene('desktop');
+  } else {
+    switchScene('work');
+  }
+}
+
+document.getElementById('chatInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') handleChat();
+});
+
+// Add transition style for scene images
+const transStyle = document.createElement('style');
+transStyle.textContent = '.scene-img { transition: opacity .4s ease; }';
+document.head.appendChild(transStyle);
+</script>
+</body>
+</html>
