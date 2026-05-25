@@ -1,25 +1,25 @@
-from fastapi import FastAPI
+import sys
+import os
+
+# Re-export the nikto API app which has all 24+ endpoints wired to NiktoBrain
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "..", "..", "nikto-core", "src"))
+from nikto.api.routes import app, ChatRequest
+
+# Add kyros-specific compatibility endpoints
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-app = FastAPI(title="Kyros API", version="0.2.0")
+
+@app.get("/memory/search")
+async def memory_search(q: str = ""):
+    from nikto.brain.core import NiktoBrain
+    b = NiktoBrain()
+    await b.awaken(restore=True)
+    results = b.recall_memories(q, 3)
+    await b.sleep()
+    return {"results": [{"content": str(r)[:200]} for r in results]}
 
 
-class ChatRequest(BaseModel):
-    message: str
-    provider: str = "local"
-    stream: bool = False
-
-
-@app.get("/health")
-async def health():
-    return {"status": "ok", "version": "0.2.0", "service": "kyros"}
-
-
-@app.post("/chat")
-async def chat(req: ChatRequest):
-    return {"response": f"Received: {req.message}", "provider": req.provider, "mode": "api"}
-
-
-@app.get("/status")
-async def status():
-    return {"status": "running", "version": "0.2.0", "providers": ["anthropic", "openai", "gemini", "deepseek", "local"], "mode": "online"}
+@app.get("/")
+async def root():
+    return {"name": "KYROS", "version": "0.2.0", "service": "kyros"}

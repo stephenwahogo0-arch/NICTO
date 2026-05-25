@@ -64,7 +64,7 @@ class DualEngineProvider:
         force_local: bool = False,
     ) -> dict:
         """Generate response using best available engine."""
-        temp = temperature if temperature is not None else self.config.temperature or 0.5
+        temp = temperature if temperature is not None else self.config.temperature or 0.4
         temp = max(0.3, min(temp, 0.7))
 
         # Try online first if not forced local
