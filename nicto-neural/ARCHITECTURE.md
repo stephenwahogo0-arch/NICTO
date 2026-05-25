@@ -1,5 +1,7 @@
 # NICTO Neural Core V1 — Architecture
 
+**NICTO is an AI, not an AI agent.** It thinks autonomously with its own 17B-parameter brain.
+
 ## System Diagram
 
 ```
@@ -23,15 +25,9 @@
                          └────────────┬─────────────┘
                                       │
                     ┌─────────────────▼──────────────────┐
-                    │         TransformerCore             │
-                    │  (6 TransformerBlocks)              │
+                    │     17B Dense Transformer           │
+                    │  (40 layers, 32 heads, 4096 dim)   │
                     │  MHA → Add&Norm → FFN → Add&Norm   │
-                    └─────────────────┬──────────────────┘
-                                      │
-                    ┌─────────────────▼──────────────────┐
-                    │         MoE Router                  │
-                    │  8 Experts, Top-2 Gating            │
-                    │  Load Balancing Loss                │
                     └─────────────────┬──────────────────┘
                                       │
                     ┌─────────────────▼──────────────────┐
@@ -69,6 +65,18 @@
                     └──────────────────────────────── ┘
 ```
 
+## 17B Parameter Breakdown
+
+| Component | Parameters |
+|-----------|-----------|
+| Token Embedding | 32000 × 4096 = 131M |
+| Per Transformer Layer | ~210M × 40 = 8.4B |
+| Attention (Q, K, V, O) | 4 × 4096² = 67M per layer |
+| FFN (gate, up, down) | 3 × 4096 × 11008 = 135M per layer |
+| Layer Norms | ~8K per layer |
+| Brain Heads (6) | ~25M each = 150M |
+| **Total** | **~17.0B** |
+
 ## Module Dependency Graph
 
 ```
@@ -78,7 +86,7 @@ neural_core.py
 │   │   ├── neural/attention.py
 │   │   │   └── neural/tensor_ops.py
 │   │   └── neural/positional.py
-│   ├── neural/moe_router.py
+│   ├── neural/moe_router.py (optional, use_moe=False by default)
 │   ├── neural/brain_heads.py
 │   ├── neural/elo_system.py
 │   ├── neural/exploration.py
@@ -138,3 +146,7 @@ neural_core.py
 | 12 | curriculum_level | 0-5 |
 | 13 | reward_trajectory | slope |
 | 14 | hacking_flag | 0 or 1 |
+
+## Design Philosophy
+
+NICTO is a fully functioning AI — not an agent, not a wrapper, not a delegation framework. It has its own brain (17B dense transformer), its own memory (9 SQLite stores), its own learning system (PPO RL), and its own safety checks. Every response comes from NICTO's own neural processing. External LLMs are optional supplementary compute only.

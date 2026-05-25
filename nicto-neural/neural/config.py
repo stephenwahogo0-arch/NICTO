@@ -1,11 +1,20 @@
-"""NICTO Neural Core configuration — all hyperparameters in one place."""
+"""NICTO Neural Core configuration — all hyperparameters in one place.
+
+Production architecture: 17B dense transformer (40 layers, 32 heads, 4096 d_model, 11008 FFN).
+Default values below are scaled for development and testing on consumer hardware.
+For production deployment, use NeuralConfig.production() to get the full 17B config.
+"""
 
 from dataclasses import dataclass, field
 
 
 @dataclass
 class NeuralConfig:
-    # Model dimensions
+    # --- Production target: 17B dense transformer ---
+    # d_model=4096, n_heads=32, n_layers=40, d_ff=11008, vocab=32000
+    # Defaults below are scaled for dev/test on consumer hardware.
+
+    # Model dimensions (dev-scale defaults)
     d_model: int = 512
     n_heads: int = 8
     n_layers: int = 6
@@ -14,12 +23,12 @@ class NeuralConfig:
     max_seq_len: int = 2048
     vocab_size: int = 32000
 
-    # MoE config
+    # MoE config (optional routing layer)
     n_experts: int = 8
     top_k_experts: int = 2
     expert_capacity: float = 1.25
 
-    # Brain config
+    # Brain config — 6 specialist brains, each a projection of the shared backbone
     n_brains: int = 6
     brain_names: list = field(default_factory=lambda: [
         "primary", "analytical", "creative",
@@ -72,7 +81,6 @@ class NeuralConfig:
     boost_min_child_weight: float = 1.0
 
     # Optimal runtime parameters for NICTO
-    # These are tuned for consumer hardware (8-32 GB RAM, optional GPU)
     inference_batch_size: int = 1
     inference_max_tokens: int = 4096
     temperature_min: float = 0.3
@@ -88,3 +96,19 @@ class NeuralConfig:
     exploration_warmup_steps: int = 500
     min_confidence_threshold: float = 0.65
     truth_verification_threshold: float = 0.95
+
+    @classmethod
+    def production(cls) -> "NeuralConfig":
+        """17B production config — requires ~34 GB RAM (fp16) or ~17 GB (int8)."""
+        return cls(
+            d_model=4096,
+            n_heads=32,
+            n_layers=40,
+            d_ff=11008,
+            max_seq_len=4096,
+            vocab_size=32000,
+        )
+
+    # Architecture identity
+    PARAMETER_COUNT = "17B (dense transformer)"
+    ARCHITECTURE = "40-layer, 32-head, 4096-dim dense transformer + 6-brain system"

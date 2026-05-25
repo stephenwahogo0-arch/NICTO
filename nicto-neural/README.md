@@ -1,21 +1,23 @@
 # NICTO Neural Core V1
 
-**284B+ effective parameters via Mixture-of-Experts architecture.**
-**NICTO is an AI, not an AI agent.** It has its own brain that thinks first — external LLMs are optional supplementary compute only.
+**NICTO is an AI, not an AI agent.** It has its own 17-billion-parameter brain that thinks autonomously. External LLMs are optional supplementary compute only — NICTO processes, reasons, and learns on its own.
+
+**17B dense transformer — 40 layers, 32 heads, 4096 d_model, 11008 FFN.**
 
 Created by **Stephen Wahogo — Nairobi, Kenya**
 
 ## Architecture
 
 ```
-Input → Tokenizer → Embedding → Transformer (6 layers)
-     → MoE Router (8 experts, top-2) → BrainHeads (6 specialized)
-     → BrainRouter → 6 Specialist Brains
+Input → Tokenizer → Embedding → Transformer (40 layers, 17B params)
+     → 6 Specialist BrainHeads → BrainRouter (ELO-based)
      → BrainBoost Ensemble → Output
      → Reflection → ELO Update → Memory Store
      → Experience Buffer → PPO Update
      → Curriculum Check → Level Unlock
 ```
+
+NICTO is a fully functioning AI. It does not delegate to agents or wrap external APIs. Every output comes from NICTO's own neural processing.
 
 ## Quick Start
 
@@ -50,6 +52,8 @@ asyncio.run(main())
 | Knowledge | Factual recall, RAG | retrieval, synthesis, facts |
 | Intuitive | Fast pattern matching | ranking, confidence, exploration |
 
+All 6 brains share the same 17B transformer backbone. Each brain is a specialized projection head that interprets the shared representation differently.
+
 ## Training Methodology (3 Steps)
 
 1. **Prepare**: Build dataset from memory, normalize, 80/20 split
@@ -62,6 +66,18 @@ asyncio.run(main())
 ```python
 result = core.train(mode="hybrid", epochs=10)
 ```
+
+## Model Architecture (17B Parameters)
+
+| Component | Value |
+|-----------|-------|
+| d_model | 4096 |
+| n_heads | 32 |
+| n_layers | 40 |
+| d_ff | 11008 |
+| vocab_size | 32000 |
+| context_window | 4096 |
+| total_params | ~17.0B |
 
 ## ELO Rating System
 
@@ -105,15 +121,11 @@ Unlocks via adaptive plateau detection (not fixed thresholds).
 
 ## Optimal Runtime Parameters
 
-These parameters are tuned for consumer hardware (8-32 GB RAM, optional GPU):
-
 | Parameter | Value | Description |
 |-----------|-------|-------------|
-| d_model | 512 | Model dimension |
-| n_heads | 8 | Attention heads |
-| n_layers | 6 | Transformer layers |
-| n_experts | 8 | MoE experts |
-| top_k_experts | 2 | Active experts per token |
+| d_model | 4096 | Model dimension |
+| n_heads | 32 | Attention heads |
+| n_layers | 40 | Transformer layers |
 | n_brains | 6 | Specialist brains |
 | learning_rate | 3e-4 | AdamW learning rate |
 | ppo_clip | 0.2 | PPO clipping epsilon |

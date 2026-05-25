@@ -24,7 +24,7 @@ def test_full_pipeline():
 
     status = core.get_status()
     assert status["version"] == "1.0.0"
-    assert status["parameters"] == "284B+ (MoE architecture)"
+    assert status["parameters"] == "17B (dense transformer)"
     assert status["think_count"] >= 1
     assert status["initialized"] is True
 

@@ -1,8 +1,8 @@
 """
 NICTO Neural Core V1
 Version: 1.0.0
-Architecture: Transformer + MoE + 6-Brain System + PPO RL
-Parameters: 284B+ (MoE declared)
+Architecture: 17B Dense Transformer + 6-Brain System + PPO RL
+NICTO is an AI, not an AI agent. It thinks autonomously with its own brain.
 Creator: Stephen Wahogo — Nairobi, Kenya
 """
 

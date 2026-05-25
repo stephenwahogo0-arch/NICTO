@@ -31,7 +31,7 @@ def test_get_status():
     core = NeuralCore(config)
     status = core.get_status()
     assert status["version"] == "1.0.0"
-    assert status["parameters"] == "284B+ (MoE architecture)"
+    assert status["parameters"] == "17B (dense transformer)"
     assert status["initialized"] is True
 
 
