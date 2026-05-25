@@ -33,68 +33,134 @@
     display:flex; flex-direction:column; align-items:center; gap:40px;
   }
 
-  /* ── Logo wrapper ── */
-  .logo-wrap{
-    width:320px; height:320px;
+  /* ═══════════════════════════════════════════
+     COIN — 3D two-sided logo
+     ═══════════════════════════════════════════ */
+
+  .coin-scene{
+    width:300px; height:300px;
+    perspective:900px;
     position:relative;
     display:flex; align-items:center; justify-content:center;
   }
 
   /* Outer glow ring */
   .glow-ring{
-    position:absolute; inset:-20px;
+    position:absolute; inset:-24px;
     border-radius:50%;
     border:2px solid rgba(160,180,200,.15);
     animation: pulseRing 3s ease-in-out infinite;
+    pointer-events:none;
   }
   .glow-ring::after{
-    content:''; position:absolute; inset:-8px;
+    content:''; position:absolute; inset:-10px;
     border-radius:50%;
     border:1px solid rgba(160,180,200,.07);
   }
   @keyframes pulseRing{
-    0%,100%{ transform:scale(1); opacity:.6; }
-    50%{ transform:scale(1.06); opacity:1; }
+    0%,100%{ transform:scale(1); opacity:.5; }
+    50%    { transform:scale(1.08); opacity:1; }
   }
 
-  /* The spinning logo */
-  .logo{
+  /* The coin itself — preserves 3D for children */
+  .coin{
     width:280px; height:280px;
-    animation: hexSpin 4.2s cubic-bezier(.4,0,.2,1) infinite;
-    filter: drop-shadow(0 0 30px rgba(140,160,190,.35));
+    position:relative;
+    transform-style:preserve-3d;
+    animation: coinFlip 5s cubic-bezier(.42,0,.58,1) infinite;
+    filter: drop-shadow(0 0 40px rgba(140,160,190,.3));
     will-change:transform;
   }
-  .logo img{
+
+  /* Each face of the coin */
+  .coin-face{
+    position:absolute; inset:0;
+    backface-visibility:hidden;
+    border-radius:50%;
+    overflow:hidden;
+  }
+  .coin-face img{
     width:100%; height:100%;
     object-fit:contain;
     pointer-events:none;
   }
 
+  /* Front: mathematical formulas (logo-2: has 3³) */
+  .coin-front{
+    z-index:2;
+  }
+
+  /* Back: alien + person (logo-1: has the faces) — rotated 180° so it shows when flipped */
+  .coin-back{
+    transform:rotateY(180deg);
+  }
+
+  /* Thin edge visible during flip — gives coin thickness */
+  .coin-edge{
+    position:absolute;
+    top:10%; bottom:10%;
+    left:50%; width:6px;
+    margin-left:-3px;
+    background:linear-gradient(180deg, #555, #888, #555);
+    transform:rotateY(90deg);
+    transform-origin:center;
+    border-radius:2px;
+  }
+
   /*
-    Hexagonal spin: 6 steps of 60 degrees each = 360.
-    Each step holds briefly then snaps to the next angle,
-    giving the angular "click" feel of a hexagon rotating.
+    COIN ANIMATION SEQUENCE:
+    Phase 1 (0-40%):   Flip forward 180° on Y axis
+                        → reveals the back face (alien+person)
+    Phase 2 (40-50%):  Pause — hold the back face visible
+    Phase 3 (50-95%):  Full 360° spin on Y axis
+                        → shows both sides in one fluid motion
+    Phase 4 (95-100%): Settle back to front face
   */
-  @keyframes hexSpin{
-    0%       { transform: rotate(0deg);   }
-    2%       { transform: rotate(0deg);   }
-    14.5%    { transform: rotate(60deg);  }
-    16.67%   { transform: rotate(60deg);  }
-    19.17%   { transform: rotate(60deg);  }
-    31%      { transform: rotate(120deg); }
-    33.33%   { transform: rotate(120deg); }
-    35.83%   { transform: rotate(120deg); }
-    47.5%    { transform: rotate(180deg); }
-    50%      { transform: rotate(180deg); }
-    52.5%    { transform: rotate(180deg); }
-    64%      { transform: rotate(240deg); }
-    66.67%   { transform: rotate(240deg); }
-    69.17%   { transform: rotate(240deg); }
-    81%      { transform: rotate(300deg); }
-    83.33%   { transform: rotate(300deg); }
-    85.83%   { transform: rotate(300deg); }
-    97.5%    { transform: rotate(360deg); }
-    100%     { transform: rotate(360deg); }
+  @keyframes coinFlip{
+    /* Start: front face (math formulas) visible */
+    0%    { transform: rotateY(0deg);   }
+    5%    { transform: rotateY(0deg);   }
+
+    /* Phase 1: flip forward 180° — reveals back (alien+person) */
+    30%   { transform: rotateY(180deg); }
+
+    /* Pause on back face */
+    40%   { transform: rotateY(180deg); }
+
+    /* Phase 2: full 360° spin from current position (180 → 540) */
+    90%   { transform: rotateY(540deg); }
+
+    /* Settle — back to front face (540 = 360+180, so add another 180 to land on 720=0) */
+    /* Actually 540 shows the back face. Go to 720 to return to front */
+    95%   { transform: rotateY(720deg); }
+    100%  { transform: rotateY(720deg); }
+  }
+
+  /* ── Metallic shimmer that sweeps across during flip ── */
+  .coin::after{
+    content:'';
+    position:absolute; inset:0;
+    border-radius:50%;
+    background:linear-gradient(
+      105deg,
+      transparent 30%,
+      rgba(255,255,255,.12) 45%,
+      rgba(255,255,255,.25) 50%,
+      rgba(255,255,255,.12) 55%,
+      transparent 70%
+    );
+    z-index:10;
+    pointer-events:none;
+    animation: shimmer 5s ease-in-out infinite;
+  }
+  @keyframes shimmer{
+    0%,5%  { opacity:0; }
+    15%    { opacity:1; }
+    35%    { opacity:0; }
+    50%,55%{ opacity:0; }
+    65%    { opacity:1; }
+    85%    { opacity:0; }
+    100%   { opacity:0; }
   }
 
   /* ── Text ── */
@@ -114,7 +180,7 @@
   }
   @keyframes fadeUp{
     from{ opacity:0; transform:translateY(20px); }
-    to{ opacity:1; transform:translateY(0); }
+    to  { opacity:1; transform:translateY(0); }
   }
 
   /* ── Progress bar ── */
@@ -128,7 +194,7 @@
     height:100%; width:0%;
     background:linear-gradient(90deg, #4a5568, #8a9bb0, #c8cdd4);
     border-radius:2px;
-    animation: load 6s cubic-bezier(.25,.46,.45,.94) forwards;
+    animation: load 8s cubic-bezier(.25,.46,.45,.94) forwards;
   }
   @keyframes load{
     0%  { width:0%;   }
@@ -196,10 +262,21 @@
 <div class="particles" id="particles"></div>
 
 <div class="container">
-  <div class="logo-wrap">
+
+  <!-- 3D coin with two faces -->
+  <div class="coin-scene">
     <div class="glow-ring"></div>
-    <div class="logo">
-      <img src="images/nikto-logo-1.png" alt="NIKTO" id="logoImg">
+    <div class="coin">
+      <!-- Front face: mathematical formulas side -->
+      <div class="coin-face coin-front">
+        <img src="images/nikto-logo-2.png" alt="NIKTO — Formulas">
+      </div>
+      <!-- Back face: alien + person side -->
+      <div class="coin-face coin-back">
+        <img src="images/nikto-logo-1.png" alt="NIKTO — Alliance">
+      </div>
+      <!-- Coin edge for thickness illusion -->
+      <div class="coin-edge"></div>
     </div>
   </div>
 
@@ -247,15 +324,6 @@
     mi = (mi + 1) % msgs.length;
     statusEl.innerHTML = msgs[mi] + '<span>_</span>';
   }, 2800);
-
-  // Alternate logo images every full rotation
-  const logos = ['images/nikto-logo-1.png', 'images/nikto-logo-2.png'];
-  let li = 0;
-  const logoImg = document.getElementById('logoImg');
-  setInterval(() => {
-    li = (li + 1) % logos.length;
-    logoImg.src = logos[li];
-  }, 4200);
 </script>
 </body>
 </html>
