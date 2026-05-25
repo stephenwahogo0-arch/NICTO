@@ -34,7 +34,7 @@
   }
 
   /* ═══════════════════════════════════════════
-     COIN — 3D two-sided logo
+     COIN — JS-driven two-sided logo
      ═══════════════════════════════════════════ */
 
   .coin-scene{
@@ -62,85 +62,24 @@
     50%    { transform:scale(1.08); opacity:1; }
   }
 
-  /* The coin itself — preserves 3D for children */
+  /* The coin — driven by JS for precise image swapping */
   .coin{
     width:280px; height:280px;
     position:relative;
-    transform-style:preserve-3d;
-    animation: coinFlip 5s cubic-bezier(.42,0,.58,1) infinite;
     filter: drop-shadow(0 0 40px rgba(140,160,190,.3));
     will-change:transform;
   }
-
-  /* Each face of the coin */
-  .coin-face{
-    position:absolute; inset:0;
-    backface-visibility:hidden;
-    border-radius:50%;
-    overflow:hidden;
-  }
-  .coin-face img{
+  .coin img{
     width:100%; height:100%;
     object-fit:contain;
     pointer-events:none;
+    display:block;
   }
 
-  /* Front: mathematical formulas (logo-2: has 3³) */
-  .coin-front{
-    z-index:2;
-  }
-
-  /* Back: alien + person (logo-1: has the faces) — rotated 180° so it shows when flipped */
-  .coin-back{
-    transform:rotateY(180deg);
-  }
-
-  /* Thin edge visible during flip — gives coin thickness */
-  .coin-edge{
-    position:absolute;
-    top:10%; bottom:10%;
-    left:50%; width:6px;
-    margin-left:-3px;
-    background:linear-gradient(180deg, #555, #888, #555);
-    transform:rotateY(90deg);
-    transform-origin:center;
-    border-radius:2px;
-  }
-
-  /*
-    COIN ANIMATION SEQUENCE:
-    Phase 1 (0-40%):   Flip forward 180° on Y axis
-                        → reveals the back face (alien+person)
-    Phase 2 (40-50%):  Pause — hold the back face visible
-    Phase 3 (50-95%):  Full 360° spin on Y axis
-                        → shows both sides in one fluid motion
-    Phase 4 (95-100%): Settle back to front face
-  */
-  @keyframes coinFlip{
-    /* Start: front face (math formulas) visible */
-    0%    { transform: rotateY(0deg);   }
-    5%    { transform: rotateY(0deg);   }
-
-    /* Phase 1: flip forward 180° — reveals back (alien+person) */
-    30%   { transform: rotateY(180deg); }
-
-    /* Pause on back face */
-    40%   { transform: rotateY(180deg); }
-
-    /* Phase 2: full 360° spin from current position (180 → 540) */
-    90%   { transform: rotateY(540deg); }
-
-    /* Settle — back to front face (540 = 360+180, so add another 180 to land on 720=0) */
-    /* Actually 540 shows the back face. Go to 720 to return to front */
-    95%   { transform: rotateY(720deg); }
-    100%  { transform: rotateY(720deg); }
-  }
-
-  /* ── Metallic shimmer that sweeps across during flip ── */
+  /* Metallic shimmer overlay */
   .coin::after{
     content:'';
     position:absolute; inset:0;
-    border-radius:50%;
     background:linear-gradient(
       105deg,
       transparent 30%,
@@ -151,16 +90,7 @@
     );
     z-index:10;
     pointer-events:none;
-    animation: shimmer 5s ease-in-out infinite;
-  }
-  @keyframes shimmer{
-    0%,5%  { opacity:0; }
-    15%    { opacity:1; }
-    35%    { opacity:0; }
-    50%,55%{ opacity:0; }
-    65%    { opacity:1; }
-    85%    { opacity:0; }
-    100%   { opacity:0; }
+    opacity:0;
   }
 
   /* ── Text ── */
@@ -263,20 +193,10 @@
 
 <div class="container">
 
-  <!-- 3D coin with two faces -->
   <div class="coin-scene">
     <div class="glow-ring"></div>
-    <div class="coin">
-      <!-- Front face: mathematical formulas side -->
-      <div class="coin-face coin-front">
-        <img src="images/nikto-logo-2.png" alt="NIKTO — Formulas">
-      </div>
-      <!-- Back face: alien + person side -->
-      <div class="coin-face coin-back">
-        <img src="images/nikto-logo-1.png" alt="NIKTO — Alliance">
-      </div>
-      <!-- Coin edge for thickness illusion -->
-      <div class="coin-edge"></div>
+    <div class="coin" id="coin">
+      <img id="coinImg" src="images/nikto-logo-2.png" alt="NIKTO">
     </div>
   </div>
 
@@ -295,7 +215,100 @@
 </div>
 
 <script>
-  // Generate floating particles
+  // ══════════════════════════════════════════════════════════════
+  // JS-driven coin flip animation
+  // Sequence per cycle (5s total):
+  //   Phase 1: 0s-1.5s   → flip forward 180° (front → back)
+  //   Phase 2: 1.5s-2.5s → hold on back face
+  //   Phase 3: 2.5s-4.5s → full 360° spin
+  //   Phase 4: 4.5s-5.0s → settle on front face
+  //
+  // Image swaps happen when the coin is edge-on (90° / 270°),
+  // so the user never sees a pop — only the new face emerging.
+  // ══════════════════════════════════════════════════════════════
+
+  const FRONT = 'images/nikto-logo-2.png';  // math formulas (3³)
+  const BACK  = 'images/nikto-logo-1.png';  // alien + person
+
+  const coin    = document.getElementById('coin');
+  const coinImg = document.getElementById('coinImg');
+  const shimmer = coin; // ::after pseudo
+
+  const CYCLE = 5000; // ms
+
+  // Easing: ease-in-out
+  function easeInOut(t) {
+    return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+  }
+
+  let start = null;
+
+  function animate(ts) {
+    if (!start) start = ts;
+    const elapsed = (ts - start) % CYCLE;
+    const t = elapsed / CYCLE; // 0..1
+
+    let angle;
+    let showFront;
+
+    if (t < 0.30) {
+      // Phase 1: flip 0° → 180° (ease)
+      const p = easeInOut(t / 0.30);
+      angle = p * 180;
+      showFront = angle < 90;
+    } else if (t < 0.45) {
+      // Phase 2: hold at 180° (back face visible)
+      angle = 180;
+      showFront = false;
+    } else if (t < 0.90) {
+      // Phase 3: full 360° spin (180° → 540°)
+      const p = easeInOut((t - 0.45) / 0.45);
+      angle = 180 + p * 360;
+      // Normalize to 0-360 for face detection
+      const norm = ((angle % 360) + 360) % 360;
+      showFront = (norm < 90 || norm > 270);
+    } else {
+      // Phase 4: settle at 540° = 180° → snap to 0° (back to front)
+      // Quick ease from 540 to 720 (= 0°)
+      const p = easeInOut((t - 0.90) / 0.10);
+      angle = 540 + p * 180;
+      const norm = ((angle % 360) + 360) % 360;
+      showFront = (norm < 90 || norm > 270);
+    }
+
+    // Apply 3D rotation.
+    // When the back face is visible, also scaleX(-1) to cancel
+    // the horizontal mirror that rotateY produces at 180°.
+    if (showFront) {
+      coin.style.transform = 'rotateY(' + angle + 'deg)';
+    } else {
+      coin.style.transform = 'rotateY(' + angle + 'deg) scaleX(-1)';
+    }
+
+    // Swap image at edge-on moment (never visible to user)
+    const target = showFront ? FRONT : BACK;
+    if (coinImg.getAttribute('data-current') !== target) {
+      coinImg.src = target;
+      coinImg.setAttribute('data-current', target);
+    }
+
+    // Shimmer on ::after — triggered via CSS variable
+    const norm2 = ((angle % 360) + 360) % 360;
+    const isFlipping = (norm2 > 60 && norm2 < 120) || (norm2 > 240 && norm2 < 300);
+    coin.style.setProperty('--shimmer', isFlipping ? '1' : '0');
+
+    requestAnimationFrame(animate);
+  }
+
+  // Apply shimmer via the CSS variable
+  const style = document.createElement('style');
+  style.textContent = '.coin::after { opacity: var(--shimmer, 0); transition: opacity 0.15s; }';
+  document.head.appendChild(style);
+
+  coinImg.setAttribute('data-current', FRONT);
+  requestAnimationFrame(animate);
+
+  // ── Particles ──
   const container = document.getElementById('particles');
   for (let i = 0; i < 25; i++) {
     const p = document.createElement('div');
@@ -307,7 +320,7 @@
     container.appendChild(p);
   }
 
-  // Cycle status messages
+  // ── Status messages ──
   const msgs = [
     'Initializing neural core',
     'Loading 17B parameters',
