@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NIKTO — Loading</title>
+<style>
+  *{ margin:0; padding:0; box-sizing:border-box; }
+
+  body{
+    background:#0a0a0a;
+    display:flex; align-items:center; justify-content:center;
+    height:100vh; overflow:hidden;
+    font-family:'Segoe UI',system-ui,sans-serif;
+  }
+
+  /* ── Hex background pattern ── */
+  .hex-bg{
+    position:fixed; inset:0; z-index:0; opacity:.08;
+    background-image:
+      linear-gradient(30deg, #333 12%, transparent 12.5%, transparent 87%, #333 87.5%, #333),
+      linear-gradient(150deg, #333 12%, transparent 12.5%, transparent 87%, #333 87.5%, #333),
+      linear-gradient(30deg, #333 12%, transparent 12.5%, transparent 87%, #333 87.5%, #333),
+      linear-gradient(150deg, #333 12%, transparent 12.5%, transparent 87%, #333 87.5%, #333),
+      linear-gradient(60deg, #222 25%, transparent 25.5%, transparent 75%, #222 75%, #222),
+      linear-gradient(60deg, #222 25%, transparent 25.5%, transparent 75%, #222 75%, #222);
+    background-size:80px 140px;
+    background-position:0 0, 0 0, 40px 70px, 40px 70px, 0 0, 40px 70px;
+  }
+
+  .container{
+    position:relative; z-index:1;
+    display:flex; flex-direction:column; align-items:center; gap:40px;
+  }
+
+  /* ── Logo wrapper ── */
+  .logo-wrap{
+    width:320px; height:320px;
+    position:relative;
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  /* Outer glow ring */
+  .glow-ring{
+    position:absolute; inset:-20px;
+    border-radius:50%;
+    border:2px solid rgba(160,180,200,.15);
+    animation: pulseRing 3s ease-in-out infinite;
+  }
+  .glow-ring::after{
+    content:''; position:absolute; inset:-8px;
+    border-radius:50%;
+    border:1px solid rgba(160,180,200,.07);
+  }
+  @keyframes pulseRing{
+    0%,100%{ transform:scale(1); opacity:.6; }
+    50%{ transform:scale(1.06); opacity:1; }
+  }
+
+  /* The spinning logo */
+  .logo{
+    width:280px; height:280px;
+    animation: hexSpin 4.2s cubic-bezier(.4,0,.2,1) infinite;
+    filter: drop-shadow(0 0 30px rgba(140,160,190,.35));
+    will-change:transform;
+  }
+  .logo img{
+    width:100%; height:100%;
+    object-fit:contain;
+    pointer-events:none;
+  }
+
+  /*
+    Hexagonal spin: 6 steps of 60 degrees each = 360.
+    Each step holds briefly then snaps to the next angle,
+    giving the angular "click" feel of a hexagon rotating.
+  */
+  @keyframes hexSpin{
+    0%       { transform: rotate(0deg);   }
+    2%       { transform: rotate(0deg);   }
+    14.5%    { transform: rotate(60deg);  }
+    16.67%   { transform: rotate(60deg);  }
+    19.17%   { transform: rotate(60deg);  }
+    31%      { transform: rotate(120deg); }
+    33.33%   { transform: rotate(120deg); }
+    35.83%   { transform: rotate(120deg); }
+    47.5%    { transform: rotate(180deg); }
+    50%      { transform: rotate(180deg); }
+    52.5%    { transform: rotate(180deg); }
+    64%      { transform: rotate(240deg); }
+    66.67%   { transform: rotate(240deg); }
+    69.17%   { transform: rotate(240deg); }
+    81%      { transform: rotate(300deg); }
+    83.33%   { transform: rotate(300deg); }
+    85.83%   { transform: rotate(300deg); }
+    97.5%    { transform: rotate(360deg); }
+    100%     { transform: rotate(360deg); }
+  }
+
+  /* ── Text ── */
+  .brand{
+    text-align:center;
+    animation: fadeUp 1.2s ease-out both;
+  }
+  .brand h1{
+    font-size:42px; font-weight:300; letter-spacing:18px;
+    color:#c8cdd4;
+    text-shadow:0 0 30px rgba(160,180,200,.25);
+    margin-bottom:6px;
+  }
+  .brand .sub{
+    font-size:13px; letter-spacing:6px; color:#6a7080;
+    text-transform:uppercase;
+  }
+  @keyframes fadeUp{
+    from{ opacity:0; transform:translateY(20px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+
+  /* ── Progress bar ── */
+  .progress-wrap{
+    width:280px; height:3px;
+    background:rgba(255,255,255,.06);
+    border-radius:2px; overflow:hidden;
+    animation: fadeUp 1.6s ease-out both;
+  }
+  .progress-bar{
+    height:100%; width:0%;
+    background:linear-gradient(90deg, #4a5568, #8a9bb0, #c8cdd4);
+    border-radius:2px;
+    animation: load 6s cubic-bezier(.25,.46,.45,.94) forwards;
+  }
+  @keyframes load{
+    0%  { width:0%;   }
+    15% { width:12%;  }
+    30% { width:28%;  }
+    50% { width:55%;  }
+    70% { width:72%;  }
+    85% { width:88%;  }
+    95% { width:96%;  }
+    100%{ width:100%; }
+  }
+
+  .status{
+    font-size:11px; letter-spacing:3px; color:#4a5060;
+    text-transform:uppercase;
+    animation: fadeUp 2s ease-out both;
+  }
+  .status span{
+    animation: blink 1.4s step-end infinite;
+  }
+  @keyframes blink{
+    50%{ opacity:0; }
+  }
+
+  /* ── Corner hex accents ── */
+  .corner-hex{
+    position:fixed; width:60px; height:60px; opacity:.04; z-index:0;
+  }
+  .corner-hex svg{ width:100%; height:100%; fill:#aab; }
+  .corner-hex.tl{ top:30px; left:30px; }
+  .corner-hex.tr{ top:30px; right:30px; }
+  .corner-hex.bl{ bottom:30px; left:30px; }
+  .corner-hex.br{ bottom:30px; right:30px; }
+
+  /* ── Particle shimmer ── */
+  .particles{
+    position:fixed; inset:0; z-index:0; pointer-events:none;
+  }
+  .particle{
+    position:absolute;
+    width:2px; height:2px;
+    background:rgba(180,190,210,.3);
+    border-radius:50%;
+    animation: drift linear infinite;
+  }
+  @keyframes drift{
+    from{ transform:translateY(100vh) scale(0); opacity:0; }
+    10% { opacity:1; }
+    90% { opacity:1; }
+    to  { transform:translateY(-10vh) scale(1); opacity:0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hex-bg"></div>
+
+<!-- Corner hexagons -->
+<div class="corner-hex tl"><svg viewBox="0 0 100 115"><polygon points="50,0 100,28.8 100,86.4 50,115 0,86.4 0,28.8"/></svg></div>
+<div class="corner-hex tr"><svg viewBox="0 0 100 115"><polygon points="50,0 100,28.8 100,86.4 50,115 0,86.4 0,28.8"/></svg></div>
+<div class="corner-hex bl"><svg viewBox="0 0 100 115"><polygon points="50,0 100,28.8 100,86.4 50,115 0,86.4 0,28.8"/></svg></div>
+<div class="corner-hex br"><svg viewBox="0 0 100 115"><polygon points="50,0 100,28.8 100,86.4 50,115 0,86.4 0,28.8"/></svg></div>
+
+<!-- Floating particles -->
+<div class="particles" id="particles"></div>
+
+<div class="container">
+  <div class="logo-wrap">
+    <div class="glow-ring"></div>
+    <div class="logo">
+      <img src="images/nikto-logo-1.png" alt="NIKTO" id="logoImg">
+    </div>
+  </div>
+
+  <div class="brand">
+    <h1>NIKTO</h1>
+    <div class="sub">Cognitive Systems AI</div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-bar"></div>
+  </div>
+
+  <div class="status">
+    Initializing neural core<span>_</span>
+  </div>
+</div>
+
+<script>
+  // Generate floating particles
+  const container = document.getElementById('particles');
+  for (let i = 0; i < 25; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.animationDuration = (6 + Math.random() * 10) + 's';
+    p.style.animationDelay = (Math.random() * 8) + 's';
+    p.style.width = p.style.height = (1 + Math.random() * 2) + 'px';
+    container.appendChild(p);
+  }
+
+  // Cycle status messages
+  const msgs = [
+    'Initializing neural core',
+    'Loading 17B parameters',
+    'Activating 6 specialist brains',
+    'Calibrating ELO ratings',
+    'Preparing knowledge base',
+    'Syncing memory stores',
+    'Warming transformer layers',
+    'System ready'
+  ];
+  const statusEl = document.querySelector('.status');
+  let mi = 0;
+  setInterval(() => {
+    mi = (mi + 1) % msgs.length;
+    statusEl.innerHTML = msgs[mi] + '<span>_</span>';
+  }, 2800);
+
+  // Alternate logo images every full rotation
+  const logos = ['images/nikto-logo-1.png', 'images/nikto-logo-2.png'];
+  let li = 0;
+  const logoImg = document.getElementById('logoImg');
+  setInterval(() => {
+    li = (li + 1) % logos.length;
+    logoImg.src = logos[li];
+  }, 4200);
+</script>
+</body>
+</html>
