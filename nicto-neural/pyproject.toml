@@ -1,0 +1,28 @@
+[project]
+name = "nicto-neural"
+version = "1.0.0"
+description = "NICTO Neural Core V1 — 284B MoE brain, 6-brain system, PPO RL"
+requires-python = ">=3.11"
+dependencies = [
+    "torch>=2.0.0",
+    "numpy>=1.26.0",
+]
+
+[project.optional-dependencies]
+gpu = ["faiss-gpu>=1.8.0"]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.24.0",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+markers = ["gpu: requires GPU"]
+testpaths = ["tests"]
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[tool.setuptools.packages.find]
+where = ["."]
