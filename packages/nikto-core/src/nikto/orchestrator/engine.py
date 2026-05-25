@@ -204,3 +204,82 @@ class Orchestrator:
     def _save_org_chart(self):
         data = [a.to_dict() for a in self.agents.values()]
         Path(self.config.org_chart_file).write_text(json.dumps(data, indent=2))
+
+    # ── Auto-routing: detect task type → select variant ──
+
+    _BUILD_KEYWORDS = frozenset([
+        "build", "create", "generate", "scaffold", "make", "develop",
+        "set up", "bootstrap", "init", "new project", "starter", "boilerplate",
+        "app", "application", "website", "api", "service", "bot",
+    ])
+    _ML_KEYWORDS = frozenset([
+        "train", "learn", "model", "neural", "ai", "machine learning",
+        "deep learning", "predict", "classify", "regression", "dataset",
+        "optimize", "hyperparameter", "epoch", "gradient", "loss",
+    ])
+    _SECURITY_KEYWORDS = frozenset([
+        "security", "hack", "vulnerability", "exploit", "penetration",
+        "pentest", "audit", "owasp", "injection", "xss", "csrf",
+        "reentrancy", "cve", "threat", "malware", "forensic",
+    ])
+    _PERF_KEYWORDS = frozenset([
+        "performance", "slow", "optimize", "bottleneck", "profil",
+        "latency", "throughput", "benchmark", "cache", "index",
+        "memory leak", "cpu", "fast",
+    ])
+
+    def detect_task_type(self, user_message: str) -> str:
+        """Detect task category from user message keywords.
+
+        Returns one of: "build_app", "ml_optimization", "security_audit",
+        "optimization", "general".
+        """
+        msg_lower = user_message.lower()
+
+        scores = {
+            "build_app": sum(1 for kw in self._BUILD_KEYWORDS if kw in msg_lower),
+            "ml_optimization": sum(1 for kw in self._ML_KEYWORDS if kw in msg_lower),
+            "security_audit": sum(1 for kw in self._SECURITY_KEYWORDS if kw in msg_lower),
+            "optimization": sum(1 for kw in self._PERF_KEYWORDS if kw in msg_lower),
+        }
+
+        best_type = max(scores, key=scores.get)
+        if scores[best_type] == 0:
+            return "general"
+        return best_type
+
+    def select_variant(self, task_type: str) -> str:
+        """Route task type to the correct NICTO variant.
+
+        Returns variant name: "nikto-nikto", "nikto-denu", or "nikto-plus".
+        """
+        variant_map = {
+            "build_app": "nikto-nikto",       # heavyweight — full-stack builder
+            "ml_optimization": "nikto-denu",   # sonnet — AI specialist
+            "security_audit": "nikto-plus",    # mythos — security specialist
+            "optimization": "nikto-nikto",     # heavyweight — system designer
+            "general": "nikto-nikto",          # heavyweight — default
+        }
+        return variant_map.get(task_type, "nikto-nikto")
+
+    def auto_route(self, user_message: str) -> dict:
+        """Detect task type and select variant automatically.
+
+        Returns dict with task_type, variant, and explanation.
+        """
+        task_type = self.detect_task_type(user_message)
+        variant = self.select_variant(task_type)
+
+        explanations = {
+            "build_app": "Routing to heavyweight (nikto-nikto) — full-stack builder with complete language mastery",
+            "ml_optimization": "Routing to sonnet (nikto-denu) — AI and algorithm specialist",
+            "security_audit": "Routing to mythos (nikto-plus) — security and exploit specialist",
+            "optimization": "Routing to heavyweight (nikto-nikto) — system designer and performance optimizer",
+            "general": "Routing to heavyweight (nikto-nikto) — default general-purpose variant",
+        }
+
+        return {
+            "task_type": task_type,
+            "variant": variant,
+            "explanation": explanations.get(task_type, "Default routing"),
+        }
