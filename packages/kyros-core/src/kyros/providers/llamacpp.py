@@ -32,7 +32,7 @@ class LLaMACPPProvider:
         self.n_threads = self._compute_threads()
         self.n_gpu_layers = self._compute_gpu_layers()
         self.ctx_size = min(config.max_tokens or 4096, 4096)
-        self.temperature = max(0.3, min(config.temperature or 0.5, 0.7))
+        self.temperature = max(0.3, min(config.temperature or 0.4, 0.7))
         self._model = None
         self._llama_cpp_available = None
         self._lock = threading.Lock()

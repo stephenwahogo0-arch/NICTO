@@ -8,7 +8,7 @@ class ModelConfig(BaseModel):
     model: str = "local"
     api_key: Optional[str] = None
     api_base: Optional[str] = None
-    temperature: float = 0.5
+    temperature: float = 0.4
     max_tokens: int = 4096
     thinking_mode: bool = False
     ollama_model: str = "llama3.2:1b"
