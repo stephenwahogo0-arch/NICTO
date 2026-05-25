@@ -17,10 +17,10 @@ from .safety.reward_hacking import RewardHackingDetector
 
 
 class NeuralCore:
-    """Top-level NICTO Neural Core facade. Single entry point: process(input) -> output."""
+    """NICTO is an AI, not an AI agent. It thinks autonomously with its own 17B-parameter brain."""
 
     VERSION = "1.0.0"
-    PARAMETER_COUNT = "284B+ (MoE architecture)"
+    PARAMETER_COUNT = "17B (dense transformer)"
 
     def __init__(self, config: NeuralConfig = None):
         if config is None:

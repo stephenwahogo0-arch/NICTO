@@ -1,8 +1,8 @@
-"""Agent API — TaskOrchestrator.run() wrapper."""
+"""Task API — TaskOrchestrator.run() wrapper for autonomous task execution."""
 
 
-class AgentAPI:
-    """Public API for task orchestration."""
+class TaskAPI:
+    """Public API for autonomous task execution (NICTO thinks, not delegates)."""
 
     def __init__(self, orchestrator):
         self.orchestrator = orchestrator

@@ -1,8 +1,8 @@
-"""Task orchestration — end-to-end pipeline coordination."""
+"""Task orchestration — autonomous end-to-end pipeline. NICTO thinks, not delegates."""
 
 
 class TaskOrchestrator:
-    """Orchestrates end-to-end task execution pipeline."""
+    """Autonomous task pipeline — NICTO processes tasks with its own brain."""
 
     def __init__(self, consciousness, tool_registry, safety_policies):
         self.consciousness = consciousness

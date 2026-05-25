@@ -1,7 +1,7 @@
 [project]
 name = "nicto-neural"
 version = "1.0.0"
-description = "NICTO Neural Core V1 — 284B MoE brain, 6-brain system, PPO RL"
+description = "NICTO Neural Core V1 — 17B autonomous AI brain, 6-brain system, PPO RL"
 requires-python = ">=3.11"
 dependencies = [
     "torch>=2.0.0",
