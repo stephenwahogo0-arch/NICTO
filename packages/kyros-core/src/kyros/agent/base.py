@@ -4,6 +4,7 @@ from typing import Any, AsyncGenerator, Callable, Optional
 
 import aiofiles
 
+from kyros.brain.core import NiktoBrain
 from kyros.config.settings import KyrosConfig, ModelConfig
 from kyros.knowledge.loader import knowledge_base, search_knowledge
 from kyros.memory.base import MemorySystem
@@ -45,31 +46,44 @@ class Agent:
         self.config = config or AgentConfig()
         self.id = str(uuid.uuid4())[:12]
         self.state = AgentState.IDLE
-        model_cfg = self.config.model if isinstance(self.config.model, ModelConfig) else ModelConfig(model=self.config.model if isinstance(self.config.model, str) else "local")
-        self.provider = create_provider(model_cfg)
+        self.brain = None
+        self.provider = None
         self.memory = MemorySystem()
         self.tool_registry = ToolRegistry()
 
+    async def awaken_brain(self):
+        self.brain = NiktoBrain()
+        await self.brain.awaken()
+        self.brain.knowledge.add_fact(
+            f"Agent {self.id} initialized with mode {self.config.mode.value}",
+            source="system",
+            confidence=1.0,
+        )
+        return self
+
     async def run(self, task: str, stream: bool = False) -> dict:
         self.state = AgentState.THINKING
-        context = await self.memory.get_context(task)
-        messages = [
-            {"role": "system", "content": self.config.system_prompt},
-            {"role": "user", "content": f"Context: {context}\n\nTask: {task}"},
-        ]
-        result = await self.provider.chat(messages, max_tokens=self.config.max_tokens, temperature=self.config.temperature)
+
+        if self.brain is None:
+            await self.awaken_brain()
+
+        result = self.brain.process(task, {"mode": self.config.mode.value})
+        thought = result["thought"]["content"]
+
         await self.memory.store(task, source="user")
-        await self.memory.store(result.get("content", ""), source="kyros")
+        await self.memory.store(thought, source="nikto_brain")
         self.state = AgentState.IDLE
-        return result
+
+        return {"content": thought, "brain_state": self.brain.get_status(), "metacognition": result.get("metacognition")}
 
     async def run_sync(self, prompt: str) -> str:
         result = await self.run(prompt)
         return result.get("content", "")
 
     def get_status(self) -> dict:
-        info = self.provider.get_info()
-        return {"id": self.id, "state": self.state.value, "mode": self.config.mode.value if hasattr(self.config.mode, 'value') else str(self.config.mode), "provider": info}
+        if self.brain:
+            return {"id": self.id, "state": self.state.value, "mode": self.config.mode.value if hasattr(self.config.mode, 'value') else str(self.config.mode), "brain": self.brain.get_status()}
+        return {"id": self.id, "state": self.state.value, "mode": self.config.mode.value if hasattr(self.config.mode, 'value') else str(self.config.mode), "brain": "uninitialized"}
 
     async def build_app(self, spec: dict) -> dict:
         app_type = spec.get("type", "web")

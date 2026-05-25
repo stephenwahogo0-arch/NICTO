@@ -1,3 +1,17 @@
+from kyros.brain.core import NiktoBrain
+from kyros.brain.identity import NiktoIdentity
+from kyros.brain.knowledge import NiktoKnowledgeCore
+from kyros.brain.memory import NiktoLongTermMemory
+from kyros.brain.emotion import NiktoEmotionalCore
+from kyros.brain.conscience import NiktoConscience
+from kyros.brain.reasoner import NiktoReasoner
+from kyros.brain.language import NiktoLanguageEngine
+from kyros.brain.learner import NiktoLearner
+from kyros.brain.goals import NiktoGoalSystem
+from kyros.brain.models import (
+    Thought, MemoryFragment, Belief, Goal, GoalStatus,
+    ThinkingStyle, EmotionType, KnowledgeLevel, EmotionalState, MoralRule,
+)
 from kyros.config.settings import KyrosConfig, ModelConfig, MemoryConfig, DaemonConfig
 from kyros.providers.base import ModelProvider, create_provider
 from kyros.memory.base import MemorySystem
@@ -50,6 +64,11 @@ from kyros.daemon.service import KyrosDaemon, DaemonConfig
 from kyros.api.routes import app
 
 __all__ = [
+    "NiktoBrain", "NiktoIdentity", "NiktoKnowledgeCore", "NiktoLongTermMemory",
+    "NiktoEmotionalCore", "NiktoConscience", "NiktoReasoner", "NiktoLanguageEngine",
+    "NiktoLearner", "NiktoGoalSystem",
+    "Thought", "MemoryFragment", "Belief", "Goal", "GoalStatus",
+    "ThinkingStyle", "EmotionType", "KnowledgeLevel", "EmotionalState", "MoralRule",
     "KyrosConfig", "ModelConfig", "MemoryConfig", "DaemonConfig",
     "Agent", "AgentConfig", "AgentMode",
     "KnowledgeBase", "knowledge_base", "get_knowledge", "search_knowledge",

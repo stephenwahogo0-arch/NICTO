@@ -1,5 +1,10 @@
-"""Brain Engine — real memory and reasoning system."""
-from .engine import BrainEngine
-from .multiprocess import MultiprocessBrain, ParallelRegion
-
-__all__ = ["BrainEngine", "MultiprocessBrain", "ParallelRegion"]
+from kyros.brain.core import NiktoBrain
+from kyros.brain.identity import NiktoIdentity
+from kyros.brain.knowledge import NiktoKnowledgeCore
+from kyros.brain.memory import NiktoLongTermMemory
+from kyros.brain.emotion import NiktoEmotionalCore
+from kyros.brain.conscience import NiktoConscience
+from kyros.brain.reasoner import NiktoReasoner
+from kyros.brain.language import NiktoLanguageEngine
+from kyros.brain.learner import NiktoLearner
+from kyros.brain.goals import NiktoGoalSystem
