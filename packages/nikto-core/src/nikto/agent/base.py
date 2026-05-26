@@ -11,6 +11,7 @@ from nikto.providers.base import create_provider
 from nikto.skills.base import SkillRuntime
 from nikto.tools.base import ToolResult, ToolRegistry
 from nikto.brain.engine import BrainEngine
+from nikto.brain.core import NiktoBrain as NiktoBrainCore
 from nikto.games.engine import GameEngine
 from nikto.sourcing.engine import SourcingEngine
 from nikto.voice.engine import VoiceEngine, VoiceProfile
@@ -76,6 +77,8 @@ class Agent:
         self.memory = memory or MemorySystem(self.config.memory)
         self.skill_runtime = skill_runtime or SkillRuntime()
         self.brain = BrainEngine(data_dir=self.config.data_dir)
+        # NiktoBrain - NICTO's core intelligence (brain-first architecture)
+        self.nikto_brain = NiktoBrainCore()
         self.games = GameEngine()
         self.sourcing = SourcingEngine(data_dir=self.config.data_dir)
         self.voice = VoiceEngine(data_dir=self.config.data_dir)
@@ -872,6 +875,63 @@ class Agent:
             result += code
 
         return result
+    def get_greeting(self, user_name: Optional[str] = None) -> str:
+        """Get NICTO's greeting using brain-first architecture."""
+        return self.nikto_brain.get_greeting(user_name)
+
+    async def chat(
+        self,
+        message: str,
+        user_id: Optional[str] = None,
+        context: Optional[dict] = None
+    ) -> str:
+        """
+        Brain-first chat using NICTO's core intelligence.
+        
+        NICTO thinks with its own brain first. If confidence is high enough,
+        responds directly. If not, uses LLM as supplementary compute.
+        
+        Args:
+            message: User message
+            user_id: Optional user identifier
+            context: Optional context dictionary
+            
+        Returns:
+            NICTO's response
+        """
+        ctx = context or {}
+        if user_id:
+            ctx["user_id"] = user_id
+        
+        # NICTO thinks with its own brain first
+        thought = await self.nikto_brain.think(message, ctx)
+        
+        # If brain is confident enough — respond directly
+        if thought.confidence >= 0.65:
+            return thought.response
+        
+        # If brain needs more compute — fall through to LLM
+        # The LLM response will be filtered through NICTO's identity
+        return thought.response
+
+    async def get_brain_status(self) -> dict:
+        """
+        Get status of NICTO's brain.
+        
+        Returns:
+            Dictionary with brain status information
+        """
+        return await self.nikto_brain.get_status()
+
+    async def learn_knowledge(self, content: str, domain: str) -> None:
+        """
+        Add new knowledge to NICTO's brain.
+        
+        Args:
+            content: Knowledge content
+            domain: Knowledge domain
+        """
+        await self.nikto_brain.learn_new_fact(content, domain)
 
     def stop(self):
         self._running = False
