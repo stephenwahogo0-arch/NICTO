@@ -1,4 +1,4 @@
-"""Generate NIKTO game engine screenshot SVGs."""
+"""Generate KYROS game engine screenshot SVGs."""
 import os
 
 os.makedirs("screenshots", exist_ok=True)
@@ -25,7 +25,7 @@ for name, desc in screenshots.items():
     svg = (
         '<svg width="640" height="480" xmlns="http://www.w3.org/2000/svg">\n'
         '<rect width="640" height="480" fill="#111118"/>\n'
-        '<text x="320" y="50" text-anchor="middle" fill="#00aaff" font-size="24" font-family="monospace" font-weight="bold">NIKTO</text>\n'
+        '<text x="320" y="50" text-anchor="middle" fill="#00aaff" font-size="24" font-family="monospace" font-weight="bold">KYROS</text>\n'
         '<text x="320" y="80" text-anchor="middle" fill="#ffffff" font-size="14" font-family="monospace">Game Engine Screenshot</text>\n'
         '<rect x="40" y="100" width="560" height="300" rx="12" fill="#1a1a28" stroke="#00aaff" stroke-width="1"/>\n'
         '<text x="320" y="160" text-anchor="middle" fill="#00ffcc" font-size="18" font-family="monospace" font-weight="bold">'
@@ -33,7 +33,7 @@ for name, desc in screenshots.items():
         '<text x="320" y="260" text-anchor="middle" fill="#aaaaaa" font-size="13" font-family="monospace">'
         + desc + '</text>\n'
         '<text x="320" y="430" text-anchor="middle" fill="#555" font-size="11" font-family="monospace">'
-        'NIKTO Game Engine  |  pygame-ce  |  ECS Architecture</text>\n'
+        'KYROS Game Engine  |  pygame-ce  |  ECS Architecture</text>\n'
         '</svg>'
     )
     fp = "screenshots/game_" + name + ".svg"

@@ -1,0 +1,20 @@
+[project]
+name = "kyros-cli"
+version = "0.1.0"
+description = "KYROS CLI Interface"
+requires-python = ">=3.12"
+dependencies = [
+    "kyros-core",
+    "click>=8.0.0",
+    "rich>=13.0.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/kyros_cli"]
+
+[project.scripts]
+nikto = "kyros_cli.main:cli"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

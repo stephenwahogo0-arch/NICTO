@@ -23,8 +23,8 @@ echo "--> Python setup..."
 uv venv
 source .venv/bin/activate
 uv sync
-uv pip install -e packages/nikto-core
-uv pip install -e packages/nikto-cli
+uv pip install -e packages/kyros-core
+uv pip install -e packages/kyros-cli
 
 echo "--> Web UI setup..."
 cd packages/nikto-web

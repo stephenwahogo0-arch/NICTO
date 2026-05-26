@@ -2,7 +2,7 @@
 name = "nikto-super-kernel"
 version = "1.0.0"
 edition = "2021"
-description = "NIKTO Unified Kernel Runtime — All 8 sectors in a single cdylib"
+description = "KYROS Unified Kernel Runtime — All 8 sectors in a single cdylib"
 
 [lib]
 name = "nikto_super_kernel"

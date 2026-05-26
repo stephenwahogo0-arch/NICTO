@@ -1,13 +1,13 @@
 [package]
-name = "nikto-core-engine"
+name = "kyros-core-engine"
 version = "0.2.0"
 edition = "2021"
-description = "NIKTO AI-Native Generative Engine — Rust ECS + wgpu GPU renderer + PyO3 bridge"
-authors = ["NIKTO Engineering"]
+description = "KYROS AI-Native Generative Engine — Rust ECS + wgpu GPU renderer + PyO3 bridge"
+authors = ["KYROS Engineering"]
 license = "MIT"
 
 [lib]
-name = "nikto_core_engine"
+name = "kyros_core_engine"
 crate-type = ["cdylib"]
 
 [dependencies]

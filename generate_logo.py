@@ -1,4 +1,4 @@
-"""NIKTO logo — clean, professional design."""
+"""KYROS logo — clean, professional design."""
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 import os
 
@@ -61,7 +61,7 @@ inner_pts = [(CX + 50, CY), (CX + 25, CY - 43), (CX - 25, CY - 43),
              (CX - 50, CY), (CX - 25, CY + 43), (CX + 25, CY + 43)]
 draw.polygon(inner_pts, outline=(100, 200, 255, 150), width=1)
 
-# NIKTO text
+# KYROS text
 try:
     font_big = ImageFont.truetype("arialbd.ttf", 56)
     font_small = ImageFont.truetype("arial.ttf", 18)
@@ -69,7 +69,7 @@ except Exception:
     font_big = ImageFont.load_default()
     font_small = font_big
 
-draw.text((CX, CY + 130), "NIKTO", fill=(0, 180, 255, 255), font=font_big, anchor="mm")
+draw.text((CX, CY + 130), "KYROS", fill=(0, 180, 255, 255), font=font_big, anchor="mm")
 draw.text((CX, CY + 170), "AI SYSTEM", fill=(100, 150, 200, 180), font=font_small, anchor="mm")
 
 # Subtle glow effect

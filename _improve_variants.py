@@ -1,9 +1,9 @@
-"""Check and improve all 3 NIKTO variants + 12 featured areas."""
+"""Check and improve all 3 KYROS variants + 12 featured areas."""
 import os, sys
-sys.path.insert(0, "packages/nikto-core/src")
+sys.path.insert(0, "packages/kyros-core/src")
 
 def check_variant(name):
-    from nikto.variants.base import create_variant
+    from kyros.variants.base import create_variant
     v = create_variant(name)
     sp = v.build_system_prompt()
     issues = []
@@ -17,7 +17,7 @@ def check_variant(name):
     return {"name": name, "prompt_len": len(sp), "issues": issues, "prompt": sp}
 
 # Check all 3
-for vname in ["nikto", "nikto-sonnet", "nikto-mythos"]:
+for vname in ["kyros", "kyros-sonnet", "kyros-mythos"]:
     result = check_variant(vname)
     print(f"  [{vname}] Length: {result['prompt_len']} chars")
     if result['issues']:

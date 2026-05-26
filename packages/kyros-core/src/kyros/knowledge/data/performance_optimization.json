@@ -1,0 +1,269 @@
+{
+  "caching_strategies": {
+    "content": "Caching stores frequently accessed data in fast storage to reduce latency. CPU caches (L1 32KB, L2 256KB, L3 2-32MB per core) exploit temporal and spatial locality. Redis provides in-memory distributed caching with strings, hashes, lists, sets, sorted sets, streams, and pub/sub. CDN caching (CloudFront, Cloudflare, Akamai) serves static assets from edge locations. Database caching includes query result caching, materialized views, and buffer pool tuning (InnoDB buffer pool, shared_buffers).",
+    "metadata": {
+      "category": "performance_optimization",
+      "tags": [
+        "caching",
+        "redis",
+        "cdn"
+      ]
+    }
+  },
+  "database_indexing": {
+    "content": "Database indexes accelerate queries by providing efficient access paths. B-tree indexes support equality and range queries, ordering, and LIKE prefix patterns. Hash indexes provide O(1) equality lookups. GiST indexes support full-text search, spatial queries, and array operations. GIN indexes handle composite values (arrays, JSONB). Composite indexes follow the leftmost prefix rule — column order matters. Partial indexes on WHERE conditions reduce index size. Covering indexes include all needed columns to avoid heap lookups.",
+    "metadata": {
+      "category": "performance_optimization",
+      "tags": [
+        "indexing",
+        "database",
+        "b_tree"
+      ]
+    }
+  },
+  "query_optimization": {
+    "content": "Query optimization improves performance through execution plan analysis. EXPLAIN ANALYZE reveals actual vs estimated row counts, scan types (sequential, index-only, bitmap, index), join strategies (nested loop, hash join, merge join), and sort/aggregate methods. Key patterns: missing indexes (seq scan on large tables), incorrect join order, unnecessary sorts, implicit type conversion preventing index use, over-fetching columns (SELECT *), and N+1 queries in ORM code. Rewriting subqueries as JOINs often improves performance dramatically.",
+    "metadata": {
+      "category": "performance_optimization",
+      "tags": [
+        "query_optimization",
+        "execution_plan",
+        "explain"
+      ]
+    }
+  },
+  "algorithm_selection": {
+    "content": "Algorithm choice directly impacts performance. Big-O provides theoretical growth rates, but constant factors, data size, and access patterns matter practically. Cache-friendly linear scans outperform binary search on small-to-medium datasets due to branch prediction and prefetching. Algorithm selection criteria: typical input size, distribution characteristics (random, sorted, near-sorted), memory constraints, and real-time requirements. Profile-guided selection benchmarks actual performance rather than relying solely on asymptotic analysis.",
+    "metadata": {
+      "category": "performance_optimization",
+      "tags": [
+        "algorithms",
+        "complexity",
+        "big_o"
+      ]
+    }
+  },
+  "memory_management": {
+    "content": "Memory management performance depends on allocation patterns and access locality. Custom allocators: arena allocator (fast sequential allocation, bulk free), pool allocator (fixed-size block reuse), slab allocator (object caching with constructor/destructor caching). Stack allocation avoids heap overhead entirely — alloca() in C/C++, stack allocate in Rust. NUMA-aware allocation places memory on the same socket as accessing cores (numactl, libnuma, mempol). mmap for large persistent datasets avoids malloc overhead.",
+    "metadata": {
+      "category": "performance_optimization",
+      "tags": [
+        "memory",
+        "allocators",
+        "numa"
+      ]
+    }
+  },
+  "concurrency_patterns": {
+    "content": "Concurrency enables parallel execution for throughput. Thread pools (fixed, cached, work-stealing) reuse threads avoiding creation overhead. Work-stealing schedulers (Go runtime, Java ForkJoinPool, Tokio) balance load across threads — idle threads steal tasks from busy threads' queues. Lock-free data structures use atomic operations (CAS, FAA) and memory ordering (acquire/release, sequentially consistent) for thread safety without mutex contention. RCU enables concurrent reads during in-place updates with deferred reclamation via grace periods.",
+    "metadata": {
+      "category": "performance_optimization",
+      "tags": [
+        "concurrency",
+        "thread_pool",
+        "lock_free"
+      ]
+    }
+  },
+  "profiling_tools": {
+    "content": "Profilers identify performance bottlenecks. CPU profilers: perf (Linux sampling, hardware counters, tracepoints), Intel VTune (GUI, hotspot analysis, threading analysis), AMD uProf (Zen architecture optimization). Memory profilers: Valgrind Massif (heap profiling), heaptrack (Linux), dotMemory (.NET). Tracing: perf trace, bpftool/eBPF (kernel dynamic tracing), DTrace, SystemTap. Application profilers: py-spy (Python), pprof (Go), JProfiler (Java), Instruments (macOS/iOS). Continuous profiling (Pyroscope, Parca, Google Cloud Profiler) provides always-on production profiling.",
+    "metadata": {
+      "category": "performance_optimization",
+      "tags": [
+        "profiling",
+        "perf",
+        "tracing"
+      ]
+    }
+  },
+  "lazy_loading": {
+    "content": "Lazy loading defers initialization until first access, reducing startup time and memory. Web: below-the-fold image lazy loading (loading=lazy attribute, Intersection Observer), route-based code splitting (React lazy, dynamic import()), virtual scrolling (react-window, tanstack virtual) for long lists. Database: lazy loading related entities (ORM lazy relations) — convenient but can cause N+1 queries if iterated. Copy-on-write (COW) defers data copying until modification, used by fork() and persistent data structures.",
+    "metadata": {
+      "category": "performance_optimization",
+      "tags": [
+        "lazy_loading",
+        "code_splitting",
+        "on_demand"
+      ]
+    }
+  },
+  "compression": {
+    "content": "Compression reduces storage and network transfer size. General-purpose: zlib (deflate, widely compatible), zstd (high compression/speed ratio, adjustable levels 1-22, dictionary support), LZ4 (extremely fast compression/decompression), Brotli (optimal for web text content). Image: WebP (lossy/lossless, transparency, animations), AVIF (AV1-based, better compression than WebP), JPEG XL (lossy/lossless, progressive, wide gamut). Database: ZSTD column compression, TOAST (PostgreSQL large value compression), page compression (SQL Server, InnoDB transparent).",
+    "metadata": {
+      "category": "performance_optimization",
+      "tags": [
+        "compression",
+        "zstd",
+        "lz4"
+      ]
+    }
+  },
+  "connection_pooling": {
+    "content": "Connection pooling reuses established connections avoiding TCP handshake and authentication overhead. Pools maintain min/max connections, idle timeout, connection lifetime, and health check queries. HikariCP (Java) provides high-performance pooling with fast pool sizing. PgBouncer (PostgreSQL) offers session/transaction/statement pooling modes. Pool sizing: too small causes contention waiting, too large wastes resources. Formula: pool_size = T * (C - 1), where T=threads and C=connection wait time ratio. Monitor pool wait time and active connections for tuning.",
+    "metadata": {
+      "category": "performance_optimization",
+      "tags": [
+        "connection_pooling",
+        "database",
+        "pools"
+      ]
+    }
+  },
+  "async_io": {
+    "content": "Async I/O overlaps computation with I/O waiting, improving throughput. io_uring (Linux 5.1+) provides the most efficient async I/O with submission/ completion ring buffers, batching syscalls and supporting vectored I/O, op polling, and fixed buffers. epoll (Linux), kqueue (BSD/macOS), IOCP (Windows) — event notification mechanisms for I/O readiness. Async/await patterns (Rust Tokio, C# Task, Python asyncio, JS Promise) express async operations as state machine coroutines. Event loops multiplex I/O events across many concurrent operations efficiently.",
+    "metadata": {
+      "category": "performance_optimization",
+      "tags": [
+        "async_io",
+        "iouring",
+        "event_loop"
+      ]
+    }
+  },
+  "jit_compilation": {
+    "content": "JIT compiles bytecode or interpreted code to native at runtime. Hotspot detection identifies frequently executed (hot) methods for optimization. Tiered compilation: interpreter (level 0), simple C1 compiler (level 1-3), optimized C2 compiler (level 4). Key optimizations: method inlining, escape analysis (stack allocation, lock elision), dead code elimination, loop unrolling, and intrinsic substitution. JIT warmup causes latency spikes in server applications — mitigated by AOT precompilation (GraalVM native-image, .NET ReadyToRun) or profile-guided training.",
+    "metadata": {
+      "category": "performance_optimization",
+      "tags": [
+        "jit",
+        "compilation",
+        "hotspot"
+      ]
+    }
+  },
+  "aot_compilation": {
+    "content": "AOT produces native binaries before deployment, eliminating JIT warmup. Native languages (C, C++, Rust, Go, Zig) always compile AOT. Managed language AOT: C# Native AOT (trimmed self-contained binaries, no JIT), GraalVM native-image (Java closed-world analysis, reflection config), Kotlin/Native (LLVM backend), Swift (compiled via LLVM). Benefits: instant startup, predictable performance, smaller memory, container-friendly. Tradeoffs: no runtime code generation, limited reflection, larger binary size, platform-specific.",
+    "metadata": {
+      "category": "performance_optimization",
+      "tags": [
+        "aot",
+        "compilation",
+        "native"
+      ]
+    }
+  },
+  "simd": {
+    "content": "SIMD performs one operation on multiple data elements simultaneously. x86 SIMD: SSE (128-bit, 4 floats/2 doubles), AVX (256-bit, 8 floats/4 doubles), AVX-512 (512-bit, 16 floats/8 doubles) with mask registers and embedded rounding. ARM NEON (128-bit, 4 floats/2 doubles), SVE (scalable vector length, 128-2048 bits). Auto-vectorization by modern compilers (GCC -O3 -march=native, Clang, MSVC) catches simple reductions and independent operations. Explicit SIMD via intrinsics (xmmintrin.h, arm_neon.h) or platform-abstracted libraries (highway, simde, xsimd) for complex algorithms.",
+    "metadata": {
+      "category": "performance_optimization",
+      "tags": [
+        "simd",
+        "avx",
+        "neon",
+        "vectorization"
+      ]
+    }
+  },
+  "cache_locality": {
+    "content": "CPU cache locality exploits memory hierarchy for performance. Temporal locality: reuse recently accessed data — keep hot data in registers/cache, loop interchange for inner loop access to same cache line. Spatial locality: access adjacent memory — process arrays sequentially (linear access stride-1), prefer struct of arrays (SoA) over array of structs (AoS) for hot paths, pad structs to cache line boundaries. False sharing: threads on different cores write different fields of same cache line, causing expensive MESI protocol invalidations — solved by cache line padding and per-thread data separation.",
+    "metadata": {
+      "category": "performance_optimization",
+      "tags": [
+        "cache",
+        "locality",
+        "false_sharing"
+      ]
+    }
+  },
+  "branch_prediction": {
+    "content": "Modern CPUs predict branch outcomes to keep pipelines full (20+ stages). Correct prediction costs ~0 cycles; misprediction costs 10-20 cycle pipeline flush. Static prediction: forward branches not taken, backward branches taken. Dynamic prediction: 2-bit saturating counter, local/global history correlating predictors, TAGE (TAgged GEometric) — 95%+ accuracy on server code. Branchless programming: avoid unpredictable branches in hot paths using arithmetic (x = cond * a + !cond * b), conditional move (x86 CMOV), select (SIMD blend), and lookup tables. PGO collects branch statistics for recompilation.",
+    "metadata": {
+      "category": "performance_optimization",
+      "tags": [
+        "branch_prediction",
+        "pgo",
+        "branchless"
+      ]
+    }
+  },
+  "database_sharding": {
+    "content": "Sharding horizontally partitions data across database instances. Hash sharding: hash shard key (user_id % N) for uniform distribution, but resharding requires rehashing. Range sharding: contiguous key ranges per shard for efficient range scans, but can create hot spots. Directory sharding: lookup service maps keys to shards for flexible, complex routing. Consistent hashing (Dynamo, Cassandra) minimizes data movement during shard addition/removal — only K/N fraction of keys move. Cross-shard challenges: distributed transactions (XA, Saga), joins (application-level), aggregations (map-reduce), and global secondary indexes.",
+    "metadata": {
+      "category": "performance_optimization",
+      "tags": [
+        "sharding",
+        "database",
+        "horizontal_scaling"
+      ]
+    }
+  },
+  "cdn_optimization": {
+    "content": "CDNs cache content at edge locations close to users. Cache hit ratio optimization: appropriate TTL for content types (static: long TTL, versioned URLs; dynamic: short TTL or bypass), cache key design (include relevant query params, exclude noise), purge strategies (immediate for updates, wildcard for batch). Dynamic content acceleration: TCP optimizations (optimized congestion control, keep-alive), route optimization (backbone routing), TLS connection reuse. Image optimization: WebP/AVIF conversion, resizing to device dimensions, quality tuning (85-90 for photos).",
+    "metadata": {
+      "category": "performance_optimization",
+      "tags": [
+        "cdn",
+        "edge_caching",
+        "optimization"
+      ]
+    }
+  },
+  "load_balancing": {
+    "content": "Load balancers distribute traffic across servers. Algorithms: round-robin (equal distribution), least connections (to currently least loaded), IP hash (session persistence), weighted variants (different backend capacities), random (simple, works well statistically). Layer 4 (TCP level): simple, fast, works with any protocol — HAProxy, AWS NLB. Layer 7 (HTTP level): content-aware routing, health checks, SSL termination, rate limiting, circuit breaking — HAProxy, NGINX, Envoy, Traefik. Consistent hashing LBs minimize rebalancing when backends change.",
+    "metadata": {
+      "category": "performance_optimization",
+      "tags": [
+        "load_balancing",
+        "haproxy",
+        "nginx"
+      ]
+    }
+  },
+  "gpu_acceleration": {
+    "content": "GPU acceleration uses massively parallel cores for compute workloads. CUDA thread hierarchy: grids of blocks of threads (1024 threads/block), with warp (32 threads) as scheduling unit. Memory hierarchy: global (large, high latency), shared (small, fast, per-block), registers (per-thread), local (spilled registers), constant/texture (cached, read-only). Memory coalescing: adjacent threads should access adjacent memory for full bandwidth. Occupancy: ratio of active warps to maximum, limited by register/shared memory per SM. Reach 10-100x speedup over CPU for matrix operations, image processing, neural networks.",
+    "metadata": {
+      "category": "performance_optimization",
+      "tags": [
+        "gpu",
+        "cuda",
+        "parallel_computing"
+      ]
+    }
+  },
+  "database_replication": {
+    "content": "Replication copies data to multiple nodes for read scaling and HA. Leader-follower (primary-replica): writes to primary, async/sync replication to replicas. Synchronous: commit waits for N replicas to acknowledge — data durability but write latency. Asynchronous: faster writes but small replication lag — replicas may be stale. Multi-leader: writes accepted on any leader with conflict resolution (last-write-wins CRDT, application-merge). Read replicas scale SELECT queries — distribute read traffic, but handle with stale reads. Failover: automatic promotion with monitoring (Patroni for PostgreSQL, Orchestrator for MySQL).",
+    "metadata": {
+      "category": "performance_optimization",
+      "tags": [
+        "replication",
+        "high_availability",
+        "read_replicas"
+      ]
+    }
+  },
+  "serialization_performance": {
+    "content": "Serialization format choice impacts throughput. Protocol Buffers: compact binary, schema evolution (field numbers, optional/required), code-generated parsers, small size. FlatBuffers: zero-copy deserialization (read directly from buffer without parsing), great for games and mobile. MessagePack: efficient binary JSON. Cap'n Proto: similar to FlatBuffers with better feature set. Performance: JSON is 8-18x slower than binary formats in Go benchmarks due to reflection-heavy parsing. Schema evolution is critical for long-lived systems — always prefer schematized binary formats over schemaless text for performance-critical paths.",
+    "metadata": {
+      "category": "performance_optimization",
+      "tags": [
+        "serialization",
+        "protobuf",
+        "flatbuffers"
+      ]
+    }
+  },
+  "network_optimization": {
+    "content": "Network optimization reduces latency and improves throughput. TCP tuning: socket buffer sizing (net.core.rmem_max/wmem_max, auto-tuning), congestion control algorithm (BBR for high-bandwidth long-distance, CUBIC for general), TCP_NODELAY to disable Nagle, TCP_QUICKACK for low-latency, TSO/GRO for segmentation offload. HTTP/2 multiplexing reduces head-of-line blocking at application layer. HTTP/3 (QUIC over UDP) eliminates TCP HoL blocking entirely with independent stream multiplexing. Connection reuse and preconnect reduce DNS + TCP + TLS handshake overhead.",
+    "metadata": {
+      "category": "performance_optimization",
+      "tags": [
+        "network",
+        "tcp",
+        "http2",
+        "quic"
+      ]
+    }
+  },
+  "embedding_database": {
+    "content": "Vector DB indexing affects RAG performance. HNSW: navigable small-world graphs, excellent search speed (parameter M for connections, ef for search breadth), but high memory (~2x vector size) and slower indexing. IVF: inverted file index clustering (nlist centroids), nprobe controls accuracy/speed tradeoff, lower memory than HNSW. Product Quantization (PQ): compresses vectors by dividing and encoding sub-vector residuals with codebooks, reducing memory 4-16x with small accuracy loss. DiskANN: SSD-based Vamana graph index for billion-scale datasets. Choose based on dataset size, latency SLA, and memory budget.",
+    "metadata": {
+      "category": "performance_optimization",
+      "tags": [
+        "vector_db",
+        "hnsw",
+        "ivf",
+        "pq"
+      ]
+    }
+  }
+}

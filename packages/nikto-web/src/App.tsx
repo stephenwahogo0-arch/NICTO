@@ -1,16 +1,24 @@
 import { Routes, Route, NavLink } from 'react-router-dom'
-import { Terminal, Cpu, Shield, Wallet, Activity, Settings, Hand } from 'lucide-react'
+import { Terminal, Cpu, Shield, Wallet, Activity, Settings, Hand, Eye, TrendingUp, Briefcase, Zap } from 'lucide-react'
 import Dashboard from './pages/Dashboard'
 import Agents from './pages/Agents'
 import Security from './pages/Security'
 import Crypto from './pages/Crypto'
 import TerminalPage from './pages/Terminal'
 import GesturePage from './pages/Gesture'
+import AutopilotPro from './pages/AutopilotPro'
+import Business from './pages/Business'
+import EagleEye from './pages/EagleEye'
+import Prediction from './pages/Prediction'
 
 const nav = [
   { to: '/', icon: Activity, label: 'Dashboard' },
   { to: '/agents', icon: Cpu, label: 'Agents' },
   { to: '/security', icon: Shield, label: 'Security' },
+  { to: '/eagle', icon: Eye, label: 'Eagle Eye' },
+  { to: '/predict', icon: TrendingUp, label: 'Predict' },
+  { to: '/autopilot', icon: Zap, label: 'Autopilot' },
+  { to: '/business', icon: Briefcase, label: 'Business' },
   { to: '/crypto', icon: Wallet, label: 'Crypto' },
   { to: '/gesture', icon: Hand, label: 'Gesture' },
   { to: '/terminal', icon: Terminal, label: 'Terminal' },
@@ -45,6 +53,10 @@ export default function App() {
           <Route path="/crypto" element={<Crypto />} />
           <Route path="/gesture" element={<GesturePage />} />
           <Route path="/terminal" element={<TerminalPage />} />
+          <Route path="/autopilot" element={<AutopilotPro />} />
+          <Route path="/business" element={<Business />} />
+          <Route path="/eagle" element={<EagleEye />} />
+          <Route path="/predict" element={<Prediction />} />
         </Routes>
       </main>
     </div>

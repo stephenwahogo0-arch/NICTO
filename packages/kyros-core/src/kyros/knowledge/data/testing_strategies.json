@@ -1,0 +1,269 @@
+{
+  "unit_testing": {
+    "content": "Unit tests verify individual functions, methods, or classes in isolation. Tests should be fast (milliseconds), deterministic, and independent (no shared state, parallelizable). Arrange-Act-Assert (AAA) structures tests clearly: set up test data, execute the code under test, verify expectations. Fixtures (pytest) provide reusable setup/teardown with automatic scope management (function, class, module, session). Mocking replaces external dependencies with test doubles. Good unit tests serve as executable documentation — test names describe behavior.",
+    "metadata": {
+      "category": "testing_strategies",
+      "tags": [
+        "unit_testing",
+        "pytest",
+        "mocking"
+      ]
+    }
+  },
+  "integration_testing": {
+    "content": "Integration tests verify multiple components working together with real dependencies. Tests exercise real databases (test databases with migrations), network endpoints (wiremock/mockserver for HTTP), filesystems (temporary directories), and message queues. Testcontainers provide disposable Docker containers for databases, message brokers, and other services. Contract testing (Pact, Spring Cloud Contract) verifies API compatibility between services without full deployment. Integration tests are slower than unit tests, so focus on critical interaction paths.",
+    "metadata": {
+      "category": "testing_strategies",
+      "tags": [
+        "integration",
+        "contract_testing",
+        "testcontainers"
+      ]
+    }
+  },
+  "e2e_testing": {
+    "content": "End-to-end tests verify complete user workflows through the full application stack. Playwright and Cypress provide browser automation for web e2e with auto-waiting, network interception, and cross-browser support. E2e tests focus on critical user journeys: registration, login, search, purchase, logout. Page Object Model (POM) encapsulates page-specific selectors and actions for maintainability. E2e tests are the slowest and most flaky — run a focused subset in CI and parallelize across browsers/shard.",
+    "metadata": {
+      "category": "testing_strategies",
+      "tags": [
+        "e2e",
+        "playwright",
+        "cypress"
+      ]
+    }
+  },
+  "property_based_testing": {
+    "content": "Property-based testing generates random inputs to verify invariants for all valid inputs. Properties describe universal truths: serialization roundtrips (encode/decode yields original), sorting stability (equal elements retain relative order), division by zero returns error code. Hypothesis (Python) automatically shrinks failing cases to minimal counterexamples with @given decorator and strategies (integers, text, lists, custom). QuickCheck (Haskell, Rust) pioneered the approach. Property tests find edge cases missed by example-based tests, especially in data processing, parsing, and distributed systems.",
+    "metadata": {
+      "category": "testing_strategies",
+      "tags": [
+        "property_based",
+        "hypothesis",
+        "quickcheck"
+      ]
+    }
+  },
+  "fuzz_testing": {
+    "content": "Fuzz testing provides random/mutated inputs to find crashes, hangs, and memory errors. Coverage-guided fuzzers (libFuzzer, AFL++): instrument code for coverage tracking, mutate inputs to maximize coverage. Grammar-based fuzzers: generate structurally valid inputs from format specifications (protocol buffers, HTTP, JSON). In-memory fuzzing tests API functions directly without process restart. Continuous fuzzing (OSS-Fuzz, ClusterFuzz, CIFuzz) integrates fuzzing into CI with corpus management, crash deduplication, and regression testing.",
+    "metadata": {
+      "category": "testing_strategies",
+      "tags": [
+        "fuzzing",
+        "libfuzzer",
+        "afl",
+        "oss_fuzz"
+      ]
+    }
+  },
+  "mutation_testing": {
+    "content": "Mutation testing evaluates test quality by introducing code mutations (changing operators, conditions, return values) and checking if tests detect them. Surviving mutations indicate untested behavior. Tools: mutmut (Python), PIT (Java, integrates with Maven/Gradle), Stryker (JavaScript, C#, Scala), go-mutesting (Go). Mutation operators include: negate condition, remove method call, change return value, replace constant, invert logical operator. Mutation score = killed / total mutants. Target 80-90% for critical code, accept lower for trivial code (getters, DTOs).",
+    "metadata": {
+      "category": "testing_strategies",
+      "tags": [
+        "mutation_testing",
+        "mutmut",
+        "pit"
+      ]
+    }
+  },
+  "a_b_testing": {
+    "content": "A/B testing compares two variants to determine which performs better on metrics. Hypothesis testing: null hypothesis (no difference), alternative hypothesis (significant difference). Statistical significance: p-value < 0.05 (95% confidence), confidence intervals around effect size. Sample size calculation ensures sufficient statistical power (80%) to detect minimum detectable effect. Practical significance (effect size) matters more than statistical significance. Multi-armed bandit: epsilon-greedy (explore random fraction), Thompson sampling (Bayesian probability matching), dynamically allocates traffic to better variants.",
+    "metadata": {
+      "category": "testing_strategies",
+      "tags": [
+        "ab_testing",
+        "statistics",
+        "bandit"
+      ]
+    }
+  },
+  "smoke_testing": {
+    "content": "Smoke tests verify basic system functionality after deployment — does the application start, respond, connect to dependencies, and handle basic operations? Smoke suites run in minutes covering: server startup (readiness probe passes), database connectivity (query returns), auth endpoints (login succeeds), core API (CRUD on primary resource), dependency health (cache, queue, external service reachable). Smoke tests catch deployment issues: missing env variables, configuration errors, dependency version mismatches, broken migrations.",
+    "metadata": {
+      "category": "testing_strategies",
+      "tags": [
+        "smoke_testing",
+        "deployment",
+        "health_check"
+      ]
+    }
+  },
+  "regression_testing": {
+    "content": "Regression testing ensures new changes don't break existing functionality. Automated regression suites run on every code change. Selective regression testing uses dependency analysis (build dependency graph, affected modules) to run only tests covering changed code. Visual regression testing (Percy, Chromatic, Playwright Screenshot) compares screenshots pixel-by-pixel for UI changes with automated diff review. Regression suites grow over time — prune redundant tests, prioritize by business criticality and historical failure rate.",
+    "metadata": {
+      "category": "testing_strategies",
+      "tags": [
+        "regression",
+        "visual_regression",
+        "automation"
+      ]
+    }
+  },
+  "performance_testing": {
+    "content": "Performance testing measures system behavior under load. Load testing: simulate expected concurrent users (k6, Locust, JMeter, Gatling). Stress testing: push beyond expected limits to find breaking point. Soak testing: sustained load over hours to detect memory leaks and performance degradation. Spike testing: sudden load increase tests auto-scaling and connection pool behavior. Key metrics: latency percentiles (p50, p95, p99, p999), throughput (requests/second, transactions/second), error rate, resource utilization (CPU, memory, IO, network). Establish baseline before optimization.",
+    "metadata": {
+      "category": "testing_strategies",
+      "tags": [
+        "performance",
+        "load_testing",
+        "k6",
+        "locust"
+      ]
+    }
+  },
+  "security_testing": {
+    "content": "Security testing identifies vulnerabilities. SAST (Static Analysis): scans source code for vulnerability patterns without execution — Bandit (Python), Semgrep (multi-language, custom rules), CodeQL (GitHub, query-based analysis), SonarQube (continuous inspection). DAST (Dynamic Analysis): probes running applications — OWASP ZAP (automated scanner, passive/active scanning), Burp Suite (manual testing, intruder, repeater). IAST (Interactive): combines SAST + DAST with runtime instrumentation for accurate vulnerability location. Dependency scanning: Snyk, Dependabot, Trivy, OWASP Dependency-Check for known CVEs in third-party libs.",
+    "metadata": {
+      "category": "testing_strategies",
+      "tags": [
+        "security_testing",
+        "sast",
+        "dast",
+        "dependency_scanning"
+      ]
+    }
+  },
+  "accessibility_testing": {
+    "content": "Accessibility testing ensures usability by people with disabilities. Automated tools: axe-core (browser extension, CI integration), Lighthouse accessibility audit, WAVE (browser extension, API). Checks: missing alt text, insufficient color contrast (WCAG AA 4.5:1, AAA 7:1), missing ARIA attributes, keyboard traps, focus order, heading hierarchy, form label associations. Manual: screen reader (JAWS, NVDA, VoiceOver), keyboard-only navigation (tab, enter, escape, arrow keys), zoom to 200%, disable CSS to verify semantic structure. WCAG 2.1 AA is the minimum legal standard in most jurisdictions.",
+    "metadata": {
+      "category": "testing_strategies",
+      "tags": [
+        "accessibility",
+        "wcag",
+        "screen_reader"
+      ]
+    }
+  },
+  "reliability_testing": {
+    "content": "Reliability testing verifies system resilience. Chaos engineering: intentionally inject failures (Netflix Chaos Monkey kills instances, Litmus Chaos for Kubernetes, Gremlin for network/resource faults) to validate system behavior. Fault tolerance verification: circuit breakers trip and open (Hystrix, resilience4j), retry mechanisms with backoff, failover between AZs/regions. Disaster recovery testing: backup restoration validation, cross-region failover, RPO (recovery point objective) measurement, RTO (recovery time objective) verification. Steady-state hypothesis defines normal operation metrics.",
+    "metadata": {
+      "category": "testing_strategies",
+      "tags": [
+        "reliability",
+        "chaos_engineering",
+        "disaster_recovery"
+      ]
+    }
+  },
+  "test_coverage": {
+    "content": "Test coverage measures code exercised by tests. Line coverage: executed lines / total lines. Branch coverage: executed branches / total branches (if, switch, ternary). Path coverage: executed paths / total possible paths (expensive, often impractical for complex code). Coverage tools: pytest-cov (Python, HTML/XML reports), JaCoCo (Java, integrates with Maven/Gradle), Istanbul (JavaScript, nyc CLI), cargo-tarpaulin (Rust). Coverage thresholds: 80% line coverage for most projects, 90% for critical systems. Coverage data identifies dead code and guides test prioritization toward uncovered risky areas.",
+    "metadata": {
+      "category": "testing_strategies",
+      "tags": [
+        "coverage",
+        "code_coverage",
+        "metrics"
+      ]
+    }
+  },
+  "tdd": {
+    "content": "Test-Driven Development writes tests before production code in red-green-refactor cycle. Red: write a failing test defining desired behavior. Green: write minimal code to pass. Refactor: improve design while keeping tests green. TDD produces testable, loosely-coupled code with automatic high coverage. Key practices: test one thing per test, descriptive test names, fast tests, independent tests, use test doubles for external deps. TDD reduces debugging time, encourages simple designs, and provides immediate feedback on code correctness.",
+    "metadata": {
+      "category": "testing_strategies",
+      "tags": [
+        "tdd",
+        "red_green_refactor",
+        "discipline"
+      ]
+    }
+  },
+  "bdd": {
+    "content": "Behavior-Driven Development bridges stakeholders and developers using Gherkin: Given (context), When (action), Then (expected outcome). Cucumber (Ruby/Java/JS), SpecFlow (.NET), and Behave (Python) parse feature files and bind steps to test code. BDD focuses on system behavior from user perspective, not implementation details. Living documentation: executable specifications double as documentation that stays in sync with implementation. Example mapping workshops define concrete examples of desired behavior. Given-When-Then scenarios are readable by non-technical stakeholders.",
+    "metadata": {
+      "category": "testing_strategies",
+      "tags": [
+        "bdd",
+        "gherkin",
+        "cucumber"
+      ]
+    }
+  },
+  "contract_testing": {
+    "content": "Contract testing verifies service interaction conformance. Consumer-driven contracts (CDC): each consumer defines expected API behavior. Pact framework: consumer writes pact file (interaction expectations), provider verifies pact against real implementation. Contract testing catches API breaking changes faster than integration tests — runs in CI without deploying all services. Message pacts for async interactions (Kafka, RabbitMQ). Bi-directional contracts (Spring Cloud Contract): both provider and consumer define contracts for mutual API conformance.",
+    "metadata": {
+      "category": "testing_strategies",
+      "tags": [
+        "contract_testing",
+        "pact",
+        "consumer_driven"
+      ]
+    }
+  },
+  "visual_regression": {
+    "content": "Visual regression detects unintended UI changes via screenshot comparison. Workflow: capture baseline screenshots from known-good version, capture new screenshots on code change, compare using pixel-diff (different pixels count, percentage threshold) or structural analysis (DOM structure comparison). Percy: cloud-based visual review with smart diffing, cross-browser testing, responsive breakpoints. Chromatic: Storybook integration with review workflows, UI review with team approvals. Loki: open-source, Docker-based, integrates with Selenium/Cypress.",
+    "metadata": {
+      "category": "testing_strategies",
+      "tags": [
+        "visual_regression",
+        "percy",
+        "chromatic"
+      ]
+    }
+  },
+  "chaos_engineering": {
+    "content": "Chaos engineering validates system resilience through controlled failure experiments. Principles: define steady state (normal metrics: latency, error rate, throughput), hypothesize continued steady state, introduce realistic failures, monitor for deviation, automate experiments. Fault types: infrastructure (instance termination, network partition, DNS failure), platform (CPU stress, memory pressure, disk I/O saturation), application (slow responses, exceptions, latency injection). Tools: Chaos Monkey (VM termination), LitmusChaos (Kubernetes chaos), Chaos Mesh (network, pod, stress chaos), Gremlin (SaaS with safe experiment controls).",
+    "metadata": {
+      "category": "testing_strategies",
+      "tags": [
+        "chaos_engineering",
+        "resilience",
+        "fault_injection"
+      ]
+    }
+  },
+  "test_architecture": {
+    "content": "Test architecture organizes tests for maintainability and speed. Test pyramid: many fast unit tests (base), fewer integration tests (middle), minimal e2e tests (top). Test trophy (Kent C. Dodds): static analysis (TypeScript, ESLint) + integration tests (core) + e2e (critical paths) + unit (complex logic). Test doubles: mocks (verify interactions), stubs (return fixed values), fakes (working lightweight implementation), spies (record calls), dummies (passed but unused). Test configuration: environment variables per environment, test profiles/spring profiles, Docker compose for dependencies.",
+    "metadata": {
+      "category": "testing_strategies",
+      "tags": [
+        "test_architecture",
+        "test_pyramid",
+        "test_doubles"
+      ]
+    }
+  },
+  "snapshot_testing": {
+    "content": "Snapshot testing captures output (rendered component, serialized data) and compares against stored snapshots. Jest snapshot testing: toMatchSnapshot() for React components, toMatchInlineSnapshot() for inline snapshots in test files. Snapshot updates require --updateSnapshot flag and developer review to confirm changes are intentional. Snapshot tests are brittle with non-deterministic output (dates, random IDs, auto-increment IDs) — mock these values before snapshotting. Snapshot feedback is less informative than assertion-based testing — diffs show what changed but not what's correct.",
+    "metadata": {
+      "category": "testing_strategies",
+      "tags": [
+        "snapshot_testing",
+        "jest",
+        "inline_snapshot"
+      ]
+    }
+  },
+  "golden_testing": {
+    "content": "Golden testing (approval testing) compares output against approved reference files (golden files). Write output to file, compare to golden file on disk, fail with diff if mismatch. Human reviews golden file update PRs to approve intentional changes. Excellent for testing: code generators (output correctness), compilers (generated assembly/bytecode), formatters (formatted output), serialization (binary output), image generation. Instagram's Spectral (Python), ApprovalTests (multi-language), and jest-image-snapshot for image golden testing.",
+    "metadata": {
+      "category": "testing_strategies",
+      "tags": [
+        "golden_testing",
+        "approval_testing",
+        "reference"
+      ]
+    }
+  },
+  "test_pyramid": {
+    "content": "The test pyramid guides test distribution across granularity levels. Base: many fast, isolated unit tests (milliseconds, hundreds+). Middle: fewer integration tests (seconds, dozens). Top: minimal e2e tests (minutes, handful). The inverted pyramid (many e2e, few unit) causes slow feedback and flaky suites. The trophy variant (Kent C. Dodds): replace e2e with integration tests + static analysis for web apps — more confidence per test than unit, faster and less flaky than e2e. Choose distribution based on application type (data pipeline: unit-heavy, web CRUD: integration-heavy).",
+    "metadata": {
+      "category": "testing_strategies",
+      "tags": [
+        "test_pyramid",
+        "strategy",
+        "distribution"
+      ]
+    }
+  },
+  "parameterized": {
+    "content": "Parameterized tests run the same test logic with multiple inputs/outputs. pytest.mark.parametrize('input,expected', [(1,2), (3,4)]) provides clean parameter declaration. JUnit 5 @ParameterizedTest with @ValueSource, @CsvSource, @MethodSource. Test generators eliminate copy-paste for covering boundary values, error conditions, equivalence classes (valid, invalid, boundary). Clear test output naming (pytest ids parameter, JUnit @DisplayName) identifies which combination failed for debugging. Parameterized tests improve coverage without test code duplication.",
+    "metadata": {
+      "category": "testing_strategies",
+      "tags": [
+        "parameterized",
+        "parametrize",
+        "data_driven"
+      ]
+    }
+  }
+}

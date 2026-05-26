@@ -1,7 +1,7 @@
 """Debug local inference classification."""
 import sys
-sys.path.insert(0, "packages/nikto-core/src")
-from nikto.providers.local_inference import LocalInferenceEngine
+sys.path.insert(0, "packages/kyros-core/src")
+from kyros.providers.local_inference import LocalInferenceEngine
 
 e = LocalInferenceEngine()
 
@@ -9,7 +9,7 @@ tests = {
     "hello": "greeting",
     "who are you": "about",
     "tell me about yourself": "about",
-    "nikto what can you do": "about",
+    "kyros what can you do": "about",
     "help": "help",
     "write python code": "code",
     "play pong": "game",
@@ -32,9 +32,9 @@ for query, expected in tests.items():
     print(f"  [{status}] '{query}' -> {result} (expected {expected})")
 
 generation_tests = {
-    "hello": ["NIKTO", "Hello"],
+    "hello": ["KYROS", "Hello"],
     "write python code for sorting": ["Python"],
-    "bank account": ["NIKTO Finance"],
+    "bank account": ["KYROS Finance"],
     "help": ["Code", "Chat"],
 }
 for query, expected_keywords in generation_tests.items():
