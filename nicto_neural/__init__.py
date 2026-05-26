@@ -20,7 +20,18 @@ from .learning.meta_learner import MetaLearner
 from .learning.reward_model import RewardModel
 from .metrics.super_benchmark import SuperBenchmark
 
-__version__ = "2.0.0"
+# Real AI Module Imports
+from .run_nicto import NICTOInference
+from .nicto_image_gen import NICTOImageGen
+from .nicto_video_gen import NICTOVideoGen
+from .nicto_game_builder import NICTOGameBuilder
+from .setup_real_ai import run as setup_real_ai
+from .train_nicto import main as train_nicto
+from .build_training_data import main as build_training_data
+from .nicto_master import main as nicto_master
+
+__version__ = "2.1.0"
+__codename__ = "REAL_AI"
 
 __all__ = [
     "NeuralCore",
@@ -48,5 +59,13 @@ __all__ = [
     "MetaLearner",
     "RewardModel",
     "SuperBenchmark",
-
+    # Real AI Modules
+    "NICTOInference",
+    "NICTOImageGen",
+    "NICTOVideoGen",
+    "NICTOGameBuilder",
+    "setup_real_ai",
+    "train_nicto",
+    "build_training_data",
+    "nicto_master",
 ]
