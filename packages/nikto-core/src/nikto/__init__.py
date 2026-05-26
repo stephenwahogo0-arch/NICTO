@@ -57,6 +57,35 @@ from nikto.synthetic.engine import SyntheticEngine
 from nikto.consciousness.expansions.engine import ConsciousnessExpansion
 from nikto.reasoning.engine import ReasoningEngine
 from nikto.brain.engine import BrainEngine
+
+# NICTO Core Brain - Brain-first AI architecture
+from nikto.brain import (
+    NiktoBrain,
+    NiktoIdentity,
+    NiktoReasoner,
+    NiktoLongTermMemory,
+    NiktoLearner,
+    NiktoKnowledgeCore,
+    NiktoEmotionalCore,
+    NiktoConscience,
+    NiktoLanguageEngine,
+    NiktoGoalSystem,
+    # Models
+    Intent,
+    Perception,
+    Reasoning,
+    NiktoThought,
+    JudgmentResult,
+    Memory,
+    MemoryEvent,
+    UserModel,
+    KnowledgeFact,
+    KnowledgeSet,
+    LearningResult,
+    Goal,
+    GoalProgress,
+    GoalReport,
+)
 from nikto.resilience.engine import ResilienceEngine
 from nikto.diagnostics.engine import DiagnosticsEngine
 from nikto.avatar.engine import AvatarEngine
@@ -172,6 +201,31 @@ __all__ = [
     "ConsciousnessExpansion",
     "ReasoningEngine",
     "BrainEngine",
+    # NICTO Core Brain exports
+    "NiktoBrain",
+    "NiktoIdentity",
+    "NiktoReasoner",
+    "NiktoLongTermMemory",
+    "NiktoLearner",
+    "NiktoKnowledgeCore",
+    "NiktoEmotionalCore",
+    "NiktoConscience",
+    "NiktoLanguageEngine",
+    "NiktoGoalSystem",
+    "Intent",
+    "Perception",
+    "Reasoning",
+    "NiktoThought",
+    "JudgmentResult",
+    "Memory",
+    "MemoryEvent",
+    "UserModel",
+    "KnowledgeFact",
+    "KnowledgeSet",
+    "LearningResult",
+    "Goal",
+    "GoalProgress",
+    "GoalReport",
     "ResilienceEngine",
     "DiagnosticsEngine",
     "AvatarEngine",
