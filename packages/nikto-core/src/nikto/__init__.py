@@ -138,6 +138,11 @@ from nikto.sensors import WiFiGestureMonitor, GestureEvent, MovementClassifier, 
 # Quantum Computing — IBM Quantum integration
 from nikto.quantum import IBMQuantumEngine, QuantumResult, QuantumCircuits
 
+# Knowledge Loader — 8 knowledge collections (195+ entries)
+from nikto.knowledge.loader import (
+    load_all_collections, get_collection, list_collections, search_collections,
+)
+
 # Registration, Privacy & Safety
 from nikto.registration import UserRegistry, RegistrationData, RegistrationFlow
 from nikto.privacy import get_privacy_policy, get_policy_summary
@@ -256,4 +261,6 @@ __all__ = [
     "WiFiGestureMonitor", "GestureEvent", "MovementClassifier", "SleepMonitor",
     # Quantum Computing
     "IBMQuantumEngine", "QuantumResult", "QuantumCircuits",
+    # Knowledge Loader
+    "load_all_collections", "get_collection", "list_collections", "search_collections",
 ]

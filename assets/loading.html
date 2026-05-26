@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NIKTO — Loading</title>
+<style>
+  *{ margin:0; padding:0; box-sizing:border-box; }
+
+  body{
+    background:#0a0a0a;
+    display:flex; align-items:center; justify-content:center;
+    height:100vh; overflow:hidden;
+    font-family:'Segoe UI',system-ui,sans-serif;
+  }
+
+  /* ── Hex background pattern ── */
+  .hex-bg{
+    position:fixed; inset:0; z-index:0; opacity:.08;
+    background-image:
+      linear-gradient(30deg, #333 12%, transparent 12.5%, transparent 87%, #333 87.5%, #333),
+      linear-gradient(150deg, #333 12%, transparent 12.5%, transparent 87%, #333 87.5%, #333),
+      linear-gradient(30deg, #333 12%, transparent 12.5%, transparent 87%, #333 87.5%, #333),
+      linear-gradient(150deg, #333 12%, transparent 12.5%, transparent 87%, #333 87.5%, #333),
+      linear-gradient(60deg, #222 25%, transparent 25.5%, transparent 75%, #222 75%, #222),
+      linear-gradient(60deg, #222 25%, transparent 25.5%, transparent 75%, #222 75%, #222);
+    background-size:80px 140px;
+    background-position:0 0, 0 0, 40px 70px, 40px 70px, 0 0, 40px 70px;
+  }
+
+  .container{
+    position:relative; z-index:1;
+    display:flex; flex-direction:column; align-items:center; gap:40px;
+  }
+
+  /* ═══════════════════════════════════════════
+     COIN — JS-driven two-sided logo
+     ═══════════════════════════════════════════ */
+
+  .coin-scene{
+    width:300px; height:300px;
+    perspective:900px;
+    position:relative;
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  /* Outer glow ring */
+  .glow-ring{
+    position:absolute; inset:-24px;
+    border-radius:50%;
+    border:2px solid rgba(160,180,200,.15);
+    animation: pulseRing 3s ease-in-out infinite;
+    pointer-events:none;
+  }
+  .glow-ring::after{
+    content:''; position:absolute; inset:-10px;
+    border-radius:50%;
+    border:1px solid rgba(160,180,200,.07);
+  }
+  @keyframes pulseRing{
+    0%,100%{ transform:scale(1); opacity:.5; }
+    50%    { transform:scale(1.08); opacity:1; }
+  }
+
+  /* The coin — driven by JS for precise image swapping */
+  .coin{
+    width:280px; height:280px;
+    position:relative;
+    filter: drop-shadow(0 0 40px rgba(140,160,190,.3));
+    will-change:transform;
+  }
+  .coin img{
+    width:100%; height:100%;
+    object-fit:contain;
+    pointer-events:none;
+    display:block;
+  }
+
+  /* Metallic shimmer overlay */
+  .coin::after{
+    content:'';
+    position:absolute; inset:0;
+    background:linear-gradient(
+      105deg,
+      transparent 30%,
+      rgba(255,255,255,.12) 45%,
+      rgba(255,255,255,.25) 50%,
+      rgba(255,255,255,.12) 55%,
+      transparent 70%
+    );
+    z-index:10;
+    pointer-events:none;
+    opacity:0;
+  }
+
+  /* ── Text ── */
+  .brand{
+    text-align:center;
+    animation: fadeUp 1.2s ease-out both;
+  }
+  .brand h1{
+    font-size:42px; font-weight:300; letter-spacing:18px;
+    color:#c8cdd4;
+    text-shadow:0 0 30px rgba(160,180,200,.25);
+    margin-bottom:6px;
+  }
+  .brand .sub{
+    font-size:13px; letter-spacing:6px; color:#6a7080;
+    text-transform:uppercase;
+  }
+  @keyframes fadeUp{
+    from{ opacity:0; transform:translateY(20px); }
+    to  { opacity:1; transform:translateY(0); }
+  }
+
+  /* ── Progress bar ── */
+  .progress-wrap{
+    width:280px; height:3px;
+    background:rgba(255,255,255,.06);
+    border-radius:2px; overflow:hidden;
+    animation: fadeUp 1.6s ease-out both;
+  }
+  .progress-bar{
+    height:100%; width:0%;
+    background:linear-gradient(90deg, #4a5568, #8a9bb0, #c8cdd4);
+    border-radius:2px;
+    animation: load 8s cubic-bezier(.25,.46,.45,.94) forwards;
+  }
+  @keyframes load{
+    0%  { width:0%;   }
+    15% { width:12%;  }
+    30% { width:28%;  }
+    50% { width:55%;  }
+    70% { width:72%;  }
+    85% { width:88%;  }
+    95% { width:96%;  }
+    100%{ width:100%; }
+  }
+
+  .status{
+    font-size:11px; letter-spacing:3px; color:#4a5060;
+    text-transform:uppercase;
+    animation: fadeUp 2s ease-out both;
+  }
+  .status span{
+    animation: blink 1.4s step-end infinite;
+  }
+  @keyframes blink{
+    50%{ opacity:0; }
+  }
+
+  /* ── Corner hex accents ── */
+  .corner-hex{
+    position:fixed; width:60px; height:60px; opacity:.04; z-index:0;
+  }
+  .corner-hex svg{ width:100%; height:100%; fill:#aab; }
+  .corner-hex.tl{ top:30px; left:30px; }
+  .corner-hex.tr{ top:30px; right:30px; }
+  .corner-hex.bl{ bottom:30px; left:30px; }
+  .corner-hex.br{ bottom:30px; right:30px; }
+
+  /* ── Particle shimmer ── */
+  .particles{
+    position:fixed; inset:0; z-index:0; pointer-events:none;
+  }
+  .particle{
+    position:absolute;
+    width:2px; height:2px;
+    background:rgba(180,190,210,.3);
+    border-radius:50%;
+    animation: drift linear infinite;
+  }
+  @keyframes drift{
+    from{ transform:translateY(100vh) scale(0); opacity:0; }
+    10% { opacity:1; }
+    90% { opacity:1; }
+    to  { transform:translateY(-10vh) scale(1); opacity:0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hex-bg"></div>
+
+<!-- Corner hexagons -->
+<div class="corner-hex tl"><svg viewBox="0 0 100 115"><polygon points="50,0 100,28.8 100,86.4 50,115 0,86.4 0,28.8"/></svg></div>
+<div class="corner-hex tr"><svg viewBox="0 0 100 115"><polygon points="50,0 100,28.8 100,86.4 50,115 0,86.4 0,28.8"/></svg></div>
+<div class="corner-hex bl"><svg viewBox="0 0 100 115"><polygon points="50,0 100,28.8 100,86.4 50,115 0,86.4 0,28.8"/></svg></div>
+<div class="corner-hex br"><svg viewBox="0 0 100 115"><polygon points="50,0 100,28.8 100,86.4 50,115 0,86.4 0,28.8"/></svg></div>
+
+<!-- Floating particles -->
+<div class="particles" id="particles"></div>
+
+<div class="container">
+
+  <div class="coin-scene">
+    <div class="glow-ring"></div>
+    <div class="coin" id="coin">
+      <img id="coinImg" src="images/nikto-logo-2.png" alt="NIKTO">
+    </div>
+  </div>
+
+  <div class="brand">
+    <h1>NIKTO</h1>
+    <div class="sub">Cognitive Systems AI</div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-bar"></div>
+  </div>
+
+  <div class="status">
+    Initializing neural core<span>_</span>
+  </div>
+</div>
+
+<script>
+  // ══════════════════════════════════════════════════════════════
+  // JS-driven coin flip animation
+  // Sequence per cycle (5s total):
+  //   Phase 1: 0s-1.5s   → flip forward 180° (front → back)
+  //   Phase 2: 1.5s-2.5s → hold on back face
+  //   Phase 3: 2.5s-4.5s → full 360° spin
+  //   Phase 4: 4.5s-5.0s → settle on front face
+  //
+  // Image swaps happen when the coin is edge-on (90° / 270°),
+  // so the user never sees a pop — only the new face emerging.
+  // ══════════════════════════════════════════════════════════════
+
+  const FRONT = 'images/nikto-logo-2.png';  // math formulas (3³)
+  const BACK  = 'images/nikto-logo-1.png';  // alien + person
+
+  const coin    = document.getElementById('coin');
+  const coinImg = document.getElementById('coinImg');
+  const shimmer = coin; // ::after pseudo
+
+  const CYCLE = 5000; // ms
+
+  // Easing: ease-in-out
+  function easeInOut(t) {
+    return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+  }
+
+  let start = null;
+
+  function animate(ts) {
+    if (!start) start = ts;
+    const elapsed = (ts - start) % CYCLE;
+    const t = elapsed / CYCLE; // 0..1
+
+    let angle;
+    let showFront;
+
+    if (t < 0.30) {
+      // Phase 1: flip 0° → 180° (ease)
+      const p = easeInOut(t / 0.30);
+      angle = p * 180;
+      showFront = angle < 90;
+    } else if (t < 0.45) {
+      // Phase 2: hold at 180° (back face visible)
+      angle = 180;
+      showFront = false;
+    } else if (t < 0.90) {
+      // Phase 3: full 360° spin (180° → 540°)
+      const p = easeInOut((t - 0.45) / 0.45);
+      angle = 180 + p * 360;
+      // Normalize to 0-360 for face detection
+      const norm = ((angle % 360) + 360) % 360;
+      showFront = (norm < 90 || norm > 270);
+    } else {
+      // Phase 4: settle at 540° = 180° → snap to 0° (back to front)
+      // Quick ease from 540 to 720 (= 0°)
+      const p = easeInOut((t - 0.90) / 0.10);
+      angle = 540 + p * 180;
+      const norm = ((angle % 360) + 360) % 360;
+      showFront = (norm < 90 || norm > 270);
+    }
+
+    // Apply 3D rotation.
+    // When the back face is visible, also scaleX(-1) to cancel
+    // the horizontal mirror that rotateY produces at 180°.
+    if (showFront) {
+      coin.style.transform = 'rotateY(' + angle + 'deg)';
+    } else {
+      coin.style.transform = 'rotateY(' + angle + 'deg) scaleX(-1)';
+    }
+
+    // Swap image at edge-on moment (never visible to user)
+    const target = showFront ? FRONT : BACK;
+    if (coinImg.getAttribute('data-current') !== target) {
+      coinImg.src = target;
+      coinImg.setAttribute('data-current', target);
+    }
+
+    // Shimmer on ::after — triggered via CSS variable
+    const norm2 = ((angle % 360) + 360) % 360;
+    const isFlipping = (norm2 > 60 && norm2 < 120) || (norm2 > 240 && norm2 < 300);
+    coin.style.setProperty('--shimmer', isFlipping ? '1' : '0');
+
+    requestAnimationFrame(animate);
+  }
+
+  // Apply shimmer via the CSS variable
+  const style = document.createElement('style');
+  style.textContent = '.coin::after { opacity: var(--shimmer, 0); transition: opacity 0.15s; }';
+  document.head.appendChild(style);
+
+  coinImg.setAttribute('data-current', FRONT);
+  requestAnimationFrame(animate);
+
+  // ── Particles ──
+  const container = document.getElementById('particles');
+  for (let i = 0; i < 25; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.animationDuration = (6 + Math.random() * 10) + 's';
+    p.style.animationDelay = (Math.random() * 8) + 's';
+    p.style.width = p.style.height = (1 + Math.random() * 2) + 'px';
+    container.appendChild(p);
+  }
+
+  // ── Status messages ──
+  const msgs = [
+    'Initializing neural core',
+    'Loading 17B parameters',
+    'Activating 6 specialist brains',
+    'Calibrating ELO ratings',
+    'Preparing knowledge base',
+    'Syncing memory stores',
+    'Warming transformer layers',
+    'System ready'
+  ];
+  const statusEl = document.querySelector('.status');
+  let mi = 0;
+  setInterval(() => {
+    mi = (mi + 1) % msgs.length;
+    statusEl.innerHTML = msgs[mi] + '<span>_</span>';
+  }, 2800);
+</script>
+</body>
+</html>

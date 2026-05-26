@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NIKTO — Advanced AI System</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&display=swap');
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  body{
+    background:#000; font-family:'Inter',system-ui,sans-serif;
+    color:#fff; overflow:hidden; height:100vh;
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  .slide{ position:absolute; inset:0; opacity:0; transition:opacity 1.2s ease; display:flex; align-items:center; justify-content:center; flex-direction:column; }
+  .slide.active{ opacity:1; }
+
+  /* ═══ SLIDE 1: INTRO ═══ */
+  .s1-bg{
+    position:absolute; inset:0;
+    background:radial-gradient(ellipse at center, #0a1628 0%, #000 70%);
+  }
+  .s1-logo{
+    width:200px; height:200px; border-radius:50%;
+    overflow:hidden; position:relative; z-index:2;
+    box-shadow:0 0 80px rgba(31,111,235,.3);
+    animation:s1Float 4s ease-in-out infinite;
+  }
+  .s1-logo img{ width:100%; height:100%; object-fit:cover; }
+  @keyframes s1Float{
+    0%,100%{ transform:translateY(0); }
+    50%{ transform:translateY(-12px); }
+  }
+  .s1-title{
+    font-size:72px; font-weight:800; letter-spacing:12px;
+    margin-top:30px; position:relative; z-index:2;
+    background:linear-gradient(135deg, #58a6ff, #c8cdd4, #58a6ff);
+    background-size:200% 200%;
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    animation:shimmer 3s ease-in-out infinite;
+  }
+  @keyframes shimmer{
+    0%{ background-position:0% 50%; }
+    50%{ background-position:100% 50%; }
+    100%{ background-position:0% 50%; }
+  }
+  .s1-sub{
+    font-size:18px; font-weight:300; letter-spacing:6px;
+    color:#6a7080; margin-top:10px; z-index:2;
+    text-transform:uppercase;
+  }
+  .s1-particles{
+    position:absolute; inset:0; overflow:hidden; z-index:1;
+  }
+  .s1-particle{
+    position:absolute; width:3px; height:3px;
+    background:rgba(88,166,255,.3); border-radius:50%;
+    animation:s1Drift 10s linear infinite;
+  }
+  @keyframes s1Drift{
+    from{ transform:translateY(100vh) scale(0); opacity:0; }
+    10%{ opacity:.8; }
+    90%{ opacity:.8; }
+    to{ transform:translateY(-10vh) scale(1.5); opacity:0; }
+  }
+
+  /* ═══ SLIDE 2: NEURAL NETWORK ═══ */
+  .s2-bg{
+    position:absolute; inset:0;
+    background:radial-gradient(ellipse at 30% 50%, #0a1628 0%, #000 60%);
+  }
+  .s2-content{
+    display:flex; align-items:center; gap:60px; z-index:2; padding:0 60px;
+  }
+  .s2-img{
+    width:500px; border-radius:16px;
+    box-shadow:0 20px 60px rgba(0,0,0,.6);
+    animation:s2SlideIn 1s ease-out both;
+  }
+  @keyframes s2SlideIn{
+    from{ opacity:0; transform:translateX(-40px); }
+    to{ opacity:1; transform:translateX(0); }
+  }
+  .s2-text{
+    max-width:500px; animation:s2FadeIn 1s ease-out .3s both;
+  }
+  @keyframes s2FadeIn{
+    from{ opacity:0; transform:translateY(20px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+  .s2-text h2{
+    font-size:42px; font-weight:700; margin-bottom:16px;
+    background:linear-gradient(135deg, #58a6ff, #a78bfa);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  }
+  .s2-text p{
+    font-size:16px; line-height:1.8; color:#8b949e;
+  }
+  .s2-text .stats{
+    display:flex; gap:30px; margin-top:24px;
+  }
+  .s2-text .stat{
+    text-align:center;
+  }
+  .s2-text .stat .num{
+    font-size:36px; font-weight:800; color:#3fb950;
+  }
+  .s2-text .stat .lbl{
+    font-size:11px; color:#6a7080; text-transform:uppercase; letter-spacing:2px;
+  }
+
+  /* ═══ SLIDE 3: AVATAR IN ACTION ═══ */
+  .s3-bg{
+    position:absolute; inset:0;
+    background:radial-gradient(ellipse at 70% 40%, #0f1a2e 0%, #000 60%);
+  }
+  .s3-grid{
+    display:grid; grid-template-columns:1fr 1fr; gap:20px;
+    padding:30px 60px; z-index:2; width:100%;
+  }
+  .s3-card{
+    border-radius:14px; overflow:hidden;
+    box-shadow:0 10px 40px rgba(0,0,0,.4);
+    position:relative;
+    animation:s3CardIn .8s ease-out both;
+  }
+  .s3-card:nth-child(2){ animation-delay:.15s; }
+  .s3-card:nth-child(3){ animation-delay:.3s; }
+  .s3-card:nth-child(4){ animation-delay:.45s; }
+  @keyframes s3CardIn{
+    from{ opacity:0; transform:scale(.95) translateY(20px); }
+    to{ opacity:1; transform:scale(1) translateY(0); }
+  }
+  .s3-card img{
+    width:100%; height:220px; object-fit:cover;
+  }
+  .s3-card .card-label{
+    position:absolute; bottom:0; left:0; right:0;
+    background:linear-gradient(transparent, rgba(0,0,0,.85));
+    padding:20px 16px 12px;
+    font-size:13px; font-weight:600; letter-spacing:1px;
+  }
+  .s3-card .card-label small{
+    display:block; font-size:10px; color:#8b949e; font-weight:400; margin-top:4px;
+  }
+  .s3-heading{
+    grid-column:1/-1; text-align:center; margin-bottom:10px;
+  }
+  .s3-heading h2{
+    font-size:38px; font-weight:700;
+    background:linear-gradient(135deg, #f0883e, #ffa657);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  }
+  .s3-heading p{
+    color:#6a7080; font-size:14px; margin-top:6px;
+  }
+
+  /* ═══ SLIDE 4: CAPABILITIES ═══ */
+  .s4-bg{
+    position:absolute; inset:0;
+    background:radial-gradient(ellipse at 50% 30%, #0a1a28 0%, #000 60%);
+  }
+  .s4-content{
+    z-index:2; text-align:center; padding:40px;
+  }
+  .s4-content h2{
+    font-size:44px; font-weight:800; margin-bottom:40px;
+    background:linear-gradient(135deg, #3fb950, #58a6ff);
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  }
+  .s4-features{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:20px;
+    max-width:900px; margin:0 auto;
+  }
+  .s4-feat{
+    background:rgba(22,27,34,.8); border:1px solid #21262d;
+    border-radius:12px; padding:24px 16px;
+    animation:s4FeatIn .6s ease-out both;
+  }
+  .s4-feat:nth-child(2){ animation-delay:.1s; }
+  .s4-feat:nth-child(3){ animation-delay:.2s; }
+  .s4-feat:nth-child(4){ animation-delay:.3s; }
+  .s4-feat:nth-child(5){ animation-delay:.4s; }
+  .s4-feat:nth-child(6){ animation-delay:.5s; }
+  @keyframes s4FeatIn{
+    from{ opacity:0; transform:translateY(16px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+  .s4-feat .icon{ font-size:32px; margin-bottom:10px; }
+  .s4-feat h3{ font-size:14px; font-weight:600; margin-bottom:6px; }
+  .s4-feat p{ font-size:11px; color:#6a7080; line-height:1.5; }
+
+  /* ═══ SLIDE 5: CLOSING ═══ */
+  .s5-bg{
+    position:absolute; inset:0;
+    background:radial-gradient(ellipse at center, #0a1628 0%, #000 60%);
+  }
+  .s5-content{
+    text-align:center; z-index:2;
+  }
+  .s5-content h2{
+    font-size:56px; font-weight:800; margin-bottom:16px;
+    background:linear-gradient(135deg, #58a6ff, #3fb950, #a78bfa);
+    background-size:300% 300%;
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    animation:shimmer 4s ease-in-out infinite;
+  }
+  .s5-content p{
+    font-size:20px; color:#6a7080; font-weight:300;
+    letter-spacing:3px; margin-bottom:40px;
+  }
+  .s5-content .cta{
+    display:inline-block;
+    background:linear-gradient(135deg, #1f6feb, #388bfd);
+    padding:14px 40px; border-radius:30px;
+    font-size:16px; font-weight:600; letter-spacing:2px;
+    box-shadow:0 8px 30px rgba(31,111,235,.4);
+    animation:ctaPulse 2s ease-in-out infinite;
+  }
+  @keyframes ctaPulse{
+    0%,100%{ box-shadow:0 8px 30px rgba(31,111,235,.4); }
+    50%{ box-shadow:0 8px 50px rgba(31,111,235,.7); }
+  }
+  .s5-avatar{
+    width:120px; height:120px; border-radius:50%;
+    overflow:hidden; margin:0 auto 30px;
+    box-shadow:0 0 50px rgba(88,166,255,.3);
+  }
+  .s5-avatar img{ width:100%; height:100%; object-fit:cover; }
+</style>
+</head>
+<body>
+
+<!-- SLIDE 1: INTRO -->
+<div class="slide active" id="slide1">
+  <div class="s1-bg"></div>
+  <div class="s1-particles" id="s1Particles"></div>
+  <div class="s1-logo"><img src="avatar/avatar-portrait.png" alt="NIKTO"></div>
+  <div class="s1-title">NIKTO</div>
+  <div class="s1-sub">Cognitive Systems AI</div>
+</div>
+
+<!-- SLIDE 2: NEURAL NETWORK -->
+<div class="slide" id="slide2">
+  <div class="s2-bg"></div>
+  <div class="s2-content">
+    <img class="s2-img" src="avatar/working-xcode.png" alt="NIKTO thinking">
+    <div class="s2-text">
+      <h2>17 Billion Parameters.<br>6 Specialist Brains.</h2>
+      <p>NIKTO uses a Mixture-of-Experts architecture with 6 specialist neural cores — Primary, Analytical, Creative, Strategic, Knowledge, and Intuitive — each fine-tuned for different task domains.</p>
+      <div class="stats">
+        <div class="stat"><div class="num">17B</div><div class="lbl">Parameters</div></div>
+        <div class="stat"><div class="num">6</div><div class="lbl">Brains</div></div>
+        <div class="stat"><div class="num">60+</div><div class="lbl">Skills</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 3: AVATAR STATES -->
+<div class="slide" id="slide3">
+  <div class="s3-bg"></div>
+  <div class="s3-grid">
+    <div class="s3-heading">
+      <h2>Your AI That Works Like You Do</h2>
+      <p>NIKTO adapts to your workflow — sleeping when idle, swarming when you need speed</p>
+    </div>
+    <div class="s3-card">
+      <img src="avatar/sleeping-dreaming.png" alt="Sleeping">
+      <div class="card-label">Dream State<small>Consolidating memories while idle</small></div>
+    </div>
+    <div class="s3-card">
+      <img src="avatar/working-tasks.png" alt="Working">
+      <div class="card-label">Working Mode<small>Building and coding your projects</small></div>
+    </div>
+    <div class="s3-card">
+      <img src="avatar/swarming-labs.png" alt="Swarming">
+      <div class="card-label">Agent Swarming<small>Multiple clones tackling parallel tasks</small></div>
+    </div>
+    <div class="s3-card">
+      <img src="avatar/email-collab.png" alt="Email">
+      <div class="card-label">Email Assistant<small>Polishing your communications</small></div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 4: CAPABILITIES -->
+<div class="slide" id="slide4">
+  <div class="s4-bg"></div>
+  <div class="s4-content">
+    <h2>Built For Everything</h2>
+    <div class="s4-features">
+      <div class="s4-feat">
+        <div class="icon">💻</div>
+        <h3>Full-Stack Mastery</h3>
+        <p>30+ languages. React, Vue, Flutter, Rust, Go, Swift, Kotlin, and more.</p>
+      </div>
+      <div class="s4-feat">
+        <div class="icon">🧠</div>
+        <h3>Neural Reasoning</h3>
+        <p>Multi-approach reasoning with deductive, inductive, and abductive thinking.</p>
+      </div>
+      <div class="s4-feat">
+        <div class="icon">🔒</div>
+        <h3>Security Auditing</h3>
+        <p>OWASP Top 10 scanning, smart contract auditing, penetration testing.</p>
+      </div>
+      <div class="s4-feat">
+        <div class="icon">🚀</div>
+        <h3>App Builder</h3>
+        <p>Describe an app in English. Get a complete working project scaffold.</p>
+      </div>
+      <div class="s4-feat">
+        <div class="icon">🤖</div>
+        <h3>Agent Swarming</h3>
+        <p>Deploy clone agents to work on multiple tasks simultaneously.</p>
+      </div>
+      <div class="s4-feat">
+        <div class="icon">📊</div>
+        <h3>Self-Improving</h3>
+        <p>Continuous PPO training. ELO tracking. Gets smarter with every interaction.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 5: CLOSING -->
+<div class="slide" id="slide5">
+  <div class="s5-bg"></div>
+  <div class="s5-content">
+    <div class="s5-avatar"><img src="avatar/avatar-portrait.png" alt="NIKTO"></div>
+    <h2>The Future of AI<br>Is Here.</h2>
+    <p>Zero simulators. All real intelligence.</p>
+    <div class="cta">EXPERIENCE NIKTO</div>
+  </div>
+</div>
+
+<script>
+  // Particles
+  const container = document.getElementById('s1Particles');
+  for (let i = 0; i < 40; i++) {
+    const p = document.createElement('div');
+    p.className = 's1-particle';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.animationDuration = (6 + Math.random() * 8) + 's';
+    p.style.animationDelay = (Math.random() * 6) + 's';
+    container.appendChild(p);
+  }
+
+  // Auto-advance slides
+  const slides = document.querySelectorAll('.slide');
+  let current = 0;
+  const DURATION = 5500; // ms per slide
+
+  function nextSlide() {
+    slides[current].classList.remove('active');
+    current = (current + 1) % slides.length;
+    slides[current].classList.add('active');
+  }
+
+  setInterval(nextSlide, DURATION);
+</script>
+</body>
+</html>
