@@ -59,9 +59,9 @@ def run_module(name: str, extra_args: list = None):
 
 
 def status():
-    print("\nNICTO Real AI — System Status\n")
+    print("\nNICTO Real AI - System Status\n")
     has_gpu, gpu_name, vram = check_gpu()
-    print(f"  GPU:        {'YES — ' + gpu_name + f' ({vram:.1f}GB VRAM)' if has_gpu else 'NO (CPU only)'}")
+    print(f"  GPU:        {'YES - ' + gpu_name + f' ({vram:.1f}GB VRAM)' if has_gpu else 'NO (CPU only)'}")
     print(f"  Python:     {sys.version.split()[0]}")
     print(f"  Platform:   {sys.platform}")
 
@@ -77,13 +77,13 @@ def status():
             count = sum(1 for _ in f)
         print(f"  Training:   {count} examples loaded")
     else:
-        print(f"  Training:   No data — run `build_data` first")
+        print(f"  Training:   No data - run `build_data` first")
 
     # Check module files
     for name, info in MODULES.items():
         path = HERE / info["file"]
-        status_icon = "✓" if path.exists() else "✗"
-        print(f"  [{status_icon}] {name:12s} — {info['desc']}")
+        status_icon = "[OK]" if path.exists() else "[FAIL]"
+        print(f"  {status_icon:8} {name:12s} - {info['desc']}")
 
     print()
 

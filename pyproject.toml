@@ -200,6 +200,7 @@ ml = [
 
 [project.scripts]
 kyros = "kyros_cli.main:cli"
+nicto = "nicto.cli.main:main"
 
 [tool.uv]
 dev-dependencies = [
@@ -208,10 +209,11 @@ dev-dependencies = [
     "mypy>=1.10.0",
     "ruff>=0.6.0",
 ]
-package = false
+package = true
 
 [tool.hatch.build.targets.wheel]
 packages = [
     "packages/kyros-core/src/kyros",
-    "packages/kyros-cli/src/kyros_cli"
+    "packages/kyros-cli/src/kyros_cli",
+    "src/nicto"
 ]

@@ -31,7 +31,6 @@ MANIFEST
 # Build artifacts
 dist/
 build/
-<<<<<<< HEAD
 *.egg-info/
 
 # Coverage
@@ -105,4 +104,8 @@ packages/*/target/
 
 # ChromaDB / embedding storage
 [0-9a-f]*-[0-9a-f]*-[0-9a-f]*-[0-9a-f]*/
->>>>>>> 43bf2ee (Massive upgrade: multilingual AI, IBM Quantum, Wi-Fi gesture, ArkTS visual effects, Go scanners)
+
+# Generated training data
+nicto_neural/training_data/
+nicto_neural/nicto_outputs/
+nicto_neural/hardware_config.json
