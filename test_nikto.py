@@ -2880,7 +2880,8 @@ async def test_registration_safety_extended():
 async def test_config_edge_cases():
     print("\n=== 60. CONFIG EDGE CASES & BOUNDARY TESTS ===")
     try:
-        from nikto.config.settings import NiktoConfig, MemoryConfig, AgentConfig
+        from nikto.config.settings import NiktoConfig, MemoryConfig
+        from nikto.agent.base import AgentConfig
 
         # NiktoConfig defaults
         nc = NiktoConfig()
