@@ -20,7 +20,7 @@ export default function App() {
   return (
     <div className="flex h-screen bg-gray-950">
       <nav className="w-16 bg-gray-900 border-r border-gray-800 flex flex-col items-center py-4 gap-2">
-        <div className="text-cyan-400 font-bold text-lg mb-4">N</div>
+        <img src="/nikto-logo.svg" alt="NIKTO" className="mb-4 h-10 w-10 rounded-xl border border-cyan-500/40 object-cover shadow-lg shadow-cyan-500/20" />
         {nav.map(n => (
           <NavLink
             key={n.to}

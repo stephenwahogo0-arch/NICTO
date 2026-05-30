@@ -35,7 +35,7 @@ export function useGesture() {
 
 export function useEffectOverlay(duration: number = 800) {
   const [activeEffect, setActiveEffect] = useState<{ effect: EffectBinding; opacity: number } | null>(null)
-  const timer = useRef<ReturnType<typeof setTimeout>>()
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const show = useCallback((binding: EffectBinding) => {
     if (timer.current) clearTimeout(timer.current)
