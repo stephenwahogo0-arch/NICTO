@@ -4,12 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NIKTO — Neural Intelligence Kernel</title>
+<link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+<link rel="apple-touch-icon" href="/assets/nikto-logo.svg">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 :root{--bg:#0a0a0f;--surface:#12121a;--border:#1e1e2a;--text:#c8c8d0;--text-dim:#5a5a6a;--accent:#00aaff;--accent2:#00ffcc;--gradient:linear-gradient(135deg,#00aaff,#00ffcc)}
 body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',Roboto,sans-serif;overflow:hidden;height:100vh}
 .app{display:flex;height:100vh}
 .sidebar{width:240px;background:var(--surface);border-right:1px solid var(--border);padding:20px 12px;display:flex;flex-direction:column;flex-shrink:0}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.logo-mark{width:44px;height:44px;border-radius:12px;object-fit:cover;border:1px solid rgba(0,170,255,.45);box-shadow:0 0 22px rgba(0,255,204,.15)}
 .logo{font-size:24px;font-weight:800;background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:2px;letter-spacing:-.5px}
 .logo-sub{font-size:10px;color:var(--text-dim);margin-bottom:24px;letter-spacing:2px;text-transform:uppercase}
 .nav-section{font-size:10px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1.5px;padding:8px 12px 4px;margin-top:8px}
@@ -85,8 +89,7 @@ input[type="number"]{width:80px}
 <body>
 <div class="app">
   <div class="sidebar">
-    <div class="logo">NIKTO</div>
-    <div class="logo-sub">Neural Intelligence Kernel</div>
+    <div class="brand"><img class="logo-mark" src="/assets/nikto-logo.svg" alt="NIKTO logo"><div><div class="logo">NIKTO</div><div class="logo-sub">Neural Intelligence Kernel</div></div></div>
     <div class="nav-section">Interface</div>
     <div class="nav-item active" onclick="switchPanel('chat')"><span class="nav-icon">◆</span> Chat</div>
     <div class="nav-item" onclick="switchPanel('training')"><span class="nav-icon">◈</span> Training</div>

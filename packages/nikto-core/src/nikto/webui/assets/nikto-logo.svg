@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">NIKTO logo</title>
+  <desc id="desc">A metallic NIKTO AI systems emblem with nested triangles and a stylized N over a dark cyber grid.</desc>
+  <defs>
+    <linearGradient id="steel" x1="80" y1="40" x2="430" y2="480" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f5fbff"/>
+      <stop offset="0.22" stop-color="#9eb4c0"/>
+      <stop offset="0.48" stop-color="#e8f3f8"/>
+      <stop offset="0.72" stop-color="#4d616d"/>
+      <stop offset="1" stop-color="#d8e6ec"/>
+    </linearGradient>
+    <linearGradient id="plate" x1="96" y1="48" x2="416" y2="464" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#d3e4ea"/>
+      <stop offset="0.55" stop-color="#4d5e68"/>
+      <stop offset="1" stop-color="#161f27"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="35%" r="65%">
+      <stop offset="0" stop-color="#9ff7ff" stop-opacity="0.44"/>
+      <stop offset="0.45" stop-color="#00aaff" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#000" flood-opacity="0.6"/>
+    </filter>
+    <pattern id="hex" width="42" height="36" patternUnits="userSpaceOnUse" patternTransform="scale(1.1)">
+      <path d="M10 1h22l10 17-10 17H10L0 18Z" fill="none" stroke="#5ee7ff" stroke-opacity="0.16" stroke-width="2"/>
+    </pattern>
+  </defs>
+
+  <rect width="512" height="512" rx="74" fill="#05080d"/>
+  <rect width="512" height="512" rx="74" fill="url(#hex)" opacity="0.7"/>
+  <circle cx="256" cy="202" r="245" fill="url(#glow)"/>
+
+  <path d="M256 25 450 126v260L256 487 62 386V126Z" fill="url(#plate)" stroke="#d7e8ef" stroke-opacity="0.75" stroke-width="4" filter="url(#shadow)"/>
+  <path d="M256 42 431 134v244L256 470 81 378V134Z" fill="none" stroke="#0af" stroke-opacity="0.24" stroke-width="2"/>
+
+  <g filter="url(#shadow)" stroke="url(#steel)" stroke-width="9" stroke-linejoin="round" fill="none">
+    <path d="M256 106 357 282H155Z"/>
+    <path d="M256 344 155 168h202Z"/>
+    <path d="M256 148 316 254H196Z" stroke-width="7"/>
+  </g>
+
+  <g filter="url(#shadow)">
+    <path d="M206 130V65l100 100V63" fill="none" stroke="url(#steel)" stroke-width="18" stroke-linecap="square" stroke-linejoin="miter"/>
+    <path d="M216 130V88l80 80V67" fill="none" stroke="#101820" stroke-width="6" stroke-linecap="square" stroke-linejoin="miter" opacity="0.55"/>
+  </g>
+
+  <g font-family="Orbitron, Rajdhani, Eurostile, Arial, sans-serif" text-anchor="middle" fill="url(#steel)" filter="url(#shadow)">
+    <text x="256" y="269" font-size="96" font-weight="800">3</text>
+    <text x="256" y="337" font-size="42" font-weight="700">(−6Ⅲ)</text>
+    <text x="105" y="283" font-size="42" font-weight="700">(6Ⅲ</text>
+    <text x="407" y="283" font-size="42" font-weight="700">6Ⅲ)</text>
+    <text x="256" y="421" font-size="58" font-weight="700" letter-spacing="9">NIKTO</text>
+    <text x="256" y="459" font-size="18" font-weight="500" letter-spacing="5" fill="#d8f8ff">COGNITIVE SYSTEMS AI</text>
+  </g>
+</svg>
