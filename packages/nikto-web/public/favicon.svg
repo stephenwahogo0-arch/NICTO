@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="NIKTO icon">
+  <defs>
+    <linearGradient id="g" x1="10" y1="6" x2="54" y2="58"><stop stop-color="#f6fbff"/><stop offset=".5" stop-color="#7a8f9d"/><stop offset="1" stop-color="#d8f7ff"/></linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="#05080d"/>
+  <path d="M32 5 56 18v28L32 59 8 46V18Z" fill="#1b2730" stroke="#73e8ff" stroke-opacity=".65"/>
+  <path d="M32 17 46 43H18Z" fill="none" stroke="url(#g)" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M22 25h20L32 45Z" fill="none" stroke="url(#g)" stroke-width="4" stroke-linejoin="round"/>
+  <path d="M23 20V9l18 18V9" fill="none" stroke="url(#g)" stroke-width="5" stroke-linejoin="miter"/>
+</svg>

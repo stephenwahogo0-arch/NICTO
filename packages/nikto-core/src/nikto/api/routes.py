@@ -15,6 +15,7 @@ _orch = None
 _miner = None
 
 WEBUI_DIR = Path(__file__).parent.parent / "webui"
+WEBUI_ASSETS_DIR = WEBUI_DIR / "assets"
 
 
 def _ensure_agent():
@@ -45,6 +46,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+if WEBUI_ASSETS_DIR.exists():
+    app.mount("/assets", StaticFiles(directory=str(WEBUI_ASSETS_DIR)), name="webui-assets")
 
 
 class ChatRequest(BaseModel):
