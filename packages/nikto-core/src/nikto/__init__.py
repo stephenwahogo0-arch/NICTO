@@ -37,6 +37,22 @@ from nikto.autopilot.enhanced_engine import NiktoAutopilotPro
 from nikto.business.zero_capital_engine import NiktoZeroCapitalEngine
 from nikto.eagle_eye.enhanced_eye import NiktoEagleEye
 from nikto.prediction.future_engine import NiktoFutureEngine
+from nikto.brain.math_brain import MathBrain
+from nikto.security.compliance import NiktoComplianceChecker, ComplianceFramework, ComplianceStatus, ComplianceAssessment
+
+# CUA (Computer Use Agency) availability flag
+try:
+    from nikto.cua.input import InputController
+    from nikto.cua.screen import ScreenController, list_screens
+    from nikto.cua.automation import AutomationStep, StepType
+    _CUA_AVAILABLE = True
+except ImportError:
+    _CUA_AVAILABLE = False
+    InputController = None
+    ScreenController = None
+    list_screens = None
+    AutomationStep = None
+    StepType = None
 
 __all__ = [
     "NICTO_THEME",
@@ -51,6 +67,8 @@ __all__ = [
     "NiktoSwarmEngine", "NiktoPerformanceGraph", "NiktoOrchestrator",
     "NiktoScanner",
     "NiktoAutopilotPro", "NiktoZeroCapitalEngine", "NiktoEagleEye", "NiktoFutureEngine",
+    "MathBrain",
+    "NiktoComplianceChecker", "ComplianceFramework", "ComplianceStatus", "ComplianceAssessment",
     "SCRIPTS",
     "Thought", "MemoryFragment", "Belief", "Goal", "GoalStatus",
     "ThinkingStyle", "EmotionType", "KnowledgeLevel", "EmotionalState", "MoralRule",
