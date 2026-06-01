@@ -118,6 +118,7 @@ print('Animations:', [a.value for a in ae.anim_player.current_anim.__class__])
 | Consciousness Features | 32 | ✅ |
 | Physics & Reality Features | 28 | ✅ |
 | Breakthrough Features | 22 | ✅ |
+| Compliance Framework Checker | 15+ | ✅ |
 
 ---
 
@@ -298,6 +299,16 @@ NIKTO should position as **"faster iteration + predictable performance + integra
 - **hsync.exe**: SHA-256 hash + Merkle-DAG sync
 - **graph.exe**: Dijkstra shortest path + degree centrality
 - Python calls via `subprocess.run()` with JSON I/O — works everywhere with zero C compiler
+
+### Compliance Framework Checker (May 2026)
+- **NiktoComplianceChecker**: Automated compliance assessment against PCI DSS, HIPAA, GDPR, ISO 27001, and more frameworks
+- **Regulatory Support**: Pre-built control mappings for major security and privacy standards
+- **Assessment Features**: 
+  - Automated control evaluation with evidence collection
+  - Remediation guidance for non-compliant items
+  - Historical tracking and trend analysis
+  - Multiple export formats (JSON, CSV, HTML)
+- **Integration**: Works with existing NICTO security modules (scanner, threat intel) for enhanced assessments
 
 ---
 
