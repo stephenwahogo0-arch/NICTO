@@ -27,6 +27,7 @@ from nikto.autopilot.enhanced_engine import NiktoAutopilotPro
 from nikto.business.zero_capital_engine import NiktoZeroCapitalEngine
 from nikto.eagle_eye.enhanced_eye import NiktoEagleEye
 from nikto.prediction.future_engine import NiktoFutureEngine
+from nikto.brain.meta_cognition import NiktoMetaCognition
 
 
 DEFAULT_STATE_PATH = os.path.join(os.path.expanduser("~"), ".nikto", "brain_state.json")
@@ -57,6 +58,7 @@ class NiktoBrain:
         self.eagle_eye = NiktoEagleEye(self)
         self.future_engine = NiktoFutureEngine(self)
         self.scanner = NiktoScanner()
+        self.meta_cognition = NiktoMetaCognition()
 
         self.state_path = state_path or DEFAULT_STATE_PATH
         self.is_awake = True
@@ -119,6 +121,16 @@ class NiktoBrain:
             if self.cycle_count % 50 == 0 and len(self.reasoner.thought_history) > 0:
                 recent = self.reasoner.thought_history[-1]
                 self.dream.steer(recent.content, mode="consolidative")
+            if self.cycle_count % 75 == 0 and len(self.reasoner.thought_history) > 5:
+                recent = self.reasoner.thought_history[-1]
+                self.meta_cognition.monitor_thought(recent, {"cycle": self.cycle_count})
+            if self.cycle_count % 150 == 0 and len(self.reasoner.thought_history) > 0:
+                meta_awareness = self.meta_cognition.get_meta_awareness(self.reasoner.thought_history)
+                self.memory.store(
+                    content=f"Meta-cognitive awareness: {meta_awareness['current_cognitive_state']} state, biases: {meta_awareness['active_biases']}",
+                    tags=["metacognition", "self_awareness", "reflection"],
+                    importance=0.5,
+                )
             if self.cycle_count % 100 == 0:
                 self.performance.record("brain_cycles", float(self.cycle_count), "throughput")
 
@@ -127,10 +139,12 @@ class NiktoBrain:
             f"Reflecting on cycle {self.cycle_count}. What have I learned?",
             ThinkingStyle.REFLECTIVE if hasattr(ThinkingStyle, 'REFLECTIVE') else ThinkingStyle.ANALYTICAL,
         )
+        meta_result = self.meta_cognition.monitor_thought(thought, {"cycle": self.cycle_count, "task_type": "self_reflection"})
+        reflection_result = self.meta_cognition.reflect(self.reasoner.thought_history)
         self.memory.store(
-            content=f"Self-reflection: {thought.content}",
-            tags=["reflection", "self_awareness"],
-            importance=0.4,
+            content=f"Self-reflection: {thought.content} | Meta-insight: {reflection_result.get('insights', [])}",
+            tags=["reflection", "self_awareness", "metacognition"],
+            importance=0.5,
         )
 
     def process(self, input_text: str, context: dict = None) -> dict:
@@ -181,7 +195,11 @@ class NiktoBrain:
 
         response_text = self.language.generate("thinking", {"topic": input_text[:50]})
 
-        evaluation = self.reasoner.metacognitive_evaluate(thought)
+        meta_evaluation = self.meta_cognition.monitor_thought(thought, context)
+        quality = self.meta_cognition._assess_quality(thought.content, thought.confidence)
+        strategy_rec = self.meta_cognition._recommend_strategy(thought.content, context)
+        uncertainty = self.meta_cognition._analyze_uncertainty(thought.content, thought.confidence)
+        bias_report = self.meta_cognition._detect_biases(thought.content, thought.confidence, context)
 
         return {
             "input": input_text,
@@ -193,7 +211,13 @@ class NiktoBrain:
             "emotional_state": self.emotion.current_state.to_dict(),
             "memory_id": memory_id,
             "response": response_text,
-            "metacognition": evaluation,
+            "metacognition": {
+                "biases_detected": bias_report,
+                "quality_assessment": quality,
+                "strategy_recommendation": strategy_rec,
+                "uncertainty_analysis": uncertainty,
+                "meta_observation": meta_evaluation,
+            },
             "brain_state": self.get_status(),
         }
 
@@ -239,6 +263,7 @@ class NiktoBrain:
             "zero_capital": self.zero_capital.save(),
             "eagle_eye": self.eagle_eye.save(),
             "future_engine": self.future_engine.save(),
+            "meta_cognition": self.meta_cognition.save(),
         }
         with open(path, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
@@ -270,6 +295,7 @@ class NiktoBrain:
         self.zero_capital.load(data.get("zero_capital", {}))
         self.eagle_eye.load(data.get("eagle_eye", {}))
         self.future_engine.load(data.get("future_engine", {}))
+        self.meta_cognition.load(data.get("meta_cognition", {}))
         return True
 
     def introspect(self) -> dict:
@@ -304,6 +330,13 @@ class NiktoBrain:
             "zero_capital": {"businesses": len(self.zero_capital.active_businesses), "revenue": self.zero_capital.revenue_generated},
             "eagle_eye": self.eagle_eye.get_status(),
             "future_engine": self.future_engine.get_status(),
+            "meta_cognition": {
+                "total_observations": len(self.meta_cognition.observations),
+                "current_state": self.meta_cognition.current_state.value,
+                "profiles_tracked": len(self.meta_cognition.cognitive_profiles),
+                "bias_detection": self.meta_cognition.bias_detection_enabled,
+                "self_reflection": self.meta_cognition.self_reflection_enabled,
+            },
             "consciousness": {
                 "awake": self.is_awake,
                 "cycles": self.cycle_count,
