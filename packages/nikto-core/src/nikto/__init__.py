@@ -38,6 +38,10 @@ from nikto.business.zero_capital_engine import NiktoZeroCapitalEngine
 from nikto.eagle_eye.enhanced_eye import NiktoEagleEye
 from nikto.prediction.future_engine import NiktoFutureEngine
 from nikto.brain.math_brain import MathBrain
+from nikto.brain.meta_cognition import (
+    NiktoMetaCognition, CognitiveBias, ReasoningQuality, CognitiveState,
+    MetaObservation, CognitiveProfile
+)
 from nikto.security.compliance import NiktoComplianceChecker, ComplianceFramework, ComplianceStatus, ComplianceAssessment
 
 # CUA (Computer Use Agency) availability flag
@@ -69,6 +73,8 @@ __all__ = [
     "NiktoAutopilotPro", "NiktoZeroCapitalEngine", "NiktoEagleEye", "NiktoFutureEngine",
     "MathBrain",
     "NiktoComplianceChecker", "ComplianceFramework", "ComplianceStatus", "ComplianceAssessment",
+    "NiktoMetaCognition", "CognitiveBias", "ReasoningQuality", "CognitiveState",
+    "MetaObservation", "CognitiveProfile",
     "SCRIPTS",
     "Thought", "MemoryFragment", "Belief", "Goal", "GoalStatus",
     "ThinkingStyle", "EmotionType", "KnowledgeLevel", "EmotionalState", "MoralRule",
