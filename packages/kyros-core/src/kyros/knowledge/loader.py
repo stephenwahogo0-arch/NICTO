@@ -1,4 +1,4 @@
-﻿"""ChromaDB-backed knowledge base with 12 collections and 400+ real knowledge entries."""
+"""ChromaDB-backed knowledge base with 12 collections and 400+ real knowledge entries."""
 
 import json
 import logging
