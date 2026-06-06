@@ -1,4 +1,4 @@
-﻿"""KYROSAI Production Skills — 60 real skills for autonomous operation."""
+"""KYROSAI Production Skills — 60 real skills for autonomous operation."""
 
 import hashlib
 import json
