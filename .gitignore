@@ -109,3 +109,9 @@ packages/*/target/
 nicto_neural/training_data/
 nicto_neural/nicto_outputs/
 nicto_neural/hardware_config.json
+
+# Generated game assets
+nicto_outputs/games/1gb_world/
+nicto_outputs/games/*.py
+nicto_neural/nicto_outputs/games/*.pyc
+
