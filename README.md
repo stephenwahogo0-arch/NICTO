@@ -11,15 +11,17 @@ A unified, self-improving artificial intelligence system with its own cognitive 
 | Language | Files | Purpose |
 |----------|-------|---------|
 | **Python** | 516 | Primary language — brain, engines, CLI, builders |
+| **AKNOW#** | 24 | Deterministic knowledge engine — seed-based expansion, 64-domain HyperDomainTree, NeuralRosetta, VirtualLab, GenesisCore |
 | **Rust** | 53 | High-performance core engine, super kernel, triple engine |
 | **Go** | 5 | Background monitor, graph core, hsync engine, odds feed, network scanner |
 | **C++** | 2 | Wi-Fi capture, desktop streamer |
+| **MATLAB (.m)** | 1 | AKNOW# optimizer module |
 | **JavaScript** | 1 | Desktop Electron wrapper |
 | **TypeScript** | 1 | React UI with gesture controls |
 | **HTML** | 1 | Web interface |
 | **CSS** | 1 | Web styling |
 | **Shell (sh)** | 2 | Build scripts |
-| **Batch (bat)** | 2 | Windows utilities |
+| **Batch (bat)** | 5 | Windows utilities + AKNOW# build |
 | **SQL** | 1 | Database operations |
 | **R** | 1 | Statistical computing |
 | **PHP** | 1 | Server-side scripting |
@@ -38,7 +40,7 @@ NIKTO is a full-spectrum AI system with capabilities spanning:
 | Domain | Capability |
 |--------|-----------|
 | **Autonomous Brain** | NICTO Hyperbrain v2.0 — 10 integrated cognitive subsystems (identity, memory, emotion, conscience, reasoning, language, learning, goals, truth, dream) |
-| **Deterministic Knowledge** | AKNOW# engine — 64 domains across 14 families, seed-based deterministic expansion, instant FactTable lookup (463 facts) |
+| **Deterministic Knowledge** | AKNOW# engine — 64 domains across 14 families, seed-based deterministic expansion (C++ native core, Rust parser, Go CLI, MATLAB optimizer), instant FactTable lookup (463 facts) |
 | **Real-Time Intelligence** | GodsEye — live geo-location, weather, time, network awareness |
 | **Virtual Labs** | 11 simulation models — SIR/SEIR/SIRD disease modeling, drug discovery, genetics, optimization |
 | **Code & Development** | Full project scaffolding, code generation in Python/JS/TS/Rust/Go |
@@ -97,6 +99,11 @@ NIKTO/
 │   └── nikto-triple-engine/        # Rust triple-engine
 └── AKNOW##/                        # AKNOW# deterministic knowledge engine
     ├── aknow_omega.py              # GenesisCore, HyperDomainTree (64 domains)
+    ├── genesis_core.cpp            # Native C++ core (compiled to genesis_core.dll)
+    ├── doll_parser.rs              # Rust parser
+    ├── build_iq.go                 # Go CLI tool
+    ├── optimizer.m                 # MATLAB optimizer
+    ├── aknowc.exe                  # AKNOW# native compiler
     └── sdk/                        # Python SDK, NeuralRosetta
 ```
 
