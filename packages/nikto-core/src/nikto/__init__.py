@@ -42,6 +42,12 @@ from nikto.brain.meta_cognition import (
     NiktoMetaCognition, CognitiveBias, ReasoningQuality, CognitiveState,
     MetaObservation, CognitiveProfile
 )
+from nikto.brain.aknow_bridge import AknowBridge
+from nikto.brain.virtual_labs import NiktoVirtualLabs, LabResult
+from nikto.brain.fact_table import FactTable
+from nikto.brain.gods_eye import GodsEye
+from nikto.config.api_keys import NiktoKeyManager
+from nikto.server import app as nikto_app
 from nikto.security.compliance import NiktoComplianceChecker, ComplianceFramework, ComplianceStatus, ComplianceAssessment
 
 # CUA (Computer Use Agency) availability flag
@@ -73,8 +79,9 @@ __all__ = [
     "NiktoAutopilotPro", "NiktoZeroCapitalEngine", "NiktoEagleEye", "NiktoFutureEngine",
     "MathBrain",
     "NiktoComplianceChecker", "ComplianceFramework", "ComplianceStatus", "ComplianceAssessment",
+    "NiktoKeyManager",
     "NiktoMetaCognition", "CognitiveBias", "ReasoningQuality", "CognitiveState",
-    "MetaObservation", "CognitiveProfile",
+    "MetaObservation", "CognitiveProfile",     "AknowBridge", "NiktoVirtualLabs", "LabResult", "FactTable", "GodsEye",
     "SCRIPTS",
     "Thought", "MemoryFragment", "Belief", "Goal", "GoalStatus",
     "ThinkingStyle", "EmotionType", "KnowledgeLevel", "EmotionalState", "MoralRule",

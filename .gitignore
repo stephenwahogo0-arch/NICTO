@@ -115,3 +115,15 @@ nicto_outputs/games/1gb_world/
 nicto_outputs/games/*.py
 nicto_neural/nicto_outputs/games/*.pyc
 
+# Kaggle/Colab training data (large files >100MB each)
+kaggle_data/
+colab_output/
+
+# Generated verification reports
+model_verification_results.json
+MODEL_VERIFICATION_REPORT.md
+verification_results.json
+
+# mypy cache
+.mypy_cache/
+
