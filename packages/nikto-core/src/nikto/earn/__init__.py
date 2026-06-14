@@ -1,0 +1,1 @@
+"""NIKTO Earn Module."""

@@ -1,0 +1,29 @@
+version: "3.9"
+
+services:
+  nicto-x:
+    build:
+      context: ..
+      dockerfile: deployments/Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - nicto_data:/root/.nicto-x
+    environment:
+      - LOG_LEVEL=INFO
+      - AUTH_ENABLED=true
+    restart: unless-stopped
+
+  ui:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ../ui:/app
+    command: sh -c "npm install && npm run build && npx serve@latest out -l 3000"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - nicto-x
+
+volumes:
+  nicto_data:
