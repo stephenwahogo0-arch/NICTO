@@ -28,6 +28,13 @@ from nikto.business.zero_capital_engine import NiktoZeroCapitalEngine
 from nikto.eagle_eye.enhanced_eye import NiktoEagleEye
 from nikto.prediction.future_engine import NiktoFutureEngine
 from nikto.brain.meta_cognition import NiktoMetaCognition
+from nikto.config.api_keys import NiktoKeyManager
+from nicto_game import GameDirector
+
+try:
+    from nicto_x.core.orchestrator import NictoXOrchestrator
+except ImportError:
+    NictoXOrchestrator = None
 
 
 DEFAULT_STATE_PATH = os.path.join(os.path.expanduser("~"), ".nikto", "brain_state.json")
@@ -59,6 +66,9 @@ class NiktoBrain:
         self.future_engine = NiktoFutureEngine(self)
         self.scanner = NiktoScanner()
         self.meta_cognition = NiktoMetaCognition()
+        self.api_keys = NiktoKeyManager()
+        self.nicto_x = NictoXOrchestrator() if NictoXOrchestrator else None
+        self.game_engine = GameDirector()
 
         self.state_path = state_path or DEFAULT_STATE_PATH
         self.is_awake = True
@@ -147,8 +157,32 @@ class NiktoBrain:
             importance=0.5,
         )
 
+    def validate_api_key(self, raw_key: str) -> tuple[bool, Optional[dict]]:
+        self.api_keys.reload()
+        valid, record = self.api_keys.validate_key_with_record(raw_key)
+        if valid and record:
+            return True, {
+                "name": record.name,
+                "prefix": record.prefix,
+                "owner": record.owner,
+                "scopes": list(record.scopes),
+                "usage_count": record.usage_count,
+            }
+        return False, None
+
     def process(self, input_text: str, context: dict = None) -> dict:
         context = context or {}
+
+        api_key = context.pop("api_key", None)
+        if api_key is not None:
+            valid, info = self.validate_api_key(api_key)
+            if not valid:
+                return {
+                    "input": input_text,
+                    "response": "Error: Invalid or revoked API key.",
+                    "error": "invalid_api_key",
+                }
+            context["_auth"] = info
 
         understanding = self.language.understand(input_text)
         thought = self.reasoner.think(
@@ -221,6 +255,100 @@ class NiktoBrain:
             "brain_state": self.get_status(),
         }
 
+    def process_kyros(self, input_text: str, context: dict = None) -> dict:
+        context = context or {}
+        api_key = context.pop("api_key", None)
+        if api_key is not None:
+            valid, info = self.validate_api_key(api_key)
+            if not valid:
+                return {"input": input_text, "response": "Error: Invalid or revoked API key.", "error": "invalid_api_key"}
+        understanding = self.language.understand(input_text)
+        memory_id = self.memory.store(content=f"Kyros processed: {input_text[:200]}", tags=["kyros"], importance=0.2)
+        name = self.identity.name
+        greeting = f"{name}: " if name else ""
+        response_text = f"{greeting}{understanding.get('intent', 'statement')} received. Kyros mode active."
+        return {
+            "input": input_text, "understanding": understanding,
+            "response": response_text, "memory_id": memory_id,
+            "model": "nicto_kyros", "brain_state": {"awake": self.is_awake, "cycle": self.cycle_count},
+        }
+
+    def process_main(self, input_text: str, context: dict = None) -> dict:
+        context = context or {}
+        api_key = context.pop("api_key", None)
+        if api_key is not None:
+            valid, info = self.validate_api_key(api_key)
+            if not valid:
+                return {"input": input_text, "response": "Error: Invalid or revoked API key.", "error": "invalid_api_key"}
+            context["_auth"] = info
+        understanding = self.language.understand(input_text)
+        thought = self.reasoner.think(input_text, ThinkingStyle(context.get("thinking_style", "analytical")), context)
+        moral_check = self.conscience.evaluate(input_text, context)
+        emotional_stimulus = understanding.get("sentiment", {}).get("label", "neutral")
+        if emotional_stimulus == "positive":
+            self.emotion.update(input_text, 0.2, EmotionType.JOY)
+        elif emotional_stimulus == "negative":
+            self.emotion.update(input_text, 0.3, EmotionType.SADNESS)
+        else:
+            self.emotion.update(input_text, 0.1, EmotionType.NEUTRAL)
+        entity_tags = [e.get("word", str(e)) if isinstance(e, dict) else str(e) for e in understanding.get("entities", [])]
+        memory_id = self.memory.store(content=f"Processed: {thought.content[:200]}", tags=entity_tags[:5], importance=0.3, emotional_valence=self.emotion.current_state.valence)
+        factual_key = understanding.get("intent", "statement")
+        self.knowledge.add_fact(f"{factual_key}: {input_text[:100]}", source="user_input", confidence=0.5)
+        self.learner.learn(topic=factual_key, content=input_text[:200], source="conversation")
+        truth_check = self.truth.compute_truth_score(input_text)
+        steer_result = self.dream.steer(thought.content, context.get("dream_mode", "directive"), intensity=0.3)
+        self.performance.record("process_latency", 0.0, "latency")
+        scan_result = {}
+        if hasattr(self, 'scanner') and self.scanner:
+            try:
+                scan_result = {"vulns": self.scanner.search_vulns(input_text)}
+            except Exception:
+                scan_result = {"vulns": []}
+        meta_evaluation = self.meta_cognition.monitor_thought(thought, context)
+        quality = self.meta_cognition._assess_quality(thought.content, thought.confidence)
+        strategy_rec = self.meta_cognition._recommend_strategy(thought.content, context)
+        uncertainty = self.meta_cognition._analyze_uncertainty(thought.content, thought.confidence)
+        bias_report = self.meta_cognition._detect_biases(thought.content, thought.confidence, context)
+        response_text = self.language.generate("thinking", {"topic": input_text[:50]})
+        return {
+            "input": input_text, "understanding": understanding, "thought": thought.to_dict(),
+            "moral_assessment": moral_check, "truth_check": truth_check, "dream_steer": steer_result,
+            "emotional_state": self.emotion.current_state.to_dict(), "memory_id": memory_id,
+            "security_scan": scan_result,
+            "response": response_text,
+            "metacognition": {
+                "biases_detected": bias_report, "quality_assessment": quality,
+                "strategy_recommendation": strategy_rec, "uncertainty_analysis": uncertainty,
+                "meta_observation": meta_evaluation,
+            },
+            "model": "nicto_main", "brain_state": self.get_status(),
+        }
+
+    def process_x(self, input_text: str, context: dict = None) -> dict:
+        context = context or {}
+        if self.nicto_x:
+            try:
+                import inspect
+                proc = self.nicto_x.process(input_text, context)
+                if inspect.iscoroutine(proc):
+                    import asyncio
+                    try:
+                        loop = asyncio.get_running_loop()
+                    except RuntimeError:
+                        loop = None
+                    if loop and loop.is_running():
+                        future = asyncio.run_coroutine_threadsafe(proc, loop)
+                        result = future.result(timeout=30)
+                    else:
+                        result = asyncio.run(proc)
+                else:
+                    result = proc
+                return {"input": input_text, "response": str(result), "model": "nicto_x", "brain_state": self.get_status()}
+            except Exception as e:
+                return {"input": input_text, "response": f"Nicto X error: {e}", "error": str(e), "model": "nicto_x"}
+        return {"input": input_text, "response": "Nicto X orchestrator not available.", "error": "nicto_x_unavailable", "model": "nicto_x"}
+
     async def process_async(self, input_text: str, context: dict = None) -> dict:
         return self.process(input_text, context)
 
@@ -264,6 +392,10 @@ class NiktoBrain:
             "eagle_eye": self.eagle_eye.save(),
             "future_engine": self.future_engine.save(),
             "meta_cognition": self.meta_cognition.save(),
+            "game_engine": {
+                "games_built": self.game_engine._games_built,
+                "build_history": getattr(self.game_engine, '_build_history', []),
+            },
         }
         with open(path, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2, ensure_ascii=False)
@@ -296,6 +428,10 @@ class NiktoBrain:
         self.eagle_eye.load(data.get("eagle_eye", {}))
         self.future_engine.load(data.get("future_engine", {}))
         self.meta_cognition.load(data.get("meta_cognition", {}))
+        game_engine_data = data.get("game_engine", {})
+        self.game_engine._games_built = game_engine_data.get("games_built", 0)
+        if hasattr(self.game_engine, '_build_history'):
+            self.game_engine._build_history = game_engine_data.get("build_history", [])
         return True
 
     def introspect(self) -> dict:
@@ -330,6 +466,8 @@ class NiktoBrain:
             "zero_capital": {"businesses": len(self.zero_capital.active_businesses), "revenue": self.zero_capital.revenue_generated},
             "eagle_eye": self.eagle_eye.get_status(),
             "future_engine": self.future_engine.get_status(),
+            "games_built": self.game_engine._games_built,
+            "game_engine_status": self.game_engine.get_status(),
             "meta_cognition": {
                 "total_observations": len(self.meta_cognition.observations),
                 "current_state": self.meta_cognition.current_state.value,
@@ -360,4 +498,45 @@ class NiktoBrain:
             "business_models": len(self.zero_capital.ZERO_CAPITAL_PLAYBOOKS),
             "eagle_watching": self.eagle_eye.is_watching,
             "predictions": len(self.future_engine.prediction_log._predictions),
+            "game_engine": self.game_engine.get_status(),
         }
+
+    async def build_game_from_prompt(self, prompt: str) -> dict:
+        """Build a game from a natural language prompt using the enhanced GameDirector."""
+        return await self.game_engine.build_from_prompt(prompt)
+
+    async def create_game(self, name: str, genre: str, width: int = 64, height: int = 64,
+                         enemies: int = 10, npcs: int = 5, description: str = "") -> dict:
+        """Create a game with specific parameters."""
+        from nicto_game.core.config import GameConfig, GameGenre, WorldConfig
+        cfg = GameConfig(
+            name=name,
+            genre=GameGenre(genre),
+            world=WorldConfig(width=width, height=height, enemies=enemies, npcs=npcs),
+            description=description,
+        )
+        return await self.game_engine.build_game(cfg)
+
+    async def get_game_status(self) -> dict:
+        """Get detailed status of the game engine."""
+        return self.game_engine.get_status()
+
+    async def list_generated_games(self) -> list:
+        """List all generated games."""
+        return self.game_engine._build_history if hasattr(self.game_engine, '_build_history') else []
+
+    async def get_game_by_name(self, name: str) -> dict:
+        """Get a specific generated game by name."""
+        for game in (self.game_engine._build_history if hasattr(self.game_engine, '_build_history') else []):
+            if game.get("name") == name:
+                return game
+        return None
+
+    async def delete_game(self, name: str) -> bool:
+        """Delete a generated game."""
+        if hasattr(self.game_engine, '_build_history'):
+            self.game_engine._build_history = [
+                g for g in self.game_engine._build_history if g.get("name") != name
+            ]
+            return True
+        return False
