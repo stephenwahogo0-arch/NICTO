@@ -43,7 +43,7 @@ app.add_middleware(
 
 brain: Optional[NiktoBrain] = None
 key_manager: Optional[NiktoKeyManager] = None
-require_auth: bool = True
+require_auth: bool = os.environ.get("NIKTO_NO_AUTH") != "1"
 feedback_store: list[dict] = []
 metrics_store: dict = {
     "start_time": time.time(),
