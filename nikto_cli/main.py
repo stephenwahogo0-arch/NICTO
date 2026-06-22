@@ -3,6 +3,8 @@ import asyncio
 import sys
 import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "packages", "nikto-core", "src"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "packages", "nicto-x", "src"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "packages", "nicto-game", "src"))
 
 import click
 from rich.console import Console
@@ -256,11 +258,11 @@ def daemon():
 
 @cli.command()
 @click.argument("mode", default="directive")
-@click.argument("prompt", nargs=-1, default="explore consciousness")
+@click.argument("prompt", nargs=-1)
 def dream(mode, prompt):
     """Use Dream Steerer to augment thinking"""
     from nikto import NiktoDreamSteerer
-    prompt_str = " ".join(prompt)
+    prompt_str = " ".join(prompt) if prompt else "explore consciousness"
     d = NiktoDreamSteerer()
     result = d.steer(prompt_str, mode)
     console.print(f"[bright_green]Dream Mode:[/bright_green] {result['mode']}")
@@ -366,6 +368,12 @@ def autopilot(action, task_name):
             for k, v in stats.items():
                 table.add_row(k.replace("_", " ").title(), str(v))
             console.print(table)
+        elif action == "start":
+            await ap.start()
+            console.print("[green]Autopilot started[/green]")
+        elif action == "stop":
+            await ap.stop()
+            console.print("[green]Autopilot stopped[/green]")
         elif action == "run":
             name = " ".join(task_name) if task_name else None
             if name:
@@ -383,8 +391,6 @@ def autopilot(action, task_name):
                 results = await ap.run_all_tasks("manual")
                 for r in results:
                     console.print(f"  {r['task_name']}: {'OK' if r['success'] else 'FAIL'}")
-        else:
-            console.print(f"[yellow]Autopilot {action} (simulated)[/yellow]")
     asyncio.run(_run())
 
 
@@ -593,6 +599,365 @@ def predict(question, timeframe, verify, accuracy):
             console.print(f"\n[green]Methodology Used:[/green] {', '.join(prediction.methodology)}")
             console.print(f"\n[dim]Prediction ID: {prediction.id} (save this for verification)[/dim]")
         await brain.sleep()
+    asyncio.run(_run())
+
+
+@cli.group()
+def api_key():
+    """Manage Nikto API keys — generate, list, revoke, validate"""
+    pass
+
+
+@api_key.command("generate")
+@click.argument("name")
+@click.option("--owner", "-o", default="default", help="Owner label for the key")
+@click.option("--scopes", "-s", default=None, help="Comma-separated permission scopes (chat,scan,etc)")
+@click.option("--expires", "-e", default=None, type=int, help="Days until key expires")
+def api_key_generate(name, owner, scopes, expires):
+    """Generate a new API key for external agents/users"""
+    from nikto.config.api_keys import NiktoKeyManager
+
+    mgr = NiktoKeyManager()
+    scope_list = scopes.split(",") if scopes else []
+    raw_key, record = mgr.generate_key(
+        name, owner=owner, scopes=scope_list, expires_in_days=expires
+    )
+
+    console.print(Panel(
+        f"[bold bright_green]API Key Generated[/bold bright_green]\n\n"
+        f"[bold yellow]{raw_key}[/bold yellow]\n\n"
+        f"[dim]┌─ Name:[/dim]      {record.name}\n"
+        f"[dim]├─ Prefix:[/dim]    {record.prefix}\n"
+        f"[dim]├─ Owner:[/dim]     {record.owner}\n"
+        f"[dim]├─ Scopes:[/dim]    {', '.join(record.scopes) if record.scopes else '(none)'}\n"
+        f"[dim]├─ Created:[/dim]   {record.created_at}\n"
+        f"[dim]├─ Expires:[/dim]   {record.expires_at or '(never)'}\n"
+        f"[dim]└─ Enabled:[/dim]   {record.enabled}\n\n"
+        f"[red bold]IMPORTANT: Store this key securely. It will not be shown again.[/red bold]",
+        border_style="bright_green",
+        title="Nikto API Key",
+    ))
+    return raw_key
+
+
+@api_key.command("list")
+def api_key_list():
+    """List all API keys (safe view — no secrets shown)"""
+    from nikto.config.api_keys import NiktoKeyManager
+
+    mgr = NiktoKeyManager()
+    keys = mgr.list_keys()
+
+    if not keys:
+        console.print("[yellow]No API keys found. Generate one with 'nikto api-key generate <name>'[/yellow]")
+        return
+
+    table = Table(title="Nikto API Keys", border_style=NICTO_THEME["colors"]["border_mid"])
+    table.add_column("Prefix", style=NICTO_THEME["colors"]["accent_primary"])
+    table.add_column("Name", style=NICTO_THEME["colors"]["text_primary"])
+    table.add_column("Owner", style=NICTO_THEME["colors"]["text_muted"])
+    table.add_column("Scopes", style=NICTO_THEME["colors"]["text_primary"])
+    table.add_column("Used", style=NICTO_THEME["colors"]["text_muted"])
+    table.add_column("Status", style="bold")
+    table.add_column("Expires", style=NICTO_THEME["colors"]["text_muted"])
+
+    for k in keys:
+        status = "[green]Active[/green]" if k["enabled"] else "[red]Revoked[/red]"
+        scopes = ", ".join(k["scopes"]) if k["scopes"] else "-"
+        expires = k["expires_at"][:10] if k["expires_at"] else "-"
+        table.add_row(
+            k["prefix"],
+            k["name"],
+            k["owner"],
+            scopes,
+            str(k["usage_count"]),
+            status,
+            expires,
+        )
+    console.print(table)
+
+
+@api_key.command("revoke")
+@click.argument("key_or_prefix")
+def api_key_revoke(key_or_prefix):
+    """Revoke an API key (disable without deleting)"""
+    from nikto.config.api_keys import NiktoKeyManager
+
+    mgr = NiktoKeyManager()
+    success = mgr.revoke_key(key_or_prefix)
+    if success:
+        console.print(f"[green]Key revoked:[/green] {key_or_prefix[:12]}")
+    else:
+        console.print(f"[red]Key not found:[/red] {key_or_prefix[:12]}")
+
+
+@api_key.command("delete")
+@click.argument("key_or_prefix")
+def api_key_delete(key_or_prefix):
+    """Permanently delete an API key record"""
+    from nikto.config.api_keys import NiktoKeyManager
+
+    mgr = NiktoKeyManager()
+    success = mgr.delete_key(key_or_prefix)
+    if success:
+        console.print(f"[yellow]Key deleted:[/yellow] {key_or_prefix[:12]}")
+    else:
+        console.print(f"[red]Key not found:[/red] {key_or_prefix[:12]}")
+
+
+@api_key.command("validate")
+@click.argument("key")
+def api_key_validate(key):
+    """Validate an API key (check if it's active)"""
+    from nikto.config.api_keys import NiktoKeyManager
+
+    mgr = NiktoKeyManager()
+    valid, record = mgr.validate_key_with_record(key)
+    if valid:
+        console.print(f"[green]✓ Key is VALID[/green] — {record.name} ({record.prefix})")
+        if record.scopes:
+            console.print(f"  Scopes: {', '.join(record.scopes)}")
+        console.print(f"  Used: {record.usage_count} times")
+    else:
+        if record is not None:
+            if not record.enabled:
+                console.print(f"[red]✗ Key is REVOKED[/red] — {record.name} ({record.prefix})")
+            elif record.expires_at:
+                console.print(f"[red]✗ Key is EXPIRED[/red] — expired {record.expires_at[:10]}")
+            else:
+                console.print(f"[red]✗ Key is INVALID[/red]")
+        else:
+            console.print("[red]✗ Key is INVALID — not found[/red]")
+
+
+@api_key.command("info")
+@click.argument("prefix")
+def api_key_info(prefix):
+    """Show details for a specific key by prefix"""
+    from nikto.config.api_keys import NiktoKeyManager
+
+    mgr = NiktoKeyManager()
+    info = mgr.get_key_info(prefix)
+    if not info:
+        console.print(f"[red]Key not found:[/red] {prefix}")
+        return
+
+    table = Table(title=f"API Key: {prefix}", border_style=NICTO_THEME["colors"]["border_mid"])
+    table.add_column("Property", style=NICTO_THEME["colors"]["accent_primary"])
+    table.add_column("Value", style=NICTO_THEME["colors"]["text_primary"])
+    for k, v in info.items():
+        val = str(v) if v is not None else "-"
+        if k == "enabled":
+            val = "[green]Active[/green]" if v else "[red]Revoked[/red]"
+        table.add_row(k.replace("_", " ").title(), val)
+    console.print(table)
+
+
+@cli.command()
+@click.option("--host", "-h", default="127.0.0.1", help="Bind address")
+@click.option("--port", "-p", default=5000, help="Bind port")
+@click.option("--no-auth", is_flag=True, help="Disable API key authentication")
+def serve(host, port, no_auth):
+    """Start the Nikto API server for desktop/mobile apps"""
+    from nikto.server import serve as _serve
+    _serve(host=host, port=port, no_auth=no_auth)
+
+
+# --- NICTO X Commands ---
+
+@cli.group()
+def nicto_x():
+    """NICTO X — Frontier AI Architecture commands"""
+
+
+@nicto_x.command()
+def status():
+    """Show NICTO X system status"""
+    from nicto_x import NictoXOrchestrator
+
+    async def _run():
+        nx = NictoXOrchestrator()
+        await nx.initialize()
+        status = nx.get_status()
+        table = Table(title="NICTO X Status", border_style="bright_green")
+        table.add_column("Metric", style="bright_green")
+        table.add_column("Value", style="white")
+        table.add_row("Running", str(status["running"]))
+        table.add_row("Agents", str(len(status["agents"])))
+        table.add_row("Episodic Memories", str(status["episodic_count"]))
+        table.add_row("Semantic Facts", str(status["semantic_count"]))
+        table.add_row("Version", status["config_version"])
+        console.print(table)
+
+    asyncio.run(_run())
+
+
+@nicto_x.command()
+@click.argument("message", nargs=-1)
+def process(message):
+    """Process input through NICTO X agent network"""
+    msg = " ".join(message)
+    from nicto_x import NictoXOrchestrator
+
+    async def _run():
+        nx = NictoXOrchestrator()
+        await nx.start()
+        result = await nx.process(msg)
+        console.print(f"\n[bold bright_green]NICTO X Response:[/bold bright_green]")
+        console.print(Panel(result["response"], border_style="bright_green"))
+        console.print(f"\n[dim]Confidence:[/dim] {result['confidence']['score']}")
+        console.print(f"[dim]Agents used:[/dim] {', '.join(result['agents_used'])}")
+        console.print(f"[dim]Reasoning paths:[/dim] {result['reasoning_paths']}")
+        await nx.stop()
+
+    asyncio.run(_run())
+
+
+@nicto_x.command()
+@click.argument("domain", default="general")
+def benchmark(domain):
+    """Run NICTO X benchmark in a domain"""
+    from nicto_x.self_improvement.benchmark import BenchmarkRunner
+
+    async def _run():
+        bm = BenchmarkRunner()
+        result = await bm.run_benchmark(f"{domain}_benchmark")
+        pct = round((result.score / result.max_score) * 100, 1) if result.max_score > 0 else 0
+        console.print(f"[bold]Benchmark:[/bold] {result.name}")
+        console.print(f"[bold]Score:[/bold] {result.score}/{result.max_score} ({pct}%)")
+
+    asyncio.run(_run())
+
+
+# --- Game Engine Commands ---
+
+@cli.group()
+def game():
+    """NICTO Omega Game Engine commands"""
+
+
+@game.command()
+@click.argument("prompt", nargs=-1, required=True)
+def build(prompt):
+    """Build a game from a natural language prompt"""
+    msg = " ".join(prompt)
+    from nikto.brain.core import NiktoBrain
+
+    async def _run():
+        brain = NiktoBrain()
+        result = await brain.build_game_from_prompt(msg)
+        table = Table(title=f"Game Built: {result['name']}", border_style="bright_green")
+        table.add_column("Property", style="bright_green")
+        table.add_column("Value", style="white")
+        table.add_row("Genre", result["genre"])
+        table.add_row("World", result["world_size"])
+        table.add_row("Lines of Code", str(result["lines_of_code"]))
+        table.add_row("Output", result["export_path"] or "N/A")
+        table.add_row("Playable", "Yes" if result.get("test_score", 0) > 60 else "No")
+        table.add_row("Build Time", f"{result['build_time']}s")
+        table.add_row("Total Games Built", str(result.get("games_built", 0)))
+        console.print(table)
+
+    asyncio.run(_run())
+
+
+@game.command()
+@click.argument("name", default="NICTO_Game")
+@click.option("--genre", "-g", default="fps", help="Game genre")
+@click.option("--width", "-w", default=64, help="World width")
+@click.option("--height", "-h", default=64, help="World height")
+@click.option("--enemies", "-e", default=10, help="Number of enemies")
+def create(name, genre, width, height, enemies):
+    """Create a game with specific parameters"""
+    from nikto.brain.core import NiktoBrain
+
+    async def _run():
+        brain = NiktoBrain()
+        result = await brain.create_game(name, genre, width, height, enemies)
+        console.print(f"[bold bright_green]Game created:[/bold bright_green] {result['name']}")
+        console.print(f"  File: {result.get('export_path', 'N/A')}")
+        console.print(f"  Playable: {result.get('test_score', 0) > 60}")
+
+    asyncio.run(_run())
+
+
+@game.command()
+def status():
+    """Show game engine status"""
+    from nikto.brain.core import NiktoBrain
+
+    async def _run():
+        brain = NiktoBrain()
+        status = await brain.get_game_status()
+        table = Table(title="Game Engine Status", border_style="bright_green")
+        table.add_column("Metric", style="bright_green")
+        table.add_column("Value", style="white")
+        table.add_row("Games Built", str(status.get("games_built", 0)))
+        table.add_row("Total Games", str(status.get("games_built", 0)))
+        table.add_row("Quality Score", str(status.get("quality_score", "N/A")))
+        table.add_row("Last Build", status.get("last_build", {}).get("name", "N/A") if status.get("last_build") else "N/A")
+        console.print(table)
+
+    asyncio.run(_run())
+
+@game.command()
+@click.option("--name", "-n", help="Game name to get details for")
+def get(name):
+    """Get details about a specific generated game"""
+    from nikto.brain.core import NiktoBrain
+
+    async def _run():
+        brain = NiktoBrain()
+        game = await brain.get_game_by_name(name)
+        if not game:
+            console.print(f"[red]Game '{name}' not found.[/red]")
+            return
+
+        table = Table(title=f"Game Details: {game['name']}", border_style="bright_green")
+        table.add_column("Property", style="bright_green")
+        table.add_column("Value", style="white")
+        table.add_row("Genre", game.get("genre", "N/A"))
+        table.add_row("World Size", game.get("world_size", "N/A"))
+        table.add_row("Lines of Code", str(game.get("lines_of_code", 0)))
+        table.add_row("Test Score", str(game.get("test_score", 0)))
+        table.add_row("Playable", "Yes" if game.get("test_score", 0) > 60 else "No")
+        table.add_row("Build Time", f"{game.get('build_time', 0)}s")
+        console.print(table)
+
+    asyncio.run(_run())
+
+@game.command()
+def list():
+    """List all generated games"""
+    from nikto.brain.core import NiktoBrain
+
+    async def _run():
+        brain = NiktoBrain()
+        games = await brain.list_generated_games()
+        if not games:
+            console.print("[yellow]No games have been generated yet.[/yellow]")
+            return
+
+        table = Table(title="Generated Games", border_style="bright_green")
+        table.add_column("Name", style="bright_green")
+        table.add_column("Genre", style="bright_green")
+        table.add_column("World Size", style="bright_green")
+        table.add_column("Lines of Code", style="bright_green")
+        table.add_column("Test Score", style="bright_green")
+        table.add_column("Playable", style="bright_green")
+
+        for game in games:
+            table.add_row(
+                game.get("name", "N/A"),
+                game.get("genre", "N/A"),
+                game.get("world_size", "N/A"),
+                str(game.get("lines_of_code", 0)),
+                str(game.get("test_score", 0)),
+                "Yes" if game.get("test_score", 0) > 60 else "No"
+            )
+
+        console.print(table)
+
     asyncio.run(_run())
 
 

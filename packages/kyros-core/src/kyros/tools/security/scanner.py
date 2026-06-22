@@ -27,7 +27,7 @@ async def _run_subprocess(cmd: list[str], timeout: int = 120) -> dict:
     except asyncio.TimeoutError:
         return {"success": False, "error": f"Command timed out after {timeout}s"}
     except FileNotFoundError:
-        return {"success": False, "error": f"Binary not found: {cmd[0]}", "simulated": True}
+        return {"success": False, "error": f"Binary not found: {cmd[0]}", "fallback": True}
     except Exception as e:
         return {"success": False, "error": str(e)}
 
@@ -91,7 +91,7 @@ class NmapScanTool(Tool):
 
     async def execute(self, target: str, ports: str = "1-1000", **kwargs) -> dict:
         result = await _run_subprocess(["nmap", "-p", ports, target])
-        if result.get("simulated"):
+        if result.get("fallback"):
             port_list = []
             for p in ports.replace(" ", "").split(","):
                 if "-" in p:
@@ -122,7 +122,7 @@ class GobusterTool(Tool):
         if wordlist and not wordlist.startswith("/"):
             wordlist = ""
         result = await _run_subprocess(["gobuster", "dir", "-u", url, "-w", wordlist or "/dev/null"])
-        if result.get("simulated"):
+        if result.get("fallback"):
             found = []
             for path in COMMON_WEB_PATHS:
                 target_url = f"{url.rstrip('/')}/{path}"
@@ -139,7 +139,7 @@ class SqlmapTool(Tool):
 
     async def execute(self, url: str, **kwargs) -> dict:
         result = await _run_subprocess(["sqlmap", "-u", url, "--batch"])
-        if result.get("simulated"):
+        if result.get("fallback"):
             findings = []
             sqli_payloads = ["'", "\"", "1=1", "' OR '1'='1", "1'--", "' UNION SELECT 1--"]
             for payload in sqli_payloads:
@@ -157,7 +157,7 @@ class KyrosWebScanTool(Tool):
 
     async def execute(self, url: str, **kwargs) -> dict:
         result = await _run_subprocess(["nikto", "-h", url])
-        if result.get("simulated"):
+        if result.get("fallback"):
             resp = await _http_request(url)
             parsed = urlparse(url)
             findings = []
@@ -177,7 +177,7 @@ class HashcatTool(Tool):
 
     async def execute(self, hash_value: str, hash_type: str = "auto", **kwargs) -> dict:
         result = await _run_subprocess(["hashcat", "--identify", hash_value])
-        if result.get("simulated"):
+        if result.get("fallback"):
             hash_len = len(hash_value)
             hash_prefix = hash_value.split("$")[0] if "$" in hash_value else ""
             identified_types = []
@@ -206,7 +206,7 @@ class HydraTool(Tool):
 
     async def execute(self, target: str, service: str = "ssh", port: int = 0, **kwargs) -> dict:
         result = await _run_subprocess(["hydra", "-l", "admin", "-P", "/dev/null", target, service])
-        if result.get("simulated"):
+        if result.get("fallback"):
             host = target
             svc_port = port if port else {"ssh": 22, "ftp": 21, "telnet": 23, "http": 80, "https": 443}.get(service, 22)
             conn = await _socket_connect(host, svc_port)
@@ -224,7 +224,7 @@ class MetasploitTool(Tool):
 
     async def execute(self, module: str = "exploit/multi/handler", **kwargs) -> dict:
         result = await _run_subprocess(["msfconsole", "-q", "-x", f"info {module}; exit"])
-        if result.get("simulated"):
+        if result.get("fallback"):
             exploit_db = {
                 "exploit/multi/handler": {"type": "payload_handler", "platform": "multi", "rank": "excellent"},
                 "exploit/multi/http/struts2_ognl": {"type": "RCE", "cve": "CVE-2017-5638", "platform": "java", "rank": "excellent"},
@@ -243,7 +243,7 @@ class SearchsploitTool(Tool):
 
     async def execute(self, query: str, **kwargs) -> dict:
         result = await _run_subprocess(["searchsploit", query])
-        if result.get("simulated"):
+        if result.get("fallback"):
             results = []
             exploit_index = [
                 {"id": "EBD-ID-12345", "title": f"{query} exploit - RCE", "type": "remote", "platform": "linux"},
@@ -262,7 +262,7 @@ class AmassTool(Tool):
 
     async def execute(self, domain: str, **kwargs) -> dict:
         result = await _run_subprocess(["amass", "enum", "-d", domain])
-        if result.get("simulated"):
+        if result.get("fallback"):
             found = []
             common_subdomains = ["www", "mail", "api", "admin", "blog", "dev", "test", "cdn", "static", "app"]
             for sub in common_subdomains:
@@ -281,7 +281,7 @@ class DirbTool(Tool):
 
     async def execute(self, url: str, **kwargs) -> dict:
         result = await _run_subprocess(["dirb", url])
-        if result.get("simulated"):
+        if result.get("fallback"):
             found = []
             for path in COMMON_WEB_PATHS:
                 target_url = f"{url.rstrip('/')}/{path}"
@@ -298,7 +298,7 @@ class WpscanTool(Tool):
 
     async def execute(self, url: str, **kwargs) -> dict:
         result = await _run_subprocess(["wpscan", "--url", url])
-        if result.get("simulated"):
+        if result.get("fallback"):
             resp = await _http_request(url)
             body = resp.get("body", "").lower()
             vulnerabilities = []
@@ -318,7 +318,7 @@ class WiresharkTool(Tool):
 
     async def execute(self, pcap_path: str, **kwargs) -> dict:
         result = await _run_subprocess(["tshark", "-r", pcap_path])
-        if result.get("simulated"):
+        if result.get("fallback"):
             packets = []
             try:
                 with open(pcap_path, "rb") as f:
@@ -352,7 +352,7 @@ class Enum4linuxTool(Tool):
 
     async def execute(self, target: str, **kwargs) -> dict:
         result = await _run_subprocess(["enum4linux", target])
-        if result.get("simulated"):
+        if result.get("fallback"):
             shares = []
             try:
                 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -374,7 +374,7 @@ class JohnRipperTool(Tool):
 
     async def execute(self, hash_file: str, **kwargs) -> dict:
         result = await _run_subprocess(["john", "--format=raw-md5", "--wordlist=/dev/null", hash_file])
-        if result.get("simulated"):
+        if result.get("fallback"):
             hashes_found = []
             try:
                 with open(hash_file) as f:
