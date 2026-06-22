@@ -34,6 +34,20 @@ class SuperConfig:
     n_shared_experts: int = 1
     moe_z_loss_coef: float = 0.001
     moe_aux_loss_coef: float = 0.01
+    rope_scaling: Optional[dict] = None
+    use_speculative: bool = False
+    use_nas: bool = False
+    use_hierarchical_moe: bool = False
+    use_expert_choice: bool = False
+    use_mixture_of_depths: bool = False
+    use_ssm: bool = False
+    spec_lookahead: int = 5
+    n_expert_groups: int = 2
+    n_moe_layers: int = 8
+    mod_theta: float = 0.5
+    ssm_d_state: int = 16
+    nas_population: int = 10
+    nas_generations: int = 20
 
     def __post_init__(self):
         if not self.device:
