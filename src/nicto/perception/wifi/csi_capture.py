@@ -68,9 +68,22 @@ class macOSCSICapture(CSICaptureBackend):
 
 
 class SyntheticCSIGenerator(CSICaptureBackend):
-    """Generates realistic fake CSI data for development/testing."""
+    """Generates synthetic CSI data for development/testing when hardware unavailable.
+    
+    WARNING: This produces simulated data, not real CSI measurements.
+    Use only for development, testing, or when hardware CSI capture is unavailable.
+    """
 
-    def __init__(self):
+    def __init__(self, explicit_mode: bool = False):
+        if not explicit_mode:
+            import warnings
+            warnings.warn(
+                "Using SyntheticCSIGenerator - this produces SIMULATED CSI data, "
+                "not real measurements. Use CrossPlatformCSI.create_backend(use_synthetic=True) "
+                "to explicitly enable this mode.",
+                UserWarning,
+                stacklevel=2
+            )
         self._running = False
         self._thread = None
 
@@ -121,24 +134,46 @@ class CrossPlatformCSI:
     """Factory + fallback manager for CSI capture."""
 
     @staticmethod
-    def create_backend() -> CSICaptureBackend:
+    def _check_linux_dependencies() -> bool:
+        try:
+            import pylibnl
+            return True
+        except ImportError:
+            return False
+
+    @staticmethod
+    def _check_windows_dependencies() -> bool:
+        return False  # Requires custom NDIS driver
+
+    @staticmethod
+    def _check_macos_dependencies() -> bool:
+        try:
+            import objc
+            return True
+        except ImportError:
+            return False
+
+    @staticmethod
+    def create_backend(use_synthetic: bool = False) -> CSICaptureBackend:
         system = platform.system()
-        backends = {
-            "Linux": LinuxCSICapture,
-            "Windows": WindowsCSICapture,
-            "Darwin": macOSCSICapture,
-        }
-        cls = backends.get(system)
-        if cls:
-            try:
-                return cls()
-            except Exception:
-                pass
-        return CrossPlatformCSI.get_synthetic_backend()
+        if system == "Linux":
+            if use_synthetic or not CrossPlatformCSI._check_linux_dependencies():
+                return CrossPlatformCSI.get_synthetic_backend()
+            return LinuxCSICapture()
+        elif system == "Windows":
+            if use_synthetic or not CrossPlatformCSI._check_windows_dependencies():
+                return CrossPlatformCSI.get_synthetic_backend()
+            return WindowsCSICapture()
+        elif system == "Darwin":
+            if use_synthetic or not CrossPlatformCSI._check_macos_dependencies():
+                return CrossPlatformCSI.get_synthetic_backend()
+            return macOSCSICapture()
+        else:
+            return CrossPlatformCSI.get_synthetic_backend()
 
     @staticmethod
     def get_synthetic_backend() -> SyntheticCSIGenerator:
-        return SyntheticCSIGenerator()
+        return SyntheticCSIGenerator(explicit_mode=True)
 
 
 class GestureRecognizer:

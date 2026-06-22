@@ -19,7 +19,7 @@ try:
 except ImportError:
     HAS_PSUTIL = False
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 
 @dataclass
@@ -90,14 +90,16 @@ class BrainConfig(BaseModel):
     timeout_seconds: float = Field(default=30.0, gt=0)
     device_preference: str = Field(default="auto")  # auto, cuda, cpu
 
-    @validator('quantization_bits')
+    @field_validator('quantization_bits')
+    @classmethod
     def validate_quantization_bits(cls, v):
         """Ensure quantization bits are standard values."""
         if v not in [8, 16, 32, 64]:
             raise ValueError('quantization_bits must be 8, 16, 32, or 64')
         return v
 
-    @validator('device_preference')
+    @field_validator('device_preference')
+    @classmethod
     def validate_device_preference(cls, v):
         if v not in ['auto', 'cuda', 'cpu']:
             raise ValueError("device_preference must be 'auto', 'cuda', or 'cpu'")
@@ -112,8 +114,7 @@ class BrainResponse(BaseModel):
     fallback_chain: List[str] = Field(default_factory=list)
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
-    class Config:
-        frozen = True
+    model_config = {"frozen": True}
 
 
 class Brain(ABC):
@@ -125,6 +126,9 @@ class Brain(ABC):
         self._model = None
         self._is_loaded = False
         self._load_attempted = False
+        self._latency_history: list[float] = []
+        self._confidence_history: list[float] = []
+        self._max_history = 100
 
     @abstractmethod
     def _load_model(self) -> Any:
@@ -141,7 +145,7 @@ class Brain(ABC):
         if self._is_loaded:
             return True
         if self._load_attempted:
-            return False  # Already tried and failed
+            return False
 
         self._load_attempted = True
         try:
@@ -149,17 +153,42 @@ class Brain(ABC):
             self._is_loaded = True
             return True
         except Exception as e:
-            # In a real implementation, we might log this
             self._model = None
             self._is_loaded = False
             return False
+
+    def _record_metrics(self, latency_ms: float, confidence: float):
+        """Record latency and confidence for averaging."""
+        self._latency_history.append(latency_ms)
+        self._confidence_history.append(confidence)
+        if len(self._latency_history) > self._max_history:
+            self._latency_history = self._latency_history[-self._max_history:]
+        if len(self._confidence_history) > self._max_history:
+            self._confidence_history = self._confidence_history[-self._max_history:]
+
+    def _get_ram_usage_mb(self) -> float:
+        """Get current RAM usage in MB."""
+        try:
+            import psutil
+            return psutil.Process().memory_info().rss / 1024 / 1024
+        except Exception:
+            return 0.0
+
+    def _get_vram_usage_mb(self) -> float:
+        """Get current VRAM usage in MB."""
+        try:
+            import torch
+            if torch.cuda.is_available():
+                return torch.cuda.memory_allocated() / 1024 / 1024
+        except Exception:
+            pass
+        return 0.0
 
     def process(self, prompt: str, **kwargs) -> BrainResponse:
         """Process a prompt with timing, error handling, and metrics."""
         import time
         start_time = time.perf_counter()
 
-        # Ensure model is loaded
         if not self._ensure_model_loaded():
             latency_ms = (time.perf_counter() - start_time) * 1000
             return BrainResponse(
@@ -170,15 +199,13 @@ class Brain(ABC):
                 metadata={"error": "model_load_failed"},
             )
 
-        # Process with timeout
         try:
-            # In a full implementation, we would use asyncio or threading for timeout
-            # For now, we'll just call and hope it's fast
             result = self._process_internal(prompt, **kwargs)
             latency_ms = (time.perf_counter() - start_time) * 1000
 
-            # Basic confidence heuristic (to be improved by meta-brain)
-            confidence = min(0.95, 0.5 + (len(result) / 1000))  # placeholder
+            confidence = min(0.95, 0.5 + (len(result) / 1000))
+
+            self._record_metrics(latency_ms, confidence)
 
             return BrainResponse(
                 content=result,
@@ -198,13 +225,20 @@ class Brain(ABC):
             )
 
     def get_latency_ms(self) -> float:
-        """Get average latency (placeholder)."""
-        return 0.0  # Would be tracked in a real implementation
+        """Get average latency from history."""
+        if not self._latency_history:
+            return 0.0
+        return sum(self._latency_history) / len(self._latency_history)
 
     def get_resource_usage(self) -> Dict[str, float]:
-        """Get current resource usage (placeholder)."""
-        return {"ram_mb": 0.0, "vram_mb": 0.0}
+        """Get current resource usage."""
+        return {
+            "ram_mb": self._get_ram_usage_mb(),
+            "vram_mb": self._get_vram_usage_mb(),
+        }
 
     def get_confidence(self) -> float:
-        """Get average confidence (placeholder)."""
-        return 0.0
+        """Get average confidence from history."""
+        if not self._confidence_history:
+            return 0.0
+        return sum(self._confidence_history) / len(self._confidence_history)

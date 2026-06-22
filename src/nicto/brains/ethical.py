@@ -5,6 +5,7 @@ import re
 import hashlib
 import json
 import os
+import datetime
 from dataclasses import dataclass, field
 from typing import Optional, List, Dict, Any
 from enum import Enum
@@ -101,7 +102,7 @@ class ConsentManager:
 class EthicalBrain(Brain):
     """Ethical brain that enforces policies and manages consent."""
 
-    def __init__(self, policy_pack: str = "default", config: Optional[BrainConfig] = None):
+    def __init__(self, config: Optional[BrainConfig] = None, policy_pack: str = "default"):
         if config is None:
             config = BrainConfig(
                 model_name="ethical-guardian",
@@ -111,15 +112,14 @@ class EthicalBrain(Brain):
                 timeout_seconds=5.0
             )
         super().__init__(config)
-        self.rules = self._load_rules(policy_pack)
+        self.policy_pack = policy_pack
+        self.rules = self._load_rules(self.policy_pack)
         self.consent_store = ConsentManager()
         self.audit_log: List[Dict[str, Any]] = []
 
     def _load_model(self) -> Any:
-        """Load the ethical brain's model. For Phase 1, we return a dummy object."""
-        # In a real implementation, this would load an actual model.
-        # For Phase 1, we just return a dummy object to satisfy the Brain interface.
-        return object()
+        """Load the ethical brain's policy rules engine."""
+        return {"rules": self.rules, "consent_store": self.consent_store, "loaded": True}
 
     def _load_rules(self, name: str) -> List[PolicyRule]:
         """Load policy rules from a named pack."""
@@ -144,7 +144,7 @@ class EthicalBrain(Brain):
                     pattern=r"(collect|store|share|transmit|sell).*(email|phone|ssn|social security|credit card|bank account|personal data|private information|medical|health)",
                     action=PolicyAction.BLOCK_SOFT,
                     severity=8,
-                    explanation="Handling personal data requires explicit consent to protect privacy.",
+                    explanation="Handling personal data detected.",
                     requires_consent=True,
                     consent_id="privacy_first"
                 ),
@@ -185,7 +185,7 @@ class EthicalBrain(Brain):
                 ),
                 PolicyRule(
                     id="controversial_topics",
-                    pattern=r"(politics|religion|controversial|debate|argue|persuade|convince).*((?=.*ban)|(?=.*restrict)|(?=.*prohibit)|(?=.*mandate))",
+                    pattern=r"(?=.*(political|politics|religion|controversial|debate|argue|persuade|convince))(?=.*(ban|restrict|prohibit|mandate)).*",
                     action=PolicyAction.LOG_ONLY,
                     severity=3,
                     explanation="Discussion of controversial topics with advocacy for restrictions is logged for transparency."
@@ -286,7 +286,7 @@ class EthicalBrain(Brain):
 
         # Create audit record
         audit_record = {
-            "timestamp": str(__import__('datetime').datetime.now()),
+            "timestamp": str(datetime.datetime.now()),
             "query": prompt[:100] + "..." if len(prompt) > 100 else prompt,  # Truncate for storage
             "triggered_rules": [r.id for r in triggered_rules],
             "action_taken": action.value,
@@ -379,6 +379,10 @@ class EthicalBrain(Brain):
 
         triggered_rules: List[PolicyRule] = []
         
+        # Separate rules into those that should be considered for action and those that are consent violations
+        action_rules: List[PolicyRule] = []      # Rules that should determine the action (no consent needed OR consent given AND rule allows)
+        consent_violation_rules: List[PolicyRule] = []  # Rules that require consent but we don't have it
+
         # Check each rule
         for rule in self.rules:
             if not rule.enabled:
@@ -388,17 +392,43 @@ class EthicalBrain(Brain):
                 if rule.pattern_type == "regex":
                     if re.search(rule.pattern, query, re.IGNORECASE):
                         triggered_rules.append(rule)
+                        if rule.requires_consent:
+                            if self.consent_store.has_consent(rule.consent_id):
+                                # Consent given: add to action rules ONLY if the rule's action is not blocking
+                                # Actually, if consent is given, the rule should not apply at all for blocking purposes
+                                # But we still want to log that it was triggered
+                                pass  # Don't add to action_rules - the rule doesn't apply when consent is given
+                            else:
+                                # Consent not given: add to consent violation list
+                                consent_violation_rules.append(rule)
+                        else:
+                            # Rule does not require consent: add to action consideration list
+                            action_rules.append(rule)
             except re.error:
                 continue
 
-        # Determine action
-        if not triggered_rules:
+        # Determine action from all triggered rules, considering consent violations
+        if not action_rules and not consent_violation_rules:
+            # No rules triggered at all
             action = PolicyAction.ALLOW
             approved = True
-            reason = None
-            suggested_alternative = None
+        elif not action_rules and consent_violation_rules:
+            # Only consent violations triggered
+            action = PolicyAction.BLOCK_SOFT
+            approved = False
         else:
-            # Find most restrictive action
+            # We have both action_rules and possibly consent_violation_rules
+            # Build a combined list: all action_rules + consent_violations treated as BLOCK_SOFT
+            all_violating = list(action_rules)
+            
+            # Consent violations should also contribute to the action
+            if consent_violation_rules:
+                # Mark them with BLOCK_SOFT severity for comparison
+                for cv_rule in consent_violation_rules:
+                    if cv_rule not in all_violating:
+                        all_violating.append(cv_rule)
+            
+            # Find the highest priority action
             action_priority = {
                 PolicyAction.BLOCK_HARD: 4,
                 PolicyAction.BLOCK_SOFT: 3,
@@ -409,49 +439,53 @@ class EthicalBrain(Brain):
             
             max_priority = -1
             selected_action = PolicyAction.ALLOW
-            for rule in triggered_rules:
+            for rule in all_violating:
                 priority = action_priority[rule.action]
                 if priority > max_priority:
                     max_priority = priority
                     selected_action = rule.action
-            
             action = selected_action
             approved = action in [PolicyAction.ALLOW, PolicyAction.LOG_ONLY, PolicyAction.WARN_USER]
-            
-            # Generate reason
-            if action == PolicyAction.BLOCK_HARD or action == PolicyAction.BLOCK_SOFT:
-                most_severe_rule = max(triggered_rules, key=lambda r: r.severity)
+        
+        # Generate reason and suggested alternative based on action
+        if action == PolicyAction.BLOCK_HARD or action == PolicyAction.BLOCK_SOFT:
+            # Check if this action is due to a consent violation
+            if consent_violation_rules and not action_rules:
+                # Only consent violations triggered - use the first one for reason
+                rule = consent_violation_rules[0]
+                reason = f"Consent required: {rule.explanation}"
+                suggested_alternative = f"Grant consent via `nicto consent grant {rule.consent_id}`"
+            elif action_rules:
+                # Normal rule violation - use the most severe action rule
+                most_severe_rule = max(action_rules, key=lambda r: r.severity)
                 reason = most_severe_rule.explanation
-                suggested_alternative = None
-            elif action == PolicyAction.WARN_USER:
-                most_severe_rule = max(triggered_rules, key=lambda r: r.severity)
-                reason = most_severe_rule.explanation
-                suggested_alternative = "Please rephrase your request to comply with safety guidelines."
-            elif action == PolicyAction.LOG_ONLY:
-                reason = "Logged for transparency"
                 suggested_alternative = None
             else:
-                reason = None
+                # Fallback
+                reason = "Blocked due to policy violation."
                 suggested_alternative = None
-
-        # Handle consent
-        consent_required = False
-        for rule in triggered_rules:
-            if rule.requires_consent and not self.consent_store.has_consent(rule.consent_id):
-                consent_required = True
-                if not approved:  # If we're going to block anyway, make it a consent issue
-                    action = PolicyAction.BLOCK_SOFT
-                    approved = False
-                    reason = f"Consent required: {rule.explanation}"
-                    suggested_alternative = f"Grant consent via `nicto consent grant {rule.consent_id}`"
-                break
+        elif action == PolicyAction.WARN_USER:
+            if action_rules:
+                most_severe_rule = max(action_rules, key=lambda r: r.severity)
+                reason = most_severe_rule.explanation
+                suggested_alternative = "Please rephrase your request to comply with safety guidelines."
+            else:
+                # This should not happen because WARN_USER must come from action_rules
+                reason = "Warning: potential policy violation."
+                suggested_alternative = "Please rephrase your request to comply with safety guidelines."
+        elif action == PolicyAction.LOG_ONLY:
+            reason = "Logged for transparency"
+            suggested_alternative = None
+        else:
+            reason = None
+            suggested_alternative = None
 
         # Compute audit hash
         audit_hash = self._compute_audit_hash(query, triggered_rules)
 
         # Create audit record
         audit_record = {
-            "timestamp": str(__import__('datetime').datetime.now()),
+            "timestamp": str(datetime.datetime.now()),
             "query": query[:100] + "..." if len(query) > 100 else query,
             "triggered_rules": [r.id for r in triggered_rules],
             "action_taken": action.value,
