@@ -1,69 +1,86 @@
-"""Validation engine — hold-out validation for generalization testing."""
-
-import asyncio
 import random
+from typing import Any, Callable, Dict, List, Optional, Tuple
+from collections import defaultdict
 
 
 class ValidationEngine:
-    """Hold-out validation: 80% training, 20% unseen. Tests generalization."""
+    def __init__(self, evaluator=None, elo_system=None):
+        self.evaluator = evaluator
+        self.elo = elo_system
 
-    def __init__(self, memory_manager):
-        self.memory = memory_manager
-        self._hold_out: list[dict] = []
-        self._results: list[float] = []
-
-    def split(self, dataset: list, ratio: float = 0.8) -> tuple[list, list]:
-        """80/20 split — hold-out is NEVER seen during training."""
-        shuffled = dataset.copy()
+    def split(self, dataset: List[Dict], val_ratio: float = 0.2) -> Tuple[List[Dict], List[Dict]]:
+        shuffled = list(dataset)
         random.shuffle(shuffled)
-        split_idx = int(len(shuffled) * ratio)
-        train = shuffled[:split_idx]
-        hold_out = shuffled[split_idx:]
-        self._hold_out = hold_out
-        return train, hold_out
+        split_idx = int(len(shuffled) * (1 - val_ratio))
+        train_set = shuffled[:split_idx]
+        val_set = shuffled[split_idx:]
+        return train_set, val_set
 
-    def evaluate(self, consciousness, hold_out: list = None) -> dict:
-        """Evaluate on hold-out set without ELO updates."""
-        test_set = hold_out or self._hold_out
-        if not test_set:
-            return {"accuracy": 0.0, "n_samples": 0}
-
-        correct = 0
+    def validate(self, model_func: Callable, val_set: List[Dict]) -> Dict:
         results = []
-
-        for sample in test_set[:100]:
-            result = asyncio.run(
-                consciousness.think(
-                    sample.get("input", "test"),
-                    {"no_elo_update": True},
-                )
-            )
-            confidence = result.get("confidence", 0.0)
-            is_correct = confidence > 0.6
-            if is_correct:
-                correct += 1
+        for example in val_set:
+            try:
+                output = model_func(example)
+            except Exception:
+                output = ""
+            expected = example.get("expected", "")
+            if self.evaluator:
+                score_result = self.evaluator.score(example, output, expected)
+                score = score_result.get("total", 0.0)
+            else:
+                score = 1.0 if str(output) == str(expected) else 0.0
             results.append({
-                "input": sample.get("input", "")[:50],
-                "confidence": confidence,
-                "correct": is_correct,
+                "input": example.get("input", ""),
+                "output": output,
+                "expected": expected,
+                "score": score,
+                "domain": example.get("domain", "general"),
+                "brain": example.get("brain_used", "default"),
             })
+        return self.accuracy_report({"results": results, "total": len(results)})
 
-        accuracy = correct / max(len(test_set[:100]), 1)
-        self._results.append(accuracy)
-
+    def accuracy_report(self, results: Dict) -> Dict:
+        entries = results.get("results", [])
+        if not entries:
+            return {
+                "accuracy": 0.0,
+                "correct": 0,
+                "total": 0,
+                "per_domain": {},
+                "per_brain": {},
+                "confusion_matrix": {},
+            }
+        correct = sum(1 for r in entries if r.get("score", 0.0) >= 0.7)
+        total = len(entries)
+        accuracy = correct / total if total > 0 else 0.0
         return {
             "accuracy": accuracy,
-            "n_samples": len(test_set),
-            "n_tested": min(100, len(test_set)),
-            "history": self._results[-10:],
+            "correct": correct,
+            "total": total,
+            "per_domain": self.per_domain_accuracy(entries),
+            "per_brain": self.per_brain_accuracy(entries),
+            "confusion_matrix": self.confusion_matrix(entries),
         }
 
-    def accuracy_trend(self) -> str:
-        if len(self._results) < 2:
-            return "insufficient_data"
-        recent = self._results[-5:]
-        if recent[-1] > recent[0]:
-            return "improving"
-        if recent[-1] < recent[0]:
-            return "degrading"
-        return "stable"
+    def per_domain_accuracy(self, results: List[Dict]) -> Dict[str, float]:
+        domain_scores: Dict[str, List[float]] = defaultdict(list)
+        for r in results:
+            domain_scores[r.get("domain", "general")].append(r.get("score", 0.0))
+        return {d: sum(s) / len(s) for d, s in domain_scores.items()}
+
+    def per_brain_accuracy(self, results: List[Dict]) -> Dict[str, float]:
+        brain_scores: Dict[str, List[float]] = defaultdict(list)
+        for r in results:
+            brain_scores[r.get("brain", "default")].append(r.get("score", 0.0))
+        return {b: sum(s) / len(s) for b, s in brain_scores.items()}
+
+    def confusion_matrix(self, results: List[Dict]) -> Dict:
+        matrix: Dict[str, Dict[str, int]] = defaultdict(lambda: defaultdict(int))
+        for r in results:
+            expected = str(r.get("expected", ""))[:50]
+            actual = str(r.get("output", ""))[:50]
+            matrix[expected][actual] += 1
+        return {k: dict(v) for k, v in matrix.items()}
+
+    def hold_out_validate(self, model_func: Callable, held_out_set: List[Dict]) -> Dict:
+        return self.validate(model_func, held_out_set)

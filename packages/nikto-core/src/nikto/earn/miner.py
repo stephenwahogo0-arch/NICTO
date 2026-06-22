@@ -1,120 +1,94 @@
-"""Real miner engine — actual CPU mining with configurable pool support."""
+"""
+Laptop Miner for NIKTO.
+
+CPU-only mining simulation.  The wallet address MUST come from config
+(NiktoConfig.crypto.wallet) — never hardcoded.  Logs a clear warning
+until a real pool_url is configured.
+"""
+
 import asyncio
-import hashlib
-import json
-import os
-import random
-import struct
+import logging
 import time
-from enum import Enum
-from pathlib import Path
-from typing import Optional
+from typing import Any, Optional
+
+from nikto.config.settings import NiktoConfig
+
+logger = logging.getLogger("nikto.miner")
 
 
-class MinerStatus(Enum):
-    IDLE = "idle"
-    MINING = "mining"
-    STOPPED = "stopped"
-    ERROR = "error"
+class MinerConfig:
+    """Configuration for the laptop miner."""
+
+    def __init__(
+        self,
+        algorithm: str = "randomx",
+        threads: int = 1,
+        pool_url: str = "",
+        wallet_address: str = "",
+    ) -> None:
+        self.algorithm = algorithm
+        self.threads = threads
+        self.pool_url = pool_url
+        self.wallet_address = wallet_address
 
 
 class LaptopMiner:
-    def __init__(self, data_dir: Optional[str] = None):
-        self.data_dir = Path(data_dir or os.path.join(str(Path.home()), ".nikto", "miner"))
-        self.data_dir.mkdir(parents=True, exist_ok=True)
-        self.state_file = self.data_dir / "miner_state.json"
-        self.config = {
-            "algorithm": "sha256",
-            "threads": os.cpu_count() or 4,
-            "pool_url": None,
-            "wallet_address": "bc1q60d9q8ha036rp783wlfmg0rtwl9dwywpfx30vg",
-            "mining": False,
-        }
-        self.stats = {"total_hashes": 0, "shares_found": 0, "started_at": None, "hashrate": 0.0}
-        self._running = False
-        self._load_state()
+    """CPU-only mining simulation.
 
-    def _load_state(self):
-        if self.state_file.exists():
+    No real earnings occur unless a real ``pool_url`` is configured.
+    """
+
+    def __init__(self, config: Optional[MinerConfig] = None) -> None:
+        self.config = config or MinerConfig()
+        self._running = False
+        self._hashes: int = 0
+        self._start_time: float = 0.0
+        self._load_wallet()
+
+    def _load_wallet(self) -> None:
+        """Load wallet address from config; never hardcode."""
+        if not self.config.wallet_address:
             try:
-                data = json.loads(self.state_file.read_text())
-                self.stats.update(data)
+                cfg = NiktoConfig()
+                # Try to find wallet address in config
+                crypto_wallet = getattr(cfg, "crypto", None)
+                if crypto_wallet:
+                    self.config.wallet_address = getattr(crypto_wallet, "wallet", "") or ""
             except Exception:
                 pass
 
-    def _save_state(self):
-        self.state_file.write_text(json.dumps(self.stats))
+        if not self.config.wallet_address:
+            logger.warning(
+                "No wallet address configured. Mining will not produce real earnings."
+            )
 
-    async def start_mining(self, threads: int = None, pool_url: str = None):
-        if self._running:
-            return {"error": "Already mining"}
+        if not self.config.pool_url:
+            logger.warning(
+                "Mining is CPU-only simulation. No pool connected. No real earnings."
+            )
+
+    async def start(self) -> None:
+        """Start the mining loop."""
         self._running = True
-        self.config["mining"] = True
-        self.config["pool_url"] = pool_url or self.config["pool_url"]
-        if threads:
-            self.config["threads"] = max(1, min(threads, os.cpu_count() or 4))
-        self.stats["started_at"] = self.stats.get("started_at", time.time())
-        asyncio.create_task(self._mine_loop())
-        return {"status": "started", "threads": self.config["threads"]}
+        self._start_time = time.time()
+        logger.info("Miner started (simulation mode)")
 
-    async def _mine_loop(self):
-        target = (1 << 240)  # Difficulty target
-        nonce = random.randint(0, 2**32)
-        block_template = os.urandom(76)
-        while self._running:
-            for _ in range(100):
-                header = block_template + struct.pack("<I", nonce)
-                hash_result = hashlib.sha256(hashlib.sha256(header).digest()).digest()
-                hash_int = int.from_bytes(hash_result, "big")
-                self.stats["total_hashes"] += 1
-                if hash_int < target:
-                    self.stats["shares_found"] += 1
-                nonce = (nonce + 1) & 0xFFFFFFFF
-            elapsed = time.time() - self.stats.get("started_at", time.time())
-            if elapsed > 0:
-                self.stats["hashrate"] = self.stats["total_hashes"] / elapsed
-            self._save_state()
-            await asyncio.sleep(0)
+    async def stats(self) -> dict[str, Any]:
+        """Return current mining statistics."""
+        elapsed = max(1, time.time() - self._start_time)
+        hashrate = self._hashes / elapsed
+        return {
+            "status": "running" if self._running else "stopped",
+            "algorithm": self.config.algorithm,
+            "threads": self.config.threads,
+            "hashrate_hps": round(hashrate, 2),
+            "total_hashes": self._hashes,
+            "uptime_seconds": round(elapsed),
+            "pool_url": self.config.pool_url or "none (simulation)",
+            "wallet_address": self.config.wallet_address or "not set",
+        }
 
-    async def stop_mining(self):
+    async def stop(self) -> dict[str, Any]:
+        """Stop the miner."""
         self._running = False
-        self.config["mining"] = False
-        self._save_state()
-        return {"status": "stopped", "total_hashes": self.stats["total_hashes"], "shares": self.stats["shares_found"]}
-
-    def get_status(self) -> dict:
-        return {"mining": self._running, "config": self.config, "stats": self.stats}
-            try:
-                self.session.hashrate = await self._measure_hashrate(threads)
-                self.session.shares += 1
-                self.session.accepted += 1 if self.session.shares % 5 != 0 else 0
-                self.session.rejected += 1 if self.session.shares % 5 == 0 else 0
-                await asyncio.sleep(5)
-            except asyncio.CancelledError:
-                break
-            except Exception as e:
-                self.session.status = MinerStatus.ERROR
-                self._running = False
-                logger.error(f"Mining error: {e}")
-                break
-
-    async def _measure_hashrate(self, threads: int) -> float:
-        """Measure actual local SHA-256 throughput (hashes/sec) over a short window."""
-        import hashlib
-        import concurrent.futures
-
-        loops = max(5000, 15000 * max(1, threads))
-
-        def worker(seed: int, n: int) -> int:
-            data = f"nikto{seed}".encode()
-            for i in range(n):
-                hashlib.sha256(data + i.to_bytes(8, "little")).digest()
-            return n
-
-        start = time.perf_counter()
-        per_thread = loops // max(1, threads)
-        with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, threads)) as ex:
-            futures = [ex.submit(worker, int(start * 1_000_000) + t, per_thread) for t in range(max(1, threads))]
-            total_hashes = sum(f.result() for f in futures)
-        elapsed = max(1e-6, time.perf_counter() - start)
-        return total_hashes / elapsed
+        return await self.stats()

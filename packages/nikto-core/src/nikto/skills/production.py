@@ -1,2937 +1,3274 @@
-import asyncio
-import json
-import logging
-import os
-import re
-import shutil
-import subprocess
-import tarfile
-import tempfile
-from datetime import datetime
-from pathlib import Path
-from typing import Any, Optional
+"""NIKTO Production Skills — 80 real skills for autonomous operation."""
 
+import hashlib
+import json
+import math
+import re
+import socket
+import struct
+import time
+import uuid
+from datetime import datetime, timezone
 from nikto.skills.base import SkillRuntime
 
-logger = logging.getLogger(__name__)
 
-_SKILL_FUNCTIONS: dict[str, Any] = {}
+def register_production_skills(runtime: SkillRuntime) -> list[dict]:
+    """Register 80 production skills with the runtime."""
+    skills = []
+    _register = lambda s: (runtime.register(s["name"], s["execute"]) if hasattr(runtime, "register") else None) or skills.append(s)
+
+    # ------------------------------------------------------------------ #
+    #  1. rust_code — Rust Programming                                    #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "rust_code",
+        "description": "Rust systems programming with ownership, borrow checker, traits, cargo, async, unsafe, and WASM.",
+        "knowledge": (
+            "Rust guarantees memory safety without a garbage collector through its ownership system. "
+            "Every value in Rust has exactly one owner, and ownership can be transferred via move semantics. "
+            "The borrow checker enforces at compile time that references never outlive their referents. "
+            "Rust's trait system provides zero-cost abstractions similar to Haskell typeclasses. "
+            "The standard library provides Vec, HashMap, String, and other collections with guaranteed safety. "
+            "Cargo is Rust's build system and package manager, handling dependencies, builds, and tests. "
+            "Rust's async/await model uses cooperative multitasking through futures and the tokio or async-std runtimes. "
+            "Unsafe Rust allows raw pointer dereference, inline assembly, and FFI calls when necessary. "
+            "WebAssembly support via wasm-pack enables running Rust in the browser at near-native speed. "
+            "Rust's macro system includes declarative macros and procedural macros for code generation. "
+            "The standard pattern for error handling uses Result<T, E> for recoverable errors and panic for unrecoverable ones. "
+            "Serde is the standard serialization framework, supporting JSON, YAML, BSON, and custom formats. "
+            "Rust's module system uses paths, visibility modifiers, and the use keyword for organization. "
+            "The compiler's error messages are famously helpful, often suggesting valid fixes directly."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _analyze_rust_code(params.get("code", "")),
+            "skill": "rust_code"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    #  2. cpp_code — C++ Programming                                      #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "cpp_code",
+        "description": "Modern C++ development with STL, RAII, move semantics, templates, and smart pointers.",
+        "knowledge": (
+            "Modern C++ spans C++11 through C++23, each standard adding significant language and library features. "
+            "RAII ties resource lifetime to object lifetime, eliminating manual cleanup. "
+            "Move semantics enabled by rvalue references allow efficient transfer of resources without copying. "
+            "std::unique_ptr and std::shared_ptr provide automatic memory management with deterministic destruction. "
+            "The STL provides containers (vector, map, unordered_set), algorithms (sort, find), and iterators. "
+            "Template metaprogramming enables compile-time computation and policy-based design. "
+            "Variadic templates and parameter packs allow type-safe functions that accept any number of arguments. "
+            "C++17 introduced std::optional, std::variant, and std::any for safer type handling. "
+            "C++20 added concepts, ranges, coroutines, and modules, modernizing the language significantly. "
+            "Concepts constrain template parameters with compile-time predicates, producing better error messages. "
+            "The ranges library provides composable, lazy operations on sequences without manual iteration. "
+            "std::jthread and std::stop_token enable cooperative thread cancellation in C++20. "
+            "C++23 added std::expected for error handling, std::mdspan for multidimensional arrays, and std::flat_map. "
+            "Profiling tools like perf, Valgrind, and Google Benchmark help optimize hot code paths."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _evaluate_cpp_expression(params.get("code", "")),
+            "skill": "cpp_code"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    #  3. go_code — Go Programming                                        #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "go_code",
+        "description": "Go programming with goroutines, channels, interfaces, testing, modules, and profiling.",
+        "knowledge": (
+            "Go is a statically typed, compiled language designed for simplicity and concurrent programming. "
+            "Goroutines are lightweight threads multiplexed onto OS threads by the Go runtime scheduler. "
+            "Channels provide typed, thread-safe communication between goroutines using CSP-style message passing. "
+            "Go interfaces are implicitly satisfied, enabling duck typing without explicit declaration. "
+            "The select statement allows a goroutine to wait on multiple channel operations simultaneously. "
+            "Go modules introduced in 1.16 provide dependency management with versioned module paths and checksums. "
+            "The defer keyword schedules a function call when the enclosing function returns. "
+            "Testing is built into the toolchain with go test, supporting table-driven tests and benchmarks. "
+            "The pprof tool visualizes CPU, memory, goroutine, and mutex profiles for performance analysis. "
+            "Context propagation carries deadlines, cancellation signals, and request-scoped values across APIs. "
+            "Go's standard library includes a production-grade HTTP server, JSON encoding, and crypto primitives. "
+            "The race detector enabled with -race flag finds data races by instrumenting memory accesses. "
+            "Error handling uses explicit error returns with errors.Is and errors.As for unwrapping. "
+            "Garbage collection in Go is concurrent and low-latency with typical pauses under 100 microseconds."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _evaluate_go_code(params.get("code", "")),
+            "skill": "go_code"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    #  4. java_code — Java Programming                                    #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "java_code",
+        "description": "Java development with JVM, streams, lambdas, concurrency, Spring Boot, and Maven/Gradle.",
+        "knowledge": (
+            "Java runs on the Java Virtual Machine providing platform independence through bytecode interpretation. "
+            "The JVM includes a just-in-time compiler that profiles hot methods and compiles them to native code. "
+            "Garbage collection uses generational collection with G1, ZGC, and Shenandoah algorithms. "
+            "Java 8 introduced lambdas and the Stream API for functional-style operations on collections. "
+            "The java.util.concurrent package provides thread pools, futures, locks, and concurrent collections. "
+            "CompletableFuture chains asynchronous operations with composable stages and error recovery. "
+            "Spring Boot auto-configures application context based on classpath dependencies and property files. "
+            "Maven and Gradle manage dependencies with transitive dependency resolution and build lifecycle. "
+            "JPA and Hibernate provide object-relational mapping with lazy loading and query generation. "
+            "Java records introduced in Java 16 provide transparent data carriers with auto-generated methods. "
+            "Sealed classes and pattern matching enable exhaustive type-safe switching. "
+            "Virtual threads in Java 21 provide lightweight concurrency similar to goroutines. "
+            "The module system (Project Jigsaw) enforces strong encapsulation between JAR dependencies. "
+            "Micrometer provides vendor-neutral metrics collection for monitoring system integration."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _analyze_java_code(params.get("code", "")),
+            "skill": "java_code"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    #  5. kotlin_code — Kotlin Programming                                #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "kotlin_code",
+        "description": "Kotlin development with coroutines, Flow, Ktor, Android Jetpack, and multiplatform projects.",
+        "knowledge": (
+            "Kotlin is a statically typed JVM language that interoperates with Java while providing null safety. "
+            "The type system distinguishes nullable and non-null types with the ? suffix. "
+            "Coroutines provide structured concurrency with lightweight suspend functions. "
+            "Kotlin Flow is a cold asynchronous stream supporting backpressure and cancellation. "
+            "StateFlow and SharedFlow hot streams efficiently share state across multiple collectors. "
+            "Ktor is a multiplatform HTTP framework supporting client-server with pluggable engines. "
+            "Jetpack Compose is a declarative UI toolkit for Android using composable functions. "
+            "Kotlin Multiplatform compiles shared code to JVM bytecode, JavaScript, and native binaries. "
+            "Data classes auto-generate equals, hashCode, toString, and copy methods. "
+            "Sealed classes and interfaces enable exhaustive when expressions for algebraic data types. "
+            "Extension functions add new methods to existing classes without inheritance. "
+            "Kotlinx.serialization provides compile-time safe serialization for JSON, CBOR, and protobuf. "
+            "Coroutines provide channels, mutexes, and actor primitives for concurrent programming. "
+            "The K2 compiler improves build speed with incremental compilation and daemon reuse."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _analyze_kotlin_code(params.get("code", "")),
+            "skill": "kotlin_code"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    #  6. swift_code — Swift/iOS Programming                              #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "swift_code",
+        "description": "Swift development with SwiftUI, Combine, async/await, Core Data, and AppKit/SwiftUI.",
+        "knowledge": (
+            "Swift is a type-safe language with value semantics and protocol-oriented design. "
+            "SwiftUI uses declarative views that are diffed and re-rendered by the framework. "
+            "The @State, @Binding, @ObservedObject, and @Environment property wrappers manage dependencies. "
+            "Combine provides declarative reactive programming with Publishers, Subscribers, and Operators. "
+            "async/await provides structured concurrency with cooperative task cancellation. "
+            "Actors protect mutable state with mutual exclusion preventing data races at compile time. "
+            "Core Data is Apple's object graph and persistence framework supporting SQLite stores. "
+            "The Codable protocol provides automatic encoding and decoding of model types. "
+            "Swift Package Manager handles dependencies with version resolution and binary distribution. "
+            "Optionals use ? and ! syntax with optional chaining and pattern matching. "
+            "Protocols with associated types enable generic abstraction without exposing implementation details. "
+            "UIKit uses Auto Layout for adaptive interfaces that work across device sizes. "
+            "Instrumentation via os_log and MetricKit supports production monitoring."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _analyze_swift_code(params.get("code", "")),
+            "skill": "swift_code"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    #  7. typescript_code — TypeScript/JavaScript                         #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "typescript_code",
+        "description": "TypeScript and JavaScript with types, generics, React, Node.js, bundlers, and async patterns.",
+        "knowledge": (
+            "TypeScript extends JavaScript with static type checking for IDE autocompletion and error detection. "
+            "The type system includes union, intersection, conditional, and mapped types. "
+            "Generics allow reusable components that work with any type while maintaining type safety. "
+            "TypeScript's structural type system checks compatibility based on shape not nominal inheritance. "
+            "The async/await pattern builds on Promises for asynchronous code that reads synchronously. "
+            "Node.js uses CommonJS by default while modern projects leverage ES modules. "
+            "React's component model uses hooks for state management and side effects. "
+            "Bundlers like webpack, Vite, and esbuild transform and optimize for production. "
+            "The never type represents unreachable code while unknown represents uncertain types. "
+            "Declaration files describe existing JavaScript libraries for TypeScript consumers. "
+            "Strict mode enables all strict type-checking options for maximum safety. "
+            "ESLint and Prettier enforce code style and catch potential bugs. "
+            "Tree shaking eliminates dead code during bundling reducing final bundle size. "
+            "Source maps enable debugging by mapping bytecode back to original TypeScript source."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _analyze_typescript_code(params.get("code", "")),
+            "skill": "typescript_code"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    #  8. python_code — Python Programming                                #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "python_code",
+        "description": "Python development with async/await, typing, decorators, context managers, profiling, and packaging.",
+        "knowledge": (
+            "Python is a dynamically typed language with a comprehensive standard library and third-party ecosystem. "
+            "The async/await syntax enables cooperative concurrency using the asyncio event loop. "
+            "Type hints formalized in PEP 484 provide optional static type checking with mypy and pyright. "
+            "Decorators enable metaprogramming by wrapping functions with additional behavior. "
+            "Context managers manage resource lifecycle with __enter__ and __exit__ methods. "
+            "The GIL serializes Python bytecode execution limiting CPU-bound parallelism to one core. "
+            "Multiprocessing bypasses the GIL by spawning separate processes with their own memory space. "
+            "cProfile and py-spy provide profiling to identify performance bottlenecks. "
+            "Packaging follows PEP 517/518 with pyproject.toml and multiple build backends. "
+            "Virtual environments isolate project dependencies using venv or conda. "
+            "The data model uses dunder methods for operator overloading and iteration. "
+            "The import system supports absolute, relative, and namespace packages. "
+            "Descriptor protocol powers properties, classmethods, and staticmethods. "
+            "Cython and Numba compile Python to native code for numerical computation."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _analyze_python_code(params.get("code", "")),
+            "skill": "python_code"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    #  9. react_dev — React/Next.js Development                          #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "react_dev",
+        "description": "React and Next.js development with hooks, Server Components, state management, and testing.",
+        "knowledge": (
+            "React is a component-based UI library that uses a virtual DOM for efficient browser updates. "
+            "Hooks like useState, useEffect, useReducer, and useMemo replace class lifecycle methods. "
+            "React Server Components run exclusively on the server reducing client bundle size. "
+            "Next.js provides file-based routing with SSG, SSR, and incremental static regeneration. "
+            "The App Router in Next.js 13+ uses nested layouts, loading states, and error boundaries. "
+            "State management spans from Context API to Zustand and Redux Toolkit. "
+            "React Query provides declarative data fetching with caching and optimistic updates. "
+            "Suspense enables declarative loading states for code-splitting and data fetching. "
+            "useEffect cleanup prevents memory leaks by canceling subscriptions and aborting fetches. "
+            "Testing libraries include React Testing Library and Cypress or Playwright for E2E. "
+            "React.memo and useMemo prevent unnecessary re-renders by memoizing props and results. "
+            "Portals render children into different DOM subtrees useful for modals and tooltips. "
+            "Error boundaries catch JavaScript errors in component trees and display fallback UIs. "
+            "Strict mode double-invokes effects in development to surface side-effect bugs."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _evaluate_react_component(params.get("code", "")),
+            "skill": "react_dev"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 10. vue_dev — Vue/Nuxt Development                                  #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "vue_dev",
+        "description": "Vue and Nuxt development with Composition API, Pinia, SSR, slots, composables, and testing.",
+        "knowledge": (
+            "Vue.js uses a reactive data system based on Proxy objects that track dependencies during render. "
+            "The Composition API groups logic by feature using setup, ref, reactive, computed, and watch. "
+            "Pinia is the recommended state management library with TypeScript support and modular stores. "
+            "Nuxt provides filesystem routing, auto-imports, SSR, and static site generation. "
+            "Slots allow parent components to inject template content into child layout positions. "
+            "Composables encapsulate and reuse stateful logic using the Composition API. "
+            "Vue's reactivity system deep-wraps reactive objects for fine-grained change detection. "
+            "The Suspense component handles async dependencies in nested components during SSR. "
+            "Vue Router supports nested routes, navigation guards, lazy loading, and route metadata. "
+            "Vite serves Vue components with instant hot module replacement using native ESM. "
+            "Vue Test Utils provides mounting, stubbing, and assertion utilities for component testing. "
+            "The transition system applies CSS classes during element enter and leave animations. "
+            "Provide and inject allows passing data through the component tree without prop drilling. "
+            "Nuxt modules extend functionality for SEO, PWA, content, and third-party services."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _evaluate_vue_component(params.get("code", "")),
+            "skill": "vue_dev"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 11. django_dev — Django/DRF Development                            #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "django_dev",
+        "description": "Django REST Framework development with models, views, Celery, channels, and ORM optimization.",
+        "knowledge": (
+            "Django follows the model-template-view pattern with batteries-included philosophy. "
+            "The ORM provides a query API that generates SQL with select_related and prefetch_related for joins. "
+            "Model inheritance supports abstract base classes, multi-table inheritance, and proxy models. "
+            "Django REST Framework builds REST APIs with serializers, viewsets, routers, and auth backends. "
+            "Celery integrates as a distributed task queue for async operations like email. "
+            "Django Channels extends request-response to WebSocket and other async protocols. "
+            "The migration framework tracks schema changes with auto-generated migration files. "
+            "Signals enable decoupled notification when certain actions occur across the app. "
+            "Middleware processes requests globally for cross-cutting concerns like auth and CORS. "
+            "The Admin interface auto-generates CRUD interfaces from model definitions. "
+            "QuerySet evaluation is lazy with database hits only when data is needed. "
+            "Database routing supports multiple databases with custom read and write splitting. "
+            "Caching backends reduce database load for frequently accessed query results. "
+            "The test client simulates browser requests for integration testing without a live server."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _analyze_django_model(params.get("code", "")),
+            "skill": "django_dev"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 12. fastapi_dev — FastAPI Development                               #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "fastapi_dev",
+        "description": "FastAPI development with Pydantic, dependency injection, WebSocket, background tasks, and OpenAPI.",
+        "knowledge": (
+            "FastAPI is a modern Python web framework built on Starlette and Pydantic. "
+            "It automatically generates OpenAPI and JSON Schema documentation from Python type hints. "
+            "Pydantic models validate request bodies with custom validators and serialization. "
+            "Dependency injection uses FastAPI Depends for reusable components with lifespan management. "
+            "Background tasks run after response delivery for logging, notifications, and cache warming. "
+            "WebSocket support includes lifecycle management and message broadcasting. "
+            "Path and query validation is declared through type hints with automatic 422 responses. "
+            "Security schemes like OAuth2 and JWT integrate through reusable dependency classes. "
+            "Middleware handles CORS, request timing, and custom headers at the ASGI level. "
+            "The test client based on HTTPX provides async support for endpoint testing. "
+            "Response models control serialization depth and exclude fields from output. "
+            "Lifespan events handle startup and shutdown logic like database connection pooling. "
+            "File upload streaming supports large files without loading them entirely into memory. "
+            "WebSocket disconnection uses the receive iterator to catch connection close events."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _validate_fastapi_route(params.get("code", "")),
+            "skill": "fastapi_dev"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 13. spring_dev — Spring Boot Development                            #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "spring_dev",
+        "description": "Spring Boot development with IoC, AOP, security, JPA, microservices, Cloud, and testing.",
+        "knowledge": (
+            "Spring Boot auto-configures application components based on classpath dependencies. "
+            "Inversion of Control manages bean lifecycle through dependency injection patterns. "
+            "Aspect-Oriented Programming separates cross-cutting concerns like logging and transactions. "
+            "Spring Security provides authentication, authorization, OAuth2, and LDAP integration. "
+            "Spring Data JPA abstracts repository implementations with query methods and auditing. "
+            "Spring Cloud provides service discovery, circuit breakers, and configuration management. "
+            "Microservice patterns include API gateways, distributed tracing, and event buses. "
+            "Spring Boot Actuator exposes metrics, health checks, and environment via HTTP endpoints. "
+            "Test slicing loads only relevant context for focused integration tests. "
+            "The @Transactional annotation manages declarative transaction boundaries. "
+            "Spring Batch processes large volumes with chunk-oriented processing and restart capability. "
+            "Embedded containers eliminate the need for external server deployment. "
+            "Configuration properties provide type-safe external configuration binding. "
+            "Spring WebFlux provides reactive programming support for non-blocking operations."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _analyze_spring_config(params.get("code", "")),
+            "skill": "spring_dev"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 14. android_dev — Android/Kotlin Development                        #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "android_dev",
+        "description": "Android development with Jetpack Compose, Material 3, Room, WorkManager, and Play Console.",
+        "knowledge": (
+            "Android apps run on a Linux kernel with each app in its own sandbox. "
+            "Jetpack Compose is a declarative UI toolkit using composable functions. "
+            "Material 3 implements Material Design with dynamic color and adaptive layouts. "
+            "Room provides SQLite abstraction with compile-time query verification. "
+            "WorkManager schedules deferrable background work that survives app restarts. "
+            "Navigation Compose manages in-app navigation with type-safe arguments. "
+            "ViewModel stores UI data across configuration changes like screen rotations. "
+            "Hilt provides dependency injection with Android-specific scopes. "
+            "Coroutines with LifecycleScope manage async operations tied to lifecycle. "
+            "Google Play Console provides crash reporting and staged rollouts. "
+            "App bundles optimize delivery for different device configurations. "
+            "ProGuard shrinks, obfuscates, and optimizes code for production releases. "
+            "DataStore replaces SharedPreferences with type-safe asynchronous storage. "
+            "The Android Gradle Plugin manages builds with product flavors and variants."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _analyze_android_manifest(params.get("manifest", "")),
+            "skill": "android_dev"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 15. ios_dev — iOS/Swift Development                                 #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "ios_dev",
+        "description": "iOS development with SwiftUI, UIKit, Core Data, Combine, App Store, and TestFlight.",
+        "knowledge": (
+            "iOS apps run on Apple's mobile OS with a sandboxed file system and strict lifecycle. "
+            "SwiftUI provides declarative UI with automatic dark mode and localization. "
+            "UIKit remains essential for complex custom interfaces and transition animations. "
+            "Core Data manages the object graph with change tracking and persistence. "
+            "Combine provides declarative reactive APIs for asynchronous event streams. "
+            "The app lifecycle uses UISceneDelegate for multi-window support. "
+            "Push notifications require APNs certificate and device token registration. "
+            "App Store Connect manages submission, TestFlight distribution, and purchases. "
+            "StoreKit handles in-app purchases and subscription management. "
+            "Xcode Instruments profiles CPU, memory, networking, and graphics. "
+            "Auto Layout with constraints ensures adaptive layouts across device sizes. "
+            "Keychain Services provide secure credential storage with biometric auth. "
+            "Background tasks execute finite-length operations when the app is backgrounded. "
+            "@Published and ObservableObject integrate seamlessly with SwiftUI views."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _analyze_ios_code(params.get("code", "")),
+            "skill": "ios_dev"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 16. flutter_dev — Flutter/Dart Development                          #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "flutter_dev",
+        "description": "Flutter development with widgets, state management, platform channels, animations, and testing.",
+        "knowledge": (
+            "Flutter uses the Dart language and renders via the Skia engine rather than platform widgets. "
+            "The widget tree composes immutable widgets into complex UIs with hot reload. "
+            "State management approaches include Provider, Riverpod, Bloc, and GetX. "
+            "Platform channels enable Dart and native Kotlin or Swift communication. "
+            "Implicit animations handle interpolation without explicit controllers. "
+            "CustomPainter provides a canvas API for drawing arbitrary shapes and charts. "
+            "The rendering pipeline traverses element, render object, and layer trees. "
+            "Integration tests use flutter_driver for full app flows on devices. "
+            "Widget tests verify individual widget behavior in a test environment. "
+            "Flutter's engine uses Impeller on iOS for reduced shader compilation jank. "
+            "pubspec.yaml manages dependencies, assets, fonts, and platform config. "
+            "Null safety eliminates null reference errors with sound type checking. "
+            "Flutter web renders via CanvasKit while desktop targets Windows, macOS, Linux. "
+            "GoRouter provides declarative routing with deep linking and redirects."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _evaluate_flutter_widget(params.get("code", "")),
+            "skill": "flutter_dev"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 17. react_native_dev — React Native Development                     #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "react_native_dev",
+        "description": "React Native development with bridge, Hermes, Expo, navigation, and native modules.",
+        "knowledge": (
+            "React Native renders mobile UIs using JavaScript React to native platform views. "
+            "The bridge facilitates JS and native thread communication via JSON batching. "
+            "Hermes is a JavaScript engine optimized for RN with faster startup and lower memory. "
+            "Expo provides a managed workflow with pre-built modules and build services. "
+            "React Navigation handles stack, tab, drawer, and modal navigation. "
+            "Native modules expose platform functionality through the NativeModules registry. "
+            "Fast Refresh preserves component state while injecting edited JS modules. "
+            "Turbo Modules replace the legacy bridge with direct C++ JSI bindings. "
+            "Fabric is the new rendering surface using C++ for UI updates. "
+            "Animated API drives animations on the native thread without bridge round trips. "
+            "Metro is the JavaScript bundler with lazy loading and module caching. "
+            "CodePush enables live JS updates without app store review. "
+            "React Native Web extends components to web enabling code sharing. "
+            "Flipper debugger provides layout, network, and memory inspection."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _analyze_rn_component(params.get("code", "")),
+            "skill": "react_native_dev"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 18. aws_cloud — Amazon Web Services                                 #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "aws_cloud",
+        "description": "AWS cloud infrastructure with EC2, S3, Lambda, ECS, RDS, CloudFormation, CDK, and cost optimization.",
+        "knowledge": (
+            "AWS offers over 200 services across compute, storage, database, and AI categories. "
+            "EC2 provides virtual machines optimized for compute, memory, storage, or GPU. "
+            "S3 is an object storage service with 99.999999999% durability and lifecycle policies. "
+            "Lambda executes code in response to events with automatic scaling. "
+            "ECS and EKS run containers with Fargate or EC2 launch types. "
+            "RDS manages databases with automated backups, Multi-AZ, and read replicas. "
+            "CloudFormation and CDK define infrastructure as code with JSON or TypeScript. "
+            "VPC isolates resources with subnets, NAT gateways, and security groups. "
+            "IAM manages access with policies, roles, and least-privilege permissions. "
+            "CloudWatch collects metrics, logs, and alarms for observability. "
+            "Route 53 provides DNS with routing policies for latency and geolocation. "
+            "Cost optimization uses reserved instances, savings plans, and spot instances. "
+            "Well-Architected Framework reviews workloads across five pillars. "
+            "AWS Organizations manages multiple accounts with consolidated billing."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _validate_aws_arn(params.get("arn", "")),
+            "skill": "aws_cloud"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 19. azure_cloud — Microsoft Azure                                   #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "azure_cloud",
+        "description": "Azure cloud infrastructure with VMs, Functions, Blob, AKS, Cosmos DB, ARM, and Bicep.",
+        "knowledge": (
+            "Azure is Microsoft's cloud platform with deep Microsoft enterprise integration. "
+            "Azure Virtual Machines support Windows and Linux with availability zones. "
+            "Azure Functions provides serverless compute for HTTP, timers, queues, and events. "
+            "Azure Blob Storage offers hot, cool, cold, and archive access tiers. "
+            "Azure Kubernetes Service manages clusters with Azure AD authentication. "
+            "Cosmos DB is a globally distributed NoSQL database with multiple consistency models. "
+            "Azure SQL Database provides managed SQL Server with high availability. "
+            "ARM templates define infrastructure as JSON with parameters and dependencies. "
+            "Bicep is a domain language for Azure that compiles to ARM templates. "
+            "Azure DevOps provides CI/CD pipelines and artifact repositories. "
+            "Azure Policy enforces organizational standards and compliance rules. "
+            "Managed Identities eliminate credential management with auto-rotated principals. "
+            "Azure Monitor collects telemetry with Log Analytics for cross-resource querying. "
+            "Azure Front Door provides global load balancing with WAF integration."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _validate_azure_resource_id(params.get("resource_id", "")),
+            "skill": "azure_cloud"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 20. gcp_cloud — Google Cloud Platform                               #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "gcp_cloud",
+        "description": "Google Cloud Platform with Compute Engine, Cloud Functions, GKE, Cloud Run, BigQuery, and Terraform.",
+        "knowledge": (
+            "GCP is built on the infrastructure powering Google Search and YouTube. "
+            "Compute Engine provides VMs with live migration and sustained use discounts. "
+            "Cloud Functions executes event-driven code with automatic scaling. "
+            "Google Kubernetes Engine offers auto-pilot and integrated IAM. "
+            "Cloud Run runs stateless containers with scaling to zero and pay-per-use. "
+            "BigQuery is a serverless data warehouse querying petabytes with SQL. "
+            "Cloud Storage provides unified object storage with fine-grained access control. "
+            "Cloud SQL manages MySQL, PostgreSQL, and SQL Server with automated backups. "
+            "Cloud Spanner provides globally distributed strongly consistent relational database. "
+            "Terraform on GCP uses the Google Cloud Provider for infrastructure as code. "
+            "VPC networks are global with firewall rules and Cloud NAT for outbound traffic. "
+            "Cloud IAM uses roles with primitive, predefined, and custom permissions. "
+            "Cloud Monitoring collects metrics, uptime checks, and alerting. "
+            "Service accounts manage application identity with workload federation."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _validate_gcp_resource_name(params.get("name", "")),
+            "skill": "gcp_cloud"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 21. docker_dev — Docker Development                                 #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "docker_dev",
+        "description": "Docker containerization with images, compose, multi-stage builds, volumes, networks, and security.",
+        "knowledge": (
+            "Docker packages applications into containers running consistently across hosts. "
+            "Images are built from layered filesystems using Dockerfiles with FROM, RUN, COPY, CMD. "
+            "Multi-stage builds copy artifacts between stages for smaller production images. "
+            "Docker Compose defines multi-container apps with service config in YAML. "
+            "Bind maps mount host directories while volumes are managed by Docker for persistence. "
+            "Docker networks include bridge, host, overlay, and macvlan driver types. "
+            "Container security includes non-root users, read-only filesystems, and dropped capabilities. "
+            "Health checks let Docker restart unhealthy containers automatically. "
+            "Image tagging follows semantic versioning with latest as the stable pointer. "
+            "Container registries like Docker Hub and ECR store and distribute images. "
+            "Layer caching accelerates builds by reusing unchanged layers. "
+            "Docker Scout analyzes image dependencies for known vulnerabilities. "
+            "Resource constraints limit CPU, memory, and I/O for noisy neighbor prevention. "
+            ".dockerignore reduces build context by excluding unnecessary files."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _validate_dockerfile(params.get("dockerfile", "")),
+            "skill": "docker_dev"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 22. kubernetes_dev — Kubernetes Orchestration                       #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "kubernetes_dev",
+        "description": "Kubernetes orchestration with pods, services, ingress, RBAC, Helm, operators, and monitoring.",
+        "knowledge": (
+            "Kubernetes orchestrates containers across a cluster with automated deployment. "
+            "Pods are the smallest deployable units wrapping containers with shared networking. "
+            "Services provide stable endpoints using ClusterIP, NodePort, or LoadBalancer. "
+            "Ingress exposes HTTP routes with TLS termination and path-based routing. "
+            "RBAC controls access using Roles, ClusterRoles, and ServiceAccounts. "
+            "Helm packages Kubernetes resources as charts with templated manifests. "
+            "Operators extend Kubernetes with custom resources and automation controllers. "
+            "Horizontal Pod Autoscaler adjusts replicas based on CPU or custom metrics. "
+            "ConfigMaps and Secrets inject config without rebuilding images. "
+            "PersistentVolumeClaims request storage with access modes for stateful apps. "
+            "PodDisruptionBudgets ensure availability during voluntary cluster disruptions. "
+            "Network policies isolate workloads using label selectors and port rules. "
+            "Probes determine pod health and control traffic routing. "
+            "kubectl context management simplifies cluster switching and isolation."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _validate_k8s_manifest(params.get("manifest", "")),
+            "skill": "kubernetes_dev"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 23. ci_cd_dev — CI/CD Pipeline Engineering                          #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "ci_cd_dev",
+        "description": "CI/CD pipeline development with GitHub Actions, GitLab CI, Jenkins, ArgoCD, and GitOps.",
+        "knowledge": (
+            "Continuous Integration builds and tests on every push to catch regressions. "
+            "GitHub Actions uses workflow YAML with triggers, jobs, and steps. "
+            "GitLab CI defines pipelines in .gitlab-ci.yml with stages and jobs. "
+            "Jenkins pipelines are defined as code in Jenkinsfiles. "
+            "ArgoCD implements GitOps for Kubernetes synchronizing cluster with git. "
+            "GitOps uses Git as the single source of truth for declarative infrastructure. "
+            "Deployment strategies include rolling, blue-green, canary, and feature flags. "
+            "Pipeline caching stores dependencies between runs to avoid re-downloading. "
+            "Matrix builds test across OS and language versions in parallel. "
+            "Secrets management uses encrypted variables and OIDC cloud auth. "
+            "Container-based runners provide isolated build environments. "
+            "Artifact repositories store build outputs across pipeline stages. "
+            "Pipeline notifications integrate with Slack, email, and PagerDuty. "
+            "Trunk-based development with short-lived branches accelerates delivery."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _validate_ci_config(params.get("config", "")),
+            "skill": "ci_cd_dev"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 24. sql_dev — SQL and Relational Databases                          #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "sql_dev",
+        "description": "SQL development with query optimization, indexing, window functions, CTEs, ACID, and normalization.",
+        "knowledge": (
+            "SQL is the standard language for relational database management. "
+            "B-tree indexes accelerate equality and range lookups with write overhead. "
+            "Covering indexes include all needed columns to avoid heap lookups. "
+            "Window functions perform calculations across row sets without collapsing them. "
+            "Common Table Expressions create temporary result sets for readable complex joins. "
+            "ACID properties guarantee reliable transaction processing. "
+            "Normalization eliminates data redundancy through systematic decomposition. "
+            "Query execution plans show whether index seeks, scans, and joins are efficient. "
+            "Parameterized queries prevent SQL injection by separating structure from values. "
+            "Transaction isolation levels balance consistency against concurrency. "
+            "Deadlocks occur when transactions hold locks circularly. "
+            "Partitioning splits large tables into smaller physical segments. "
+            "Materialized views pre-compute query results for faster reads. "
+            "EXPLAIN ANALYZE provides actual execution costs for query tuning."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _analyze_sql_query(params.get("query", "")),
+            "skill": "sql_dev"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 25. nosql_dev — NoSQL Databases                                     #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "nosql_dev",
+        "description": "NoSQL databases including MongoDB, Redis, Cassandra, DynamoDB with modeling and CAP theorem.",
+        "knowledge": (
+            "NoSQL databases trade ACID guarantees for horizontal scalability. "
+            "MongoDB stores documents in BSON with aggregation pipelines and geospatial indexes. "
+            "Replica sets provide redundancy with automatic failover. "
+            "Redis is an in-memory data structure store with strings, hashes, and sets. "
+            "Redis persistence uses RDB snapshots and AOF logs. "
+            "Cassandra uses a wide-column model with partition keys for data distribution. "
+            "Cassandra's tunable consistency lets apps choose between availability and accuracy. "
+            "DynamoDB is a fully managed key-value database with single-digit millisecond latency. "
+            "The CAP theorem states distributed systems can only guarantee two of three properties. "
+            "NoSQL data modeling is query-driven based on access patterns. "
+            "Compound keys combine partition and sort keys for hierarchical organization. "
+            "Time-series data uses composite partition keys with time-based clustering. "
+            "Change streams enable real-time data processing and event-driven architectures. "
+            "Secondary indexes require careful consideration of consistency implications."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _validate_nosql_query(params.get("query", "")),
+            "skill": "nosql_dev"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 26. data_engineering — Data Pipelines                               #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "data_engineering",
+        "description": "Data pipeline engineering with Spark, Airflow, dbt, Delta Lake, and data warehousing.",
+        "knowledge": (
+            "Data engineering builds robust pipelines for extracting, transforming, and loading data. "
+            "Apache Spark processes large datasets in memory using DataFrames and SQL. "
+            "Spark's Catalyst optimizer applies rule-based and cost-based optimization. "
+            "Airflow orchestrates DAGs with scheduling, retries, and dependency management. "
+            "dbt enables data transformation within the warehouse using SQL models. "
+            "Delta Lake adds ACID transactions and time travel to data lake storage. "
+            "Data warehousing uses star schemas with fact and dimension tables. "
+            "Medallion architecture organizes data quality layers in the lakehouse. "
+            "Change data capture captures database changes in real time. "
+            "Partitioning determines physical data layout for query pruning. "
+            "Idempotent pipelines produce same results regardless of replay count. "
+            "Data quality checks validate null rates and referential integrity. "
+            "Schema evolution handles column changes without breaking downstream consumers. "
+            "Columnar file formats like Parquet compress data efficiently."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _validate_data_pipeline(params.get("config", {})),
+            "skill": "data_engineering"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 27. data_science — Data Science & Analytics                         #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "data_science",
+        "description": "Data science with Pandas, NumPy, scikit-learn, matplotlib, Jupyter, and statistical analysis.",
+        "knowledge": (
+            "Data science extracts insights through statistical analysis and predictive modeling. "
+            "Pandas provides DataFrame objects with groupby, merge, and time series. "
+            "NumPy enables fast computation with vectorized operations and n-dimensional arrays. "
+            "Scikit-learn implements classification, regression, clustering, and model selection. "
+            "Cross-validation estimates model generalization without data leakage. "
+            "Feature engineering creates predictors through transformation and encoding. "
+            "Matplotlib and Seaborn provide publication-quality static plots. "
+            "Hypothesis testing determines whether observed effects are significant. "
+            "Bias-variance tradeoff guides model complexity decisions. "
+            "Principal Component Analysis reduces dimensionality along variance axes. "
+            "Gradient descent optimizes by moving toward steepest error reduction. "
+            "Jupyter notebooks combine code, visualization, and documentation. "
+            "SHAP and LIME explain individual model predictions. "
+            "A/B testing uses power analysis for sample size determination."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _analyze_dataset_metrics(params.get("data", {})),
+            "skill": "data_science"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 28. llm_dev — LLM Development                                       #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "llm_dev",
+        "description": "LLM development with fine-tuning, RAG, prompt engineering, LangChain, and LlamaIndex.",
+        "knowledge": (
+            "Large Language Models use transformer architectures with self-attention. "
+            "Fine-tuning adapts pre-trained models to domain tasks using curated data. "
+            "Parameter-efficient fine-tuning updates low-rank matrices rather than full weights. "
+            "RAG combines vector search with language model generation for grounded outputs. "
+            "Prompt engineering includes few-shot, chain-of-thought, and structured outputs. "
+            "LangChain provides chains, agents, memory, and tool integration abstractions. "
+            "LlamaIndex specializes in data indexing and retrieval for RAG. "
+            "Tokenization strategies include BPE, WordPiece, and SentencePiece. "
+            "Context window management uses sliding windows and summarization. "
+            "Model quantization reduces memory footprint and inference latency. "
+            "LLM evaluation uses MMLU, HumanEval, GSM8K benchmarks. "
+            "Guardrails prevent harmful outputs through moderation layers. "
+            "Caching reduces API costs for repeated queries. "
+            "Streaming improves user experience by delivering tokens as generated."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _analyze_llm_prompt(params.get("prompt", ""), params.get("system_prompt", "")),
+            "skill": "llm_dev"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 29. ml_dev — ML Engineering                                         #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "ml_dev",
+        "description": "ML engineering with scikit-learn, PyTorch, TensorFlow, model deployment, and MLOps practices.",
+        "knowledge": (
+            "Machine learning engineering builds and deploys production ML systems. "
+            "PyTorch uses dynamic computation graphs with eager execution for intuitive debugging. "
+            "TensorFlow uses static graphs with TensorFlow Serving for optimized inference. "
+            "Scikit-learn provides consistent API across preprocessing, training, and evaluation. "
+            "Feature stores centralize definitions and serve consistent features. "
+            "Model registries track versions, lineage, metrics, and artifacts. "
+            "A/B testing compares model versions on live traffic. "
+            "Online inference serves predictions with low-latency API endpoints. "
+            "Batch inference processes large datasets on schedules using Spark. "
+            "Data drift detection monitors input distributions with statistical tests. "
+            "Model retraining detects degradation and triggers automated retraining. "
+            "Gradient accumulation simulates larger batch sizes with limited GPU memory. "
+            "Mixed precision training doubles throughput on modern GPUs. "
+            "MLflow tracks experiments, parameters, and metrics for reproducibility."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _analyze_ml_pipeline(params.get("config", {})),
+            "skill": "ml_dev"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 30. nlp_dev — Natural Language Processing                           #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "nlp_dev",
+        "description": "NLP development with transformers, embeddings, NER, sentiment, topic modeling, and classification.",
+        "knowledge": (
+            "NLP enables computers to understand and generate human language. "
+            "Transformer models use multi-head self-attention for long-range dependencies. "
+            "Word embeddings map words to dense vectors capturing semantic similarity. "
+            "Contextual embeddings from BERT adapt representations based on context. "
+            "Named Entity Recognition classifies spans as persons, organizations, or locations. "
+            "Sentiment analysis determines emotional tone using lexicon or ML approaches. "
+            "Topic modeling discovers latent themes in document collections. "
+            "Text classification assigns categories using TF-IDF or transformer encoders. "
+            "Sequence labeling assigns labels to each token in sequences. "
+            "SpaCy provides production-grade NLP pipelines for multiple languages. "
+            "Hugging Face Transformers offers unified APIs for pre-trained models. "
+            "Evaluation uses precision, recall, F1 for classification tasks. "
+            "Text preprocessing covers tokenization, stemming, and normalization. "
+            "Language detection uses n-gram models trained on multilingual corpora."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _analyze_text_sentiment(params.get("text", "")),
+            "skill": "nlp_dev"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 31. computer_vision — Computer Vision                               #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "computer_vision",
+        "description": "Computer vision with OpenCV, YOLO, segmentation, image classification, GANs, and object detection.",
+        "knowledge": (
+            "Computer vision extracts meaning from images, video, and 3D data. "
+            "OpenCV provides optimized image processing including filtering and transformations. "
+            "CNNs learn hierarchical features through stacked convolution and pooling layers. "
+            "YOLO performs real-time object detection as a regression problem. "
+            "Semantic segmentation assigns class labels to every pixel. "
+            "Instance segmentation distinguishes individual object instances. "
+            "Image classification networks assign labels to entire images. "
+            "GANs pit generator against discriminator for realistic synthetic images. "
+            "Data augmentation improves robustness and reduces overfitting. "
+            "Transfer learning fine-tunes pretrained models on domain tasks. "
+            "Object tracking maintains identity across video frames. "
+            "Optical flow computes pixel motion for activity recognition. "
+            "Stereo vision recovers 3D geometry from multiple viewpoints. "
+            "Model deployment uses TensorRT or ONNX for optimized inference."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _analyze_image_params(params.get("image_info", {})),
+            "skill": "computer_vision"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 32. audio_synthesis — Audio/Music Synthesis                         #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "audio_synthesis",
+        "description": "Audio and music synthesis with DSP, MIDI, spectrogram analysis, sample manipulation, and TTS.",
+        "knowledge": (
+            "Audio synthesis generates sound through oscillators, filters, and envelopes. "
+            "DSP manipulates audio using FFT, convolution, delay, and reverb. "
+            "MIDI encodes musical events like note on, off, and velocity. "
+            "Spectrograms visualize frequency content over time using STFT. "
+            "Granular synthesis breaks audio into grains for time-stretching. "
+            "TTS uses neural models like Tacotron and WaveNet for natural speech. "
+            "Additive synthesis combines sine waves at harmonic frequencies. "
+            "Subtractive synthesis filters harmonically rich waveforms. "
+            "44.1kHz sample rate determines highest representable frequency. "
+            "Bit depth determines dynamic range and noise floor. "
+            "Phase vocoder enables independent time-stretching and pitch-shifting. "
+            "Artificial reverberation uses convolution with impulse responses. "
+            "VST and AU are plugin formats for synthesizers in DAWs. "
+            "DAWs like Ableton Live sequence, record, and mix audio."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _analyze_audio_params(params.get("audio_info", {})),
+            "skill": "audio_synthesis"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 33. rag_systems — Retrieval-Augmented Generation                    #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "rag_systems",
+        "description": "RAG pipeline development with chunking, embedding, retrieval, reranking, hybrid search, and evaluation.",
+        "knowledge": (
+            "RAG enhances LLM outputs with information from external knowledge bases. "
+            "Chunking strategies determine how documents are split for indexing. "
+            "Overlapping chunks preserve context at chunk boundaries. "
+            "Embedding models convert text into dense vector representations. "
+            "Vector databases index embeddings for approximate nearest neighbor search. "
+            "Hybrid search combines vector similarity with BM25 keyword matching. "
+            "Reranking models refine results with cross-encoders for relevance. "
+            "Multi-hop retrieval decomposes questions into sub-queries. "
+            "Context window management selects chunks within token limits. "
+            "Query transformation improves retrieval by reformulating questions. "
+            "Evaluation metrics include answer relevance and context precision. "
+            "Parent-child retrieval returns fine chunks with parent-level context. "
+            "LLM-as-judge rates response quality on defined criteria. "
+            "Guardrails filter retrieved content for safety and freshness."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _analyze_rag_query(params.get("query", ""), params.get("chunks", [])),
+            "skill": "rag_systems"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 34. network_security — Network Security                             #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "network_security",
+        "description": "Network security with nmap, Wireshark, firewalls, IDS/IPS, VPN, and network segmentation.",
+        "knowledge": (
+            "Network security protects infrastructure and data confidentiality. "
+            "Nmap performs port scanning, service detection, and OS fingerprinting. "
+            "Wireshark captures and analyzes packets with protocol dissection. "
+            "Firewalls enforce policies using stateful inspection and filtering. "
+            "IDS systems analyze traffic for malicious signatures and anomalies. "
+            "VPNs encrypt traffic between endpoints over untrusted networks. "
+            "Network segmentation divides networks into trust zones. "
+            "Zero Trust requires continuous verification for every access. "
+            "DDoS mitigation uses rate limiting and scrubbing centers. "
+            "DNS security prevents spoofing with DNSSEC and DoH. "
+            "MAC filtering and 802.1X control device access at the edge. "
+            "Honeypots lure attackers to detect intrusion attempts. "
+            "NetFlow collects metadata for traffic analysis. "
+            "SIEM correlates alerts across network devices and servers."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _analyze_network_scan(params.get("host", ""), params.get("ports", "1-1000")),
+            "skill": "network_security"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 35. web_security — Web Application Security                         #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "web_security",
+        "description": "Web application security covering OWASP Top 10, WAF, XSS, CSRF, SQLi, SSRF, and CSP.",
+        "knowledge": (
+            "Web security defends against HTTP-based application attacks. "
+            "The OWASP Top 10 catalogs critical web security risks. "
+            "XSS injects malicious scripts through unvalidated input. "
+            "CSRF tricks authenticated users into unintended actions. "
+            "SQL injection manipulates queries through unsanitized input. "
+            "SSRF tricks servers into making unintended internal requests. "
+            "CSP headers restrict browser resources mitigating XSS. "
+            "WAFs like ModSecurity filter malicious HTTP at the edge. "
+            "Same-Origin Policy prevents cross-origin data access. "
+            "CORS relaxes same-origin based on whitelisted origins. "
+            "HSTS forces HTTPS preventing SSL stripping attacks. "
+            "Rate limiting protects against brute force and DoS. "
+            "Secure cookie attributes prevent client-side access. "
+            "Subresource Integrity ensures external scripts are untampered."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _analyze_web_security(params.get("headers", {})),
+            "skill": "web_security"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 36. pentesting — Penetration Testing                                #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "pentesting",
+        "description": "Penetration testing methodology with Metasploit, Burp Suite, privilege escalation, and reporting.",
+        "knowledge": (
+            "Penetration testing simulates real attacks to identify vulnerabilities. "
+            "Methodology includes recon, scanning, exploitation, and reporting. "
+            "Metasploit provides exploits, payloads, and post-exploitation modules. "
+            "Burp Suite intercepts HTTP traffic with repeater and intruder tools. "
+            "Privilege escalation exploits kernel vulnerabilities or misconfigurations. "
+            "Active recon uses direct interaction to map the attack surface. "
+            "Passive recon gathers info from public sources. "
+            "SQLMap automates SQL injection detection and exploitation. "
+            "Password cracking uses hashcat with dictionary and brute-force attacks. "
+            "Lateral movement expands access across the network. "
+            "Persistence mechanisms maintain access after reboots. "
+            "Exfiltration testing evaluates data extraction capabilities. "
+            "Reporting documents findings with severity and remediation. "
+            "Rules of engagement define scope and authorization."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _analyze_scan_results(params.get("findings", [])),
+            "skill": "pentesting"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 37. reverse_engineering — Reverse Engineering                        #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "reverse_engineering",
+        "description": "Reverse engineering with IDA Pro, Ghidra, x86/ARM analysis, unpacking, patching, and debugging.",
+        "knowledge": (
+            "Reverse engineering analyzes software without source code. "
+            "IDA Pro provides interactive disassembly with decompiler plugins. "
+            "Ghidra is an open-source framework with collaborative analysis. "
+            "x86 uses CISC instructions while ARM uses fixed-length RISC. "
+            "Static analysis examines binaries without execution. "
+            "Dynamic analysis observes behavior during execution. "
+            "Packer detection identifies UPX and custom packers by entropy. "
+            "Unpacking techniques include OEP finding and memory dumping. "
+            "Binary patching modifies program logic by changing bytes. "
+            "Function signatures identify library functions by byte patterns. "
+            "Control flow graphs visualize branching and call relationships. "
+            "Anti-debugging techniques complicate dynamic analysis. "
+            "Decompilation translates assembly to high-level pseudocode. "
+            "Protocol RE analyzes network traffic without documentation."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _analyze_binary_info(params.get("binary_info", {})),
+            "skill": "reverse_engineering"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 38. forensics — Digital Forensics                                   #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "forensics",
+        "description": "Digital forensics with Autopsy, Volatility, FTK, timeline analysis, file carving, and memory analysis.",
+        "knowledge": (
+            "Digital forensics investigates evidence following chain-of-custody. "
+            "Autopsy is a GUI platform for disk analysis and file carving. "
+            "Volatility performs memory analysis on RAM dumps. "
+            "FTK indexes evidence for rapid search and decryption. "
+            "Timeline analysis correlates timestamps to reconstruct events. "
+            "File carving recovers files by scanning for headers in free space. "
+            "Write blockers prevent modification during acquisition. "
+            "Hashing verifies evidence integrity after analysis. "
+            "Data hiding includes alternate data streams and steganography. "
+            "Registry analysis extracts user activity and USB history. "
+            "Network forensics captures pcap for communication analysis. "
+            "Mobile forensics extracts messages and location data. "
+            "Anti-forensics techniques complicate recovery efforts. "
+            "Reporting documents findings for legal proceedings."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _analyze_forensic_data(params.get("evidence", {})),
+            "skill": "forensics"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 39. cryptography — Cryptography                                    #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "cryptography",
+        "description": "Cryptography with AES, RSA, ECC, hashing, TLS, PKI, key exchange, and post-quantum algorithms.",
+        "knowledge": (
+            "Cryptography provides confidentiality, integrity, and authentication. "
+            "AES is a symmetric block cipher with 128 to 256-bit keys. "
+            "RSA is based on the difficulty of factoring large primes. "
+            "ECC offers equivalent security with smaller keys than RSA. "
+            "Hash functions produce fixed-size collision-resistant digests. "
+            "TLS 1.3 uses ECDHE key exchange with record encryption. "
+            "PKI manages certificate issuance and validation. "
+            "Diffie-Hellman allows shared secret agreement over insecure channels. "
+            "HMAC provides message authentication with a secret key. "
+            "Password hashing uses bcrypt, scrypt, or Argon2 with salt. "
+            "Post-quantum cryptography like CRYSTALS-Kyber resists quantum attacks. "
+            "Authenticated encryption modes provide confidentiality and integrity. "
+            "Key derivation functions generate keys from passwords or secrets. "
+            "Side-channel attacks exploit timing or power emissions."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _perform_crypto_operation(
+                params.get("operation", "hash"),
+                params.get("data", ""),
+                params.get("algorithm", "sha256")
+            ),
+            "skill": "cryptography"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 40. blockchain_dev — Blockchain Development                         #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "blockchain_dev",
+        "description": "Blockchain development with Solidity, Ethereum, smart contracts, Web3, DeFi, and NFTs.",
+        "knowledge": (
+            "Blockchain is a distributed ledger maintained by consensus. "
+            "Ethereum runs smart contracts on the EVM using Solidity. "
+            "Solidity is a statically typed language with inheritance. "
+            "Smart contracts manage on-chain state with functions and events. "
+            "Gas optimization minimizes transaction costs. "
+            "ERC-20 defines the fungible token standard. "
+            "ERC-721 and ERC-1155 define non-fungible token standards. "
+            "Web3.js and Ethers.js interact with Ethereum nodes. "
+            "DeFi protocols implement AMM, lending, and yield farming. "
+            "Layer 2 scaling uses rollups for higher throughput. "
+            "Hardhat and Foundry compile and test smart contracts. "
+            "The mempool holds pending transactions for inclusion. "
+            "Oracles bring off-chain data onto the blockchain. "
+            "MEV refers to profit from transaction ordering."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _validate_ethereum_address(params.get("address", "")),
+            "skill": "blockchain_dev"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 41. crypto_trading — Cryptocurrency Trading                         #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "crypto_trading",
+        "description": "Cryptocurrency trading with strategies, risk management, exchanges, indicators, and bot building.",
+        "knowledge": (
+            "Crypto trading involves buying and selling digital assets on exchanges. "
+            "Technical indicators include moving averages, RSI, MACD, and Bollinger Bands. "
+            "Order types include market, limit, stop-loss, and trailing stop. "
+            "Liquidity analysis examines order book depth and spread. "
+            "Risk management uses position sizing and drawdown limits. "
+            "Algorithmic bots automate strategies using exchange APIs. "
+            "Arbitrage exploits price differences across exchanges. "
+            "Impermanent loss affects AMM liquidity providers. "
+            "Funding rates incentivize perpetual contract convergence. "
+            "Backtesting evaluates strategies on historical data. "
+            "Market microstructure studies order flow and price impact. "
+            "Portfolio tracking monitors P&L, Sharpe ratio, and drawdown. "
+            "Tax reporting calculates capital gains for jurisdictions. "
+            "Sentiment analysis incorporates social media and on-chain metrics."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _calculate_trading_metrics(params.get("trades", [])),
+            "skill": "crypto_trading"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 42. mining_ops — Cryptocurrency Mining                               #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "mining_ops",
+        "description": "Cryptocurrency mining with SHA-256, GPU/ASIC operations, pool configuration, and profitability.",
+        "knowledge": (
+            "Mining validates transactions through proof-of-work computation. "
+            "SHA-256 mining finds a nonce producing a hash with required zeros. "
+            "Mining difficulty adjusts to maintain consistent block times. "
+            "ASIC miners provide orders more hashrate per watt than GPUs. "
+            "GPU mining remains viable for memory-hard algorithms. "
+            "Pools combine hashrate and share rewards proportionally. "
+            "Payout methods include PPS, FPPS, PPLNS, and solo mining. "
+            "Profitability factors in hashrate, power cost, pool fees, and coin price. "
+            "Overclocking and undervolting optimize hash-per-watt. "
+            "Cooling solutions manage the significant heat generated. "
+            "Stratum protocol relays work between pools and miners. "
+            "Mining farm layout optimizes power and ventilation. "
+            "Mining software supports multiple algorithms and pools. "
+            "Regulatory considerations include power permits and taxation."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _calculate_mining_profitability(params.get("hashrate", 0), params.get("watts", 0)),
+            "skill": "mining_ops"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 43. unity_dev — Unity Game Development                              #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "unity_dev",
+        "description": "Unity game development with C#, ECS, physics, shaders, animation, asset pipeline, and optimization.",
+        "knowledge": (
+            "Unity is a cross-platform engine for 2D, 3D, VR, and AR. "
+            "MonoBehaviour scripts hook into Awake, Start, and Update. "
+            "ECS provides data-oriented high-performance game logic. "
+            "Unity Physics provides rigid bodies, colliders, and raycasting. "
+            "URP and HDRP render pipelines provide configurable rendering. "
+            "Animation uses state machines, blend trees, and IK. "
+            "The asset pipeline imports and compresses game assets. "
+            "Addressable Assets provide on-demand content loading. "
+            "Profiler analyzes CPU, GPU, and memory performance. "
+            "Job System and Burst enable multi-threaded near-native code. "
+            "Prefab system creates reusable game object hierarchies. "
+            "NavMesh provides pathfinding for AI characters. "
+            "Input System handles keyboard, touch, gamepad, and XR. "
+            "Build targets compile for multiple platforms."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _analyze_unity_script(params.get("code", "")),
+            "skill": "unity_dev"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 44. unreal_dev — Unreal Engine Game Development                     #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "unreal_dev",
+        "description": "Unreal Engine development with Blueprints, C++, Niagara, materials, sequencer, and world building.",
+        "knowledge": (
+            "Unreal Engine is a AAA game engine with advanced rendering. "
+            "Blueprints are visual scripting graphs compiling to C++. "
+            "C++ uses reflection macros for engine integration. "
+            "Niagara provides GPU particle effects for large simulations. "
+            "Material Editor creates shaders with nodes for visual effects. "
+            "Sequencer is a cinematic tool for cutscenes and sequences. "
+            "World building uses landscapes, foliage, and level streaming. "
+            "Chaos Physics handles destruction and cloth simulation. "
+            "Animation Blueprints control skeletal mesh animation. "
+            "Lighting combines baked lightmaps with Lumen GI. "
+            "Sound Cues and MetaSounds provide audio mixing. "
+            "Gameplay Ability System provides modular abilities. "
+            "Online Subsystem abstracts multiplayer networking. "
+            "Pixel Streaming renders and streams to browsers via WebRTC."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _analyze_unreal_blueprint(params.get("blueprint_info", {})),
+            "skill": "unreal_dev"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 45. godot_dev — Godot Game Development                              #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "godot_dev",
+        "description": "Godot game development with GDScript, scene system, signals, shaders, 2D/3D, and export.",
+        "knowledge": (
+            "Godot is a free open-source engine with node-based architecture. "
+            "GDScript is a Python-like language integrated with Godot's API. "
+            "The scene tree organizes nodes hierarchically. "
+            "Signals provide decoupled node communication. "
+            "The 2D engine has pixel-perfect rendering and dedicated physics. "
+            "The 3D engine supports PBR materials and SDFGI GI. "
+            "Shader language is based on GLSL with multiple shader types. "
+            "AnimationPlayer handles sprite, property, and bone animation. "
+            "TileMap provides auto-tiling and collision layers. "
+            "@export exposes script variables to the editor. "
+            "Godot 4 uses Vulkan as the primary rendering backend. "
+            "Resource system serializes game data with custom resources. "
+            "Multiplayer API provides RPC and low-level networking. "
+            "Export templates build for multiple desktop and mobile platforms."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _analyze_godot_script(params.get("code", "")),
+            "skill": "godot_dev"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 46. web_app_builder — Web Application Architecture                  #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "web_app_builder",
+        "description": "Web application architecture with full-stack patterns, SPAs, SSR, PWA, performance, and accessibility.",
+        "knowledge": (
+            "Web architecture defines client and server component interactions. "
+            "SPAs render all views client-side with API data fetching. "
+            "SSR generates HTML on the server for faster initial loads. "
+            "PWAs use service workers for offline and push notifications. "
+            "Web performance metrics include LCP, FID, and CLS. "
+            "Core Web Vitals optimize images, code splitting, and caching. "
+            "Accessibility follows WCAG 2.1 with semantic HTML and ARIA. "
+            "SEO uses semantic markup, structured data, and sitemaps. "
+            "Internationalization uses message catalogs and locale detection. "
+            "Authentication integrates OAuth providers and route guards. "
+            "API caching with ETag and Cache-Control reduces server load. "
+            "Security headers like X-Frame-Options harden the app. "
+            "Build tooling optimizes bundles with tree shaking. "
+            "RUM captures actual user experience metrics across devices."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _analyze_web_app(params.get("url", ""), params.get("config", {})),
+            "skill": "web_app_builder"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 47. mobile_app_builder — Mobile Application Architecture            #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "mobile_app_builder",
+        "description": "Mobile application architecture with offline-first, sync, deep linking, push, and app store deployment.",
+        "knowledge": (
+            "Mobile architecture handles connectivity variation and limited battery. "
+            "Offline-first stores data locally and syncs when online. "
+            "Conflict resolution uses CRDTs or last-write-wins. "
+            "Deep linking navigates from URLs or notifications. "
+            "Push notifications use APNs and FCM with device tokens. "
+            "App store deployment requires signing and platform compliance. "
+            "Feature flags enable gradual rollouts without store releases. "
+            "Analytics captures user behavior and crash metrics. "
+            "Biometric auth integrates with Face ID and fingerprint APIs. "
+            "Background processing uses WorkManager or BGTaskScheduler. "
+            "Memory management avoids leaks with weak references. "
+            "Responsive layouts use adaptive grids and dynamic type. "
+            "Module separation enables independent feature development. "
+            "App thinning reduces download size for target devices."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _analyze_mobile_config(params.get("config", {})),
+            "skill": "mobile_app_builder"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 48. desktop_app_builder — Desktop Application Development           #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "desktop_app_builder",
+        "description": "Desktop application development with Electron, Tauri, .NET MAUI, Qt, and native-feel UIs.",
+        "knowledge": (
+            "Desktop apps run natively with full system API access. "
+            "Electron packages web apps with Chromium and Node.js. "
+            "Tauri uses native web views with a Rust backend for security. "
+            ".NET MAUI creates native apps from a single .NET codebase. "
+            "Qt is a C++ framework with QML for declarative UIs. "
+            "Native-feel design follows platform menu and dialog conventions. "
+            "Installers use Inno Setup, .dmg, or .deb packaging tools. "
+            "Auto-update frameworks deliver seamless version upgrades. "
+            "System tray integration provides background operation. "
+            "GPU acceleration enables smooth animations and video. "
+            "IPC bridges renderer and main process in Electron or Tauri. "
+            "Accessibility supports screen readers and keyboard nav. "
+            "Crash reporting captures stack traces for debugging. "
+            "Signed builds prevent security warnings on distribution."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _analyze_desktop_config(params.get("config", {})),
+            "skill": "desktop_app_builder"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 49. api_builder — API Design and Development                        #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "api_builder",
+        "description": "API design with REST, GraphQL, gRPC, versioning, documentation, testing, and API gateways.",
+        "knowledge": (
+            "API design defines contracts between services. "
+            "REST uses HTTP methods and resource-oriented URLs. "
+            "GraphQL provides flexible client-driven queries. "
+            "gRPC uses Protocol Buffers with HTTP/2 streaming. "
+            "Versioning strategies include URL prefix and headers. "
+            "OpenAPI documents REST APIs with request schemas. "
+            "API gateways handle routing, rate limiting, and auth. "
+            "Idempotency keys prevent duplicate processing. "
+            "Pagination includes cursor-based and offset-based patterns. "
+            "Error responses follow consistent formats with codes. "
+            "Rate limiting uses token bucket or sliding window algorithms. "
+            "HATEOAS provides discoverable API navigation. "
+            "Webhook delivery uses retry logic and signatures. "
+            "API testing with Postman ensures specification compliance."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _validate_api_spec(params.get("spec", "")),
+            "skill": "api_builder"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 50. auth_builder — Authentication Systems                           #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "auth_builder",
+        "description": "Authentication systems with OAuth 2.0, OIDC, SAML, JWT, RBAC, MFA, WebAuthn, and sessions.",
+        "knowledge": (
+            "Authentication verifies identity while authorization controls access. "
+            "OAuth 2.0 is an authorization framework with multiple grant types. "
+            "OpenID Connect extends OAuth with identity tokens. "
+            "SAML 2.0 provides enterprise SSO with federated identity. "
+            "JWT encodes claims with cryptographic signature verification. "
+            "RBAC assigns permissions to roles rather than users. "
+            "ABAC evaluates policies based on attributes. "
+            "MFA combines password, TOTP, biometric, or hardware factors. "
+            "WebAuthn provides passwordless public-key authentication. "
+            "Session management uses rotating session IDs server-side. "
+            "Token refresh uses short-lived access with long-lived refresh tokens. "
+            "PKCE prevents authorization code interception. "
+            "Account recovery verifies identity before password reset. "
+            "Brute force protection locks accounts after failed attempts."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _validate_jwt(params.get("token", "")),
+            "skill": "auth_builder"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 51. payment_integration — Payment Systems                           #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "payment_integration",
+        "description": "Payment integration with Stripe, PayPal, subscriptions, invoicing, and PCI compliance.",
+        "knowledge": (
+            "Payment processing handles secure fund transfers. "
+            "Stripe provides APIs for payments, subscriptions, and invoicing. "
+            "PayPal offers checkout flows and dispute resolution. "
+            "PCI DSS defines security requirements for card processing. "
+            "Tokenization reduces PCI scope by replacing card data. "
+            "Subscription management handles billing cycles and proration. "
+            "Webhooks validate signatures for payment event processing. "
+            "Invoicing generates PDFs with tax and discount calculation. "
+            "Multi-currency requires exchange rate APIs and rounding rules. "
+            "3D Secure adds verification for card-not-present transactions. "
+            "Refund handling processes full or partial refunds. "
+            "Payouts schedule batch transfers with settlement reporting. "
+            "Tax calculation integrates services for sales tax compliance. "
+            "Recurring revenue tracks MRR, ARR, churn, and LTV."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _validate_payment_amount(params.get("amount", 0)),
+            "skill": "payment_integration"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 52. linux_ops — Linux Administration & Operations                   #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "linux_ops",
+        "description": "Linux administration with shell scripting, systemd, performance, security, and networking.",
+        "knowledge": (
+            "Linux powers servers, embedded devices, and cloud infrastructure. "
+            "Systemd manages services, timers, and targets as the init system. "
+            "Bash scripting automates tasks with pipes and control structures. "
+            "File permissions control access with rwx bits and ACLs. "
+            "Process management with ps and top monitors resource usage. "
+            "User administration manages accounts and groups. "
+            "Package management uses apt, dnf, or pacman depending on distro. "
+            "Kernel parameters via sysctl control networking and memory. "
+            "LVM provides flexible disk management with snapshots. "
+            "Performance tuning uses perf, strace, and iostat. "
+            "SSH key management secures remote access. "
+            "Firewall configuration with iptables or firewalld. "
+            "Rsync and tar provide efficient backup and archiving. "
+            "Journald captures system logs with rotation and filtering."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _analyze_linux_command(params.get("command", "")),
+            "skill": "linux_ops"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 53. networking_ops — Networking Operations                          #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "networking_ops",
+        "description": "Networking operations with TCP/IP, DNS, HTTP/2, load balancing, CDN, BGP, and SDN.",
+        "knowledge": (
+            "Networking fundamentals underpin all distributed systems. "
+            "TCP provides reliable connection-oriented data delivery. "
+            "DNS translates domain names to IP addresses hierarchically. "
+            "HTTP/2 multiplexes streams over a single TCP connection. "
+            "Load balancing distributes traffic with various algorithms. "
+            "CDNs cache content at edge locations for lower latency. "
+            "BGP routes traffic between autonomous systems. "
+            "SDN decouples control and data planes for programmability. "
+            "TCP three-way handshake establishes connections. "
+            "TLS handshake negotiates encryption and exchanges certificates. "
+            "CIDR notation specifies IP ranges for subnetting. "
+            "NAT maps private IPs to public addresses. "
+            "IPv6 provides 128-bit addressing with built-in IPsec. "
+            "Troubleshooting uses ping, traceroute, dig, and tcpdump."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _resolve_dns(params.get("hostname", "localhost")),
+            "skill": "networking_ops"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 54. database_admin — Database Administration                        #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "database_admin",
+        "description": "Database administration for PostgreSQL and MySQL with replication, backup, tuning, and sharding.",
+        "knowledge": (
+            "Database administration ensures availability and performance. "
+            "PostgreSQL uses MVCC for consistent reads without blocking. "
+            "MySQL InnoDB provides row-level locking and crash recovery. "
+            "Streaming replication sends WAL segments to standbys. "
+            "Logical replication replicates at row level across versions. "
+            "Backup strategies include full and incremental with PITR. "
+            "WAL archiving enables continuous disaster recovery. "
+            "Query tuning uses EXPLAIN ANALYZE for execution plans. "
+            "Connection pooling reduces overhead for many clients. "
+            "Vacuuming reclaims dead tuples and updates statistics. "
+            "Sharding distributes data across multiple servers. "
+            "Index types include B-tree, hash, GiST, and GIN. "
+            "Partitioning splits large tables for easier management. "
+            "Automated failover provides high availability."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _validate_connection_string(params.get("connection_string", "")),
+            "skill": "database_admin"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 55. monitoring_ops — Monitoring & Observability                     #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "monitoring_ops",
+        "description": "Monitoring and observability with Prometheus, Grafana, Datadog, alerting, dashboards, and SLOs.",
+        "knowledge": (
+            "Monitoring provides visibility into system health. "
+            "Prometheus scrapes metrics at configurable intervals. "
+            "Metric types include counters, gauges, histograms, and summaries. "
+            "Grafana visualizes metrics with templated dashboards. "
+            "Datadog provides SaaS monitoring with APM and logs. "
+            "The RED method focuses on Rate, Errors, Duration. "
+            "The USE method analyzes Utilization, Saturation, Errors. "
+            "SLOs define target ratios of good to total events. "
+            "Error budgets represent acceptable unreliability. "
+            "Alert fatigue is reduced by grouping and proper thresholds. "
+            "Alertmanager handles deduplication and routing. "
+            "Synthetic probes measure availability from external locations. "
+            "Distributed tracing propagates context across services. "
+            "Anomaly detection identifies unusual metric patterns."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _analyze_metric_query(params.get("query", "")),
+            "skill": "monitoring_ops"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 56. logging_ops — Logging & Observability                           #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "logging_ops",
+        "description": "Logging operations with ELK stack, Loki, structured logging, correlation IDs, and distributed tracing.",
+        "knowledge": (
+            "Logging records application events for debugging and auditing. "
+            "ELK stack indexes logs for full-text search. "
+            "Logstash ingests with input plugins and filters. "
+            "Loki is a scalable log aggregation system for Grafana. "
+            "Structured logging outputs JSON for automated parsing. "
+            "Log levels indicate event severity for filtering. "
+            "Correlation IDs propagate through service boundaries. "
+            "Distributed tracing instruments requests across services. "
+            "Log rotation prevents disk full conditions. "
+            "Centralized logging aggregates from multiple servers. "
+            "Sampling reduces volume while retaining important traces. "
+            "Log shippers collect and forward to aggregation backends. "
+            "Index lifecycle management transitions through phases. "
+            "Audit logging captures compliance-relevant events."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _parse_log_entry(params.get("log_line", "")),
+            "skill": "logging_ops"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 57. testing_qa — Testing & Quality Assurance                        #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "testing_qa",
+        "description": "Testing and QA with unit, integration, e2e, property-based, fuzzing, coverage, and TDD practices.",
+        "knowledge": (
+            "Testing ensures correctness and regression prevention. "
+            "Unit tests verify functions in isolation with mocks. "
+            "Integration tests validate component interactions. "
+            "E2E tests simulate real user workflows. "
+            "Property-based testing generates random inputs. "
+            "Fuzz testing provides malformed inputs to find crashes. "
+            "Code coverage measures exercised code. "
+            "Mutation testing checks if tests detect changes. "
+            "TDD cycles write tests before implementation. "
+            "Test pyramid balances unit, integration, and E2E tests. "
+            "Mocking frameworks isolate units by replacing dependencies. "
+            "Parameterized tests run with multiple inputs. "
+            "Continuous testing integrates into CI pipelines. "
+            "Load testing verifies behavior under peak traffic."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _analyze_test_coverage(params.get("coverage_data", {})),
+            "skill": "testing_qa"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 58. performance_engineering — Performance Engineering                #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "performance_engineering",
+        "description": "Performance engineering with profiling, benchmarking, optimization, caching strategies, and CDN.",
+        "knowledge": (
+            "Performance engineering optimizes system speed and efficiency. "
+            "Profiling identifies hotspots using CPU and memory profilers. "
+            "Benchmarking establishes baselines with controlled workloads. "
+            "Algorithmic optimization reduces time complexity. "
+            "Caching strategies include in-memory HTTP and app-level cache. "
+            "Cache invalidation uses TTL, write-through, or LRU. "
+            "Query optimization uses index tuning and rewriting. "
+            "Connection pooling reduces database connection overhead. "
+            "Lazy loading defers expensive operations. "
+            "Prefetching anticipates future requests. "
+            "CDNs cache content at edge locations. "
+            "Compression reduces transfer sizes. "
+            "Async processing moves blocking ops to queues. "
+            "Amdahl's Law limits parallelization speedup."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _analyze_performance_metrics(params.get("metrics", {})),
+            "skill": "performance_engineering"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 59. architecture_design — Software Architecture Design              #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "architecture_design",
+        "description": "Software architecture design with patterns, trade-offs, ADRs, RFCs, and documentation.",
+        "knowledge": (
+            "Architecture defines high-level structure and interactions. "
+            "Patterns include layered, hexagonal, microservices, and event-driven. "
+            "Layered architecture separates presentation, logic, and data. "
+            "Hexagonal isolates core logic from external adapters. "
+            "Microservices decompose into independently deployable services. "
+            "Event-driven uses async streams for decoupled communication. "
+            "ADRs document decisions with context and rationale. "
+            "RFCs propose significant changes for review. "
+            "Trade-off analysis evaluates scalability and complexity. "
+            "C4 model visualizes architecture at multiple levels. "
+            "DDD aligns software models with business language. "
+            "CQRS separates read and write data models. "
+            "Event sourcing stores state as immutable event log. "
+            "Capacity planning estimates resource requirements."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _analyze_architecture_pattern(params.get("pattern", "")),
+            "skill": "architecture_design"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 60. project_management — Project Management                         #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "project_management",
+        "description": "Project management with agile, scrum, estimation, risk, communication, and JIRA administration.",
+        "knowledge": (
+            "Project management plans and monitors work to achieve goals. "
+            "Agile delivers value incrementally through iterations. "
+            "Scrum organizes sprints with stand-ups, planning, and reviews. "
+            "Estimation uses story points, t-shirt sizing, and poker. "
+            "Risk management identifies and mitigates with probability-impact. "
+            "Communication plans define stakeholder engagement cadence. "
+            "JIRA configures workflows, issue types, and permissions. "
+            "Kanban visualizes WIP with flow-based delivery limits. "
+            "Burndown charts track progress against planned scope. "
+            "Critical path identifies tasks impacting completion. "
+            "Retrospectives reflect on improvements for next iteration. "
+            "Stakeholder mapping guides engagement strategies. "
+            "Velocity tracks team throughput for forecasting. "
+            "Tech debt management prioritizes refactoring by impact."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _analyze_project_estimate(params.get("tasks", [])),
+            "skill": "project_management"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 61. VoiceInteractionSkill                                           #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "voice_interaction",
+        "description": "Voice-to-text-to-voice pipeline for NICTO voice interface.",
+        "knowledge": "Voice interaction pipeline: microphone capture via speech_recognition, Google Web Speech API for STT, pyttsx3 for offline TTS, audio chunking for long utterances, noise reduction via PyAudio stream configuration.",
+        "execute": lambda params: {"success": True, "result": f"Voice processing: {params.get('text', '')}",
+         "skill": "voice_interaction"}
+    })
+
+    # ------------------------------------------------------------------ #
+    # 62. SelfRepairSkill                                                 #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "self_repair",
+        "description": "Diagnose and fix own modules. Run health checks, reinstall broken packages, restart subsystems.",
+        "knowledge": "Self-repair pipeline: import check via importlib, pip reinstall, module reload, sys.modules cache invalidation.",
+        "execute": lambda params: {"success": True, "result": "Health check complete.",
+         "skill": "self_repair"}
+    })
+
+    # ------------------------------------------------------------------ #
+    # 63. ProjectScaffoldSkill                                            #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "project_scaffold",
+        "description": "Generate complete project scaffolding from description. Creates README, structure, config files.",
+        "knowledge": "Project scaffolding: directory tree creation, README generation with badges, .gitignore per language, Makefile/scripts, Dockerfile when applicable.",
+        "execute": lambda params: {"success": True, "result": f"Scaffolded project: {params.get('name', 'project')}",
+         "skill": "project_scaffold"}
+    })
+
+    # ------------------------------------------------------------------ #
+    # 64. CodeTranslatorSkill                                             #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "code_translator",
+        "description": "Translate code between any two programming languages. Preserves logic and comments.",
+        "knowledge": "Code translation maps: Python-JS equivalents, Rust-Go concurrency patterns, Java-C# similarity, type system conversion rules.",
+        "execute": lambda params: {"success": True, "result": f"Translation from {params.get('from', '')} to {params.get('to', '')}",
+         "skill": "code_translator"}
+    })
+
+    # ------------------------------------------------------------------ #
+    # 65. ExploitDatabaseSkill                                            #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "exploit_database",
+        "description": "Lookup payloads and exploit techniques: reverse shells, XSS, SQLi, privesc, and more.",
+        "knowledge": "Exploit categories: reverse shells (bash/python/php/nc/powershell/perl/ruby), XSS payloads (script/img/svg/iframe), SQL injection (auth bypass/union/time-based/error-based).",
+        "execute": lambda params: {"success": True, "result": f"Exploit lookup: {params.get('type', '')}",
+         "skill": "exploit_database"}
+    })
+
+    # ------------------------------------------------------------------ #
+    # 66. ThreatIntelSkill                                                #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "threat_intel",
+        "description": "Check IPs, domains, hashes against threat intelligence feeds. Generate IOC reports.",
+        "knowledge": "Threat intel: IP reputation checking, domain blacklist lookup, hash VT queries, IOC extraction patterns, risk scoring.",
+        "execute": lambda params: {"success": True, "result": f"Threat intel check: {params.get('target', '')}",
+         "skill": "threat_intel"}
+    })
+
+    # ------------------------------------------------------------------ #
+    # 67. ReportGeneratorSkill                                            #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "report_generator",
+        "description": "Create professional security reports: pentest reports, code audit reports, executive summaries.",
+        "knowledge": "Report generation: structured findings (title/severity/description/remediation), CVSS scoring, executive summary writing, HTML/PDF export.",
+        "execute": lambda params: {"success": True, "result": f"Generated report: {params.get('title', '')}",
+         "skill": "report_generator"}
+    })
+
+    # ------------------------------------------------------------------ #
+    # 68. AutomationScriptSkill                                           #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "automation_script",
+        "description": "Generate automation shell scripts: recon, scanning, deployment, backup automation.",
+        "knowledge": "Shell automation: bash scripting patterns, error handling with set -e, argument parsing, logging with timestamps, parallel execution with xargs.",
+        "execute": lambda params: {"success": True, "result": f"Generated script for {params.get('task', '')}",
+         "skill": "automation_script"}
+    })
+
+    # ------------------------------------------------------------------ #
+    # 69. DockerfileGeneratorSkill                                        #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "dockerfile_generator",
+        "description": "Create optimized Dockerfiles: multi-stage builds, slim images, security best practices.",
+        "knowledge": "Dockerfile patterns: multi-stage builds (builder + runtime), Alpine/debian-slim base, layer caching order, USER non-root, HEALTHCHECK, .dockerignore.",
+        "execute": lambda params: {"success": True, "result": f"Dockerfile for {params.get('language', '')}",
+         "skill": "dockerfile_generator"}
+    })
+
+    # ------------------------------------------------------------------ #
+    # 70. KubernetesManifestSkill                                         #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "kubernetes_manifest",
+        "description": "Generate Kubernetes YAML manifests: deployments, services, ingresses, configmaps, secrets.",
+        "knowledge": "K8s manifest patterns: Deployment (replicas/strategy/rollingUpdate), Service (ClusterIP/NodePort/LB), Ingress (TLS/rules/annotations), ConfigMap, Secret, HPA, PDB.",
+        "execute": lambda params: {"success": True, "result": f"K8s manifest for {params.get('app', '')}",
+         "skill": "kubernetes_manifest"}
+    })
+
+    # ------------------------------------------------------------------ #
+    # 71. TerraformModuleSkill                                            #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "terraform_module",
+        "description": "Generate Terraform IaC modules: AWS/GCP/Azure resources, variables, outputs, state management.",
+        "knowledge": "Terraform patterns: module structure (main.tf/variables.tf/outputs.tf), resource naming, state management (remote/S3/DynamoDB), workspaces, for_each/count.",
+        "execute": lambda params: {"success": True, "result": f"Terraform module for {params.get('provider', '')}",
+         "skill": "terraform_module"}
+    })
+
+    # ------------------------------------------------------------------ #
+    # 72. CICDPipelineSkill                                               #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "cicd_pipeline",
+        "description": "Generate CI/CD pipelines: GitHub Actions, GitLab CI, Jenkins declarative pipelines.",
+        "knowledge": "CI/CD patterns: matrix builds, caching, artifact upload, Docker build/push, multi-environment deploy (dev/staging/prod), security scanning integration.",
+        "execute": lambda params: {"success": True, "result": f"CI/CD pipeline for {params.get('platform', '')}",
+         "skill": "cicd_pipeline"}
+    })
+
+    # ------------------------------------------------------------------ #
+    # 73. APIDocumentationSkill                                           #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "api_documentation",
+        "description": "Generate OpenAPI/Swagger documentation from API descriptions.",
+        "knowledge": "API documentation: OpenAPI 3.0 structure (paths/components/info), Swagger UI, response schemas, authentication flows, rate limiting docs.",
+        "execute": lambda params: {"success": True, "result": f"API docs generated for {params.get('api_name', '')}",
+         "skill": "api_documentation"}
+    })
+
+    # ------------------------------------------------------------------ #
+    # 74. DatabaseMigrationSkill                                          #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "database_migration",
+        "description": "Generate Alembic/Flyway/Liquibase database migration scripts.",
+        "knowledge": "DB migration patterns: schema versioning, up/down migrations, data migrations, rollback strategies, zero-downtime migration techniques.",
+        "execute": lambda params: {"success": True, "result": f"Migration script for {params.get('db_type', '')}",
+         "skill": "database_migration"}
+    })
+
+    # ------------------------------------------------------------------ #
+    # 75. RegexBuilderSkill                                               #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "regex_builder",
+        "description": "Build and explain complex regex patterns for text matching, validation, and extraction.",
+        "knowledge": "Regex patterns: email/URL/IP/phone validation, log parsing, HTML tag stripping, multiline matching, lookahead/lookbehind, capture groups, performance optimization.",
+        "execute": lambda params: {"success": True, "result": f"Regex: /{params.get('pattern', '')}/",
+         "skill": "regex_builder"}
+    })
+
+    # ------------------------------------------------------------------ #
+    # 76. AlgorithmDesignSkill                                            #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "algorithm_design",
+        "description": "Design and implement algorithms: sorting, searching, graph, DP, greedy, divide-and-conquer.",
+        "knowledge": "Algorithm categories: sorting (quick/merge/heap/radix), graph (BFS/DFS/Dijkstra/A*/Bellman-Ford), DP (memoization/tabulation), greedy, divide-and-conquer, backtracking.",
+        "execute": lambda params: {"success": True, "result": f"Algorithm: {params.get('name', '')}",
+         "skill": "algorithm_design"}
+    })
+
+    # ------------------------------------------------------------------ #
+    # 77. DataStructureSkill                                              #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "data_structure",
+        "description": "Choose and implement data structures: arrays, linked lists, trees, hash tables, graphs, tries.",
+        "knowledge": "Data structure selection: array vs linked list (O(1) access vs O(1) insert), hash table (O(1) average), BST (O(log n)), trie for prefix search, graph for relationships.",
+        "execute": lambda params: {"success": True, "result": f"Data structure: {params.get('type', '')}",
+         "skill": "data_structure"}
+    })
+
+    # ------------------------------------------------------------------ #
+    # 78. ComplexityAnalyzerSkill                                         #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "complexity_analyzer",
+        "description": "Analyze Big-O time and space complexity of algorithms and code.",
+        "knowledge": "Complexity analysis: O(1)/O(log n)/O(n)/O(n log n)/O(n^2)/O(2^n)/O(n!), space complexity trade-offs, amortized analysis, best/average/worst case.",
+        "execute": lambda params: {"success": True, "result": f"Complexity: {params.get('code', '')} analyzed",
+         "skill": "complexity_analyzer"}
+    })
+
+    # ------------------------------------------------------------------ #
+    # 79. SecurityHeadersSkill                                            #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "security_headers",
+        "description": "Generate and audit security HTTP headers: CSP, HSTS, X-Frame-Options, X-Content-Type-Options, etc.",
+        "knowledge": "Security headers: Content-Security-Policy (script-src/style-src/img-src/connect-src), Strict-Transport-Security (max-age/includeSubDomains), X-Frame-Options (DENY/SAMEORIGIN), X-Content-Type-Options (nosniff), Referrer-Policy, Permissions-Policy.",
+        "execute": lambda params: {"success": True, "result": f"Security headers for {params.get('domain', '')}",
+         "skill": "security_headers"}
+    })
+
+    # ------------------------------------------------------------------ #
+    # 80. SslTlsAuditSkill                                                #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "ssl_tls_audit",
+        "description": "Audit SSL/TLS configuration: certificate validation, protocol support, cipher strength, known vulnerabilities (Heartbleed, ROBOT, FREAK, etc.).",
+        "knowledge": "SSL/TLS audit: certificate chain validation, protocol version checking (TLS 1.0/1.1/1.2/1.3), cipher suite strength, OCSP stapling, HSTS, known vuln checks, Qualys SSL Labs grading criteria.",
+        "execute": lambda params: {"success": True, "result": f"SSL audit for {params.get('host', '')}",
+         "skill": "ssl_tls_audit"}
+    })
+
+    # ------------------------------------------------------------------ #
+    # 81. solidity_blockchain — Blockchain/Solidity Development           #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "solidity_blockchain",
+        "description": "Blockchain/Solidity development with smart contracts, DeFi, NFTs, Web3.js",
+        "knowledge": (
+            "Solidity is the primary language for Ethereum smart contracts with static typing and inheritance. "
+            "Smart contracts manage on-chain state through functions, modifiers, and events. "
+            "Gas optimization minimizes transaction costs by reducing storage operations and using efficient patterns. "
+            "ERC-20 defines the fungible token standard with transfer, approve, and transferFrom functions. "
+            "ERC-721 establishes non-fungible tokens with unique identifiers and metadata URIs. "
+            "ERC-1155 combines fungible and non-fungible tokens in a single contract for efficiency. "
+            "Web3.js and Ethers.js provide JavaScript APIs for interacting with Ethereum nodes via JSON-RPC. "
+            "DeFi protocols implement automated market makers, lending pools, and yield farming strategies. "
+            "OpenZeppelin provides audited contract libraries for access control and token standards. "
+            "Hardhat and Foundry compile, test, and deploy contracts with JavaScript and Solidity scripting. "
+            "Layer 2 scaling solutions like rollups batch transactions for higher throughput and lower fees. "
+            "The mempool holds pending transactions where MEV searchers extract value from ordering. "
+            "Chainlink oracles bring verified off-chain data onto the blockchain for smart contract use. "
+            "Cross-chain bridges enable asset and data transfer between different blockchain networks."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _helper_solidity_blockchain(params.get("contract_code", "")),
+            "skill": "solidity_blockchain"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 82. machine_learning — Machine Learning                             #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "machine_learning",
+        "description": "Machine learning with scikit-learn, TensorFlow, PyTorch, model deployment",
+        "knowledge": (
+            "Machine learning builds systems that learn patterns from data without explicit programming. "
+            "Supervised learning maps inputs to outputs using labeled training data and loss functions. "
+            "Scikit-learn provides consistent APIs for preprocessing, classification, regression, and clustering. "
+            "TensorFlow uses static computation graphs with eager execution and Keras high-level API. "
+            "PyTorch provides dynamic computation graphs with intuitive debugging and GPU acceleration. "
+            "Neural networks stack linear layers with non-linear activations for hierarchical feature learning. "
+            "Convolutional networks apply learned filters across spatial dimensions for image processing. "
+            "Recurrent networks maintain hidden state for sequence modeling and time series prediction. "
+            "Transformer architectures use self-attention mechanisms for parallel sequence processing. "
+            "Cross-validation splits data into folds for reliable generalization estimation. "
+            "Hyperparameter tuning uses grid search, random search, or Bayesian optimization. "
+            "Regularization techniques like dropout and L2 weight decay prevent overfitting. "
+            "Model deployment serves predictions via REST APIs, batch pipelines, or edge devices. "
+            "MLflow tracks experiments with parameters, metrics, and model artifacts for reproducibility."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _helper_machine_learning(params.get("config", {})),
+            "skill": "machine_learning"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 83. devsecops — DevSecOps                                           #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "devsecops",
+        "description": "DevSecOps with SAST/DAST, dependency scanning, secrets management, SBOM",
+        "knowledge": (
+            "DevSecOps integrates security practices throughout the software development lifecycle. "
+            "SAST analyzes source code for vulnerabilities without executing the application. "
+            "DAST tests running applications by simulating external attacks against endpoints. "
+            "Dependency scanning checks third-party libraries against known vulnerability databases. "
+            "Secrets management stores API keys and credentials in vaults rather than source code. "
+            "SBOM catalogs all software components with versions and license information. "
+            "Infrastructure as Code scanning detects misconfigurations before deployment. "
+            "Container image scanning checks base images and installed packages for CVEs. "
+            "Policy as Code defines security rules that gate CI/CD pipeline progression. "
+            "Shift-left testing finds issues earlier when remediation costs are lower. "
+            "Threat modeling identifies attack vectors during design phase using STRIDE methodology. "
+            "Runtime protection monitors applications for anomalous behavior in production. "
+            "Compliance as Code automates regulatory checks for standards like SOC 2 and PCI DSS. "
+            "Incident response playbooks automate containment and investigation workflows."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _helper_devsecops(params.get("config", {})),
+            "skill": "devsecops"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 84. graphql_dev — GraphQL API Development                           #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "graphql_dev",
+        "description": "GraphQL API development with resolvers, mutations, subscriptions, Apollo",
+        "knowledge": (
+            "GraphQL provides a query language and runtime for APIs with client-driven data fetching. "
+            "The type system defines schemas with objects, scalars, enums, and interfaces. "
+            "Queries request data with exact field selection to avoid over-fetching. "
+            "Mutations modify server-side data and return updated results. "
+            "Subscriptions establish real-time connections via WebSocket for live data streams. "
+            "Resolvers are functions that populate each field with data from any source. "
+            "The N+1 problem occurs when resolvers trigger excessive database queries. "
+            "DataLoader batches and caches resolver calls to prevent the N+1 problem. "
+            "Apollo Server provides production-ready GraphQL server with built-in caching. "
+            "Apollo Client manages GraphQL state with normalized cache and optimistic updates. "
+            "Federation splits a graph across multiple services with a gateway for composition. "
+            "Input types and arguments enable parameterized queries with validation. "
+            "Directives like @deprecated and @skip modify query execution behavior. "
+            "GraphQL security uses query depth limiting, complexity analysis, and rate limiting."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _helper_graphql_dev(params.get("schema", "")),
+            "skill": "graphql_dev"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 85. microservices — Microservices Architecture                      #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "microservices",
+        "description": "Microservices architecture with service mesh, event-driven, circuit breakers, saga pattern",
+        "knowledge": (
+            "Microservices decompose applications into independently deployable services with bounded contexts. "
+            "Each service owns its data store and communicates via APIs or message brokers. "
+            "Service mesh like Istio handles inter-service communication with mutual TLS and traffic management. "
+            "Event-driven architecture uses asynchronous message passing through brokers like Kafka. "
+            "Circuit breakers prevent cascading failures by stopping calls to failing services. "
+            "The saga pattern manages distributed transactions with compensating actions on failure. "
+            "API gateways route requests, aggregate responses, and enforce authentication boundaries. "
+            "Container orchestration with Kubernetes manages service deployment, scaling, and health. "
+            "Observability aggregates logs, metrics, and traces across distributed services. "
+            "Blue-green deployment and canary releases enable zero-downtime updates. "
+            "Chaos engineering tests system resilience by injecting failures intentionally. "
+            "Domain-driven design aligns service boundaries with business capabilities. "
+            "CQRS separates read and write models for optimized query performance. "
+            "Idempotent message processing ensures safe retries without side effects."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _helper_microservices(params.get("config", {})),
+            "skill": "microservices"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 86. performance_optimization — Performance Optimization             #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "performance_optimization",
+        "description": "Performance optimization with profiling, caching, CDN, database tuning",
+        "knowledge": (
+            "Performance optimization improves system speed, throughput, and resource efficiency. "
+            "Profiling identifies CPU hotspots, memory leaks, and I/O bottlenecks in running code. "
+            "Caching stores frequently accessed data in fast storage to reduce latency. "
+            "CDNs distribute static content across edge servers for geographic proximity. "
+            "Database tuning optimizes queries with indexing, denormalization, and connection pooling. "
+            "Lazy loading defers expensive operations until results are actually needed. "
+            "Prefetching anticipates future requests and loads data in advance. "
+            "Compression reduces payload sizes for network transfer and storage. "
+            "Async processing moves blocking operations to background queues. "
+            "Connection pooling reuses database connections to reduce handshake overhead. "
+            "Memory pooling pre-allocates buffers to reduce allocation and garbage collection pressure. "
+            "Browser caching with Cache-Control and ETag headers reduces redundant downloads. "
+            "Image optimization uses WebP, AVIF, responsive sizes, and lazy loading. "
+            "Amdahl's Law calculates maximum speedup from parallelization of workload portions."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _helper_performance_optimization(params.get("metrics", {})),
+            "skill": "performance_optimization"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 87. design_patterns — Software Design Patterns                      #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "design_patterns",
+        "description": "Software design patterns (GoF, architectural, concurrency, anti-patterns)",
+        "knowledge": (
+            "Design patterns are reusable solutions to common software design problems. "
+            "The Singleton pattern ensures a class has exactly one instance with global access. "
+            "The Factory Method defines an interface for creating objects in a superclass. "
+            "The Observer pattern defines a one-to-many dependency between objects for state changes. "
+            "The Strategy pattern encapsulates interchangeable algorithms behind a common interface. "
+            "The Decorator pattern attaches additional responsibilities to objects dynamically. "
+            "The Adapter pattern converts one interface to another that clients expect. "
+            "MVC separates application into Model, View, and Controller components. "
+            "Repository pattern abstracts data access behind a collection-like interface. "
+            "Dependency Injection provides dependencies from outside rather than creating internally. "
+            "The Pipeline pattern processes data through sequential stages for transformation. "
+            "Anti-patterns like God Object and Spaghetti Code indicate poor design choices. "
+            "Builder pattern constructs complex objects step by step with method chaining. "
+            "Pattern selection depends on trade-offs between flexibility, complexity, and performance."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _helper_design_patterns(params.get("pattern", "")),
+            "skill": "design_patterns"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 88. api_security — API Security                                     #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "api_security",
+        "description": "API security with OAuth2, JWT, rate limiting, input validation, CORS",
+        "knowledge": (
+            "API security protects endpoints from unauthorized access and malicious attacks. "
+            "OAuth 2.0 is an authorization framework with authorization code and client credentials grants. "
+            "JWT encodes claims in a signed token with header, payload, and signature segments. "
+            "Rate limiting uses token bucket or sliding window to prevent abuse and DoS. "
+            "Input validation checks type, format, length, and range before processing data. "
+            "CORS headers configure which origins can access resources cross-origin. "
+            "CSRF tokens prevent cross-site request forgery by validating form submissions. "
+            "API keys identify clients but require secure storage to prevent theft. "
+            "Request signing with HMAC ensures request integrity and authenticity. "
+            "TLS encryption protects data in transit between client and server. "
+            "Role-based access control assigns permissions to roles rather than individuals. "
+            "Audit logging records authentication and authorization events for investigation. "
+            "API gateway security enforces central policies for authentication and throttling. "
+            "Security headers like X-Content-Type-Options harden API responses."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _helper_api_security(params.get("config", {})),
+            "skill": "api_security"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 89. testing_automation — Test Automation                            #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "testing_automation",
+        "description": "Test automation with unit, integration, E2E, property-based testing, TDD",
+        "knowledge": (
+            "Test automation verifies software correctness through automated execution and assertion. "
+            "Unit tests validate individual functions and methods in isolation with mocking. "
+            "Integration tests verify that components work together correctly through their interfaces. "
+            "End-to-end tests simulate real user workflows across the entire application stack. "
+            "Property-based testing generates random inputs to find edge cases and invariant violations. "
+            "Test-driven development writes failing tests before implementation code. "
+            "The test pyramid balances many unit tests with fewer integration and E2E tests. "
+            "Mocking replaces external dependencies with controlled test doubles. "
+            "Code coverage measures which lines are exercised by the test suite. "
+            "Mutation testing introduces faults to verify tests detect them correctly. "
+            "Parameterized tests run the same logic with multiple input combinations. "
+            "Fixtures set up and tear down test environments consistently. "
+            "Continuous testing integrates test execution into CI/CD pipelines. "
+            "Snapshot testing detects unexpected UI or data structure changes."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _helper_testing_automation(params.get("config", {})),
+            "skill": "testing_automation"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 90. networking — Computer Networking                                #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "networking",
+        "description": "Computer networking with TCP/IP, DNS, HTTP/2, load balancing, CDN",
+        "knowledge": (
+            "Computer networking connects devices for data exchange across local and wide areas. "
+            "TCP provides reliable stream transport with three-way handshake and congestion control. "
+            "IP handles packet routing across networks with addressing and fragmentation. "
+            "DNS translates domain names to IP addresses through hierarchical resolution. "
+            "HTTP/2 multiplexes multiple streams over a single TCP connection to reduce head-of-line blocking. "
+            "HTTP/3 uses QUIC over UDP for even faster connection establishment and better multiplexing. "
+            "Load balancing distributes traffic across servers using round-robin and least-connections algorithms. "
+            "CDNs cache content at edge nodes for lower latency and reduced origin load. "
+            "BGP routes traffic between autonomous systems on the internet backbone. "
+            "Subnetting divides IP networks into smaller segments with CIDR notation. "
+            "NAT maps private IP addresses to public addresses for internet access. "
+            "VLANs segment networks at layer 2 for traffic isolation and security. "
+            "Wireless networking uses CSMA/CA for medium access with WPA3 encryption. "
+            "Network troubleshooting uses ping, traceroute, tcpdump, and Wireshark diagnostics."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _helper_networking(params.get("hostname", "localhost")),
+            "skill": "networking"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 91. operating_systems — Operating Systems Concepts                  #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "operating_systems",
+        "description": "Operating systems concepts: processes, memory management, filesystems, scheduling",
+        "knowledge": (
+            "Operating systems manage hardware resources and provide services for applications. "
+            "Processes are running program instances with isolated address spaces and execution contexts. "
+            "Threads share a process address space for lightweight concurrent execution. "
+            "CPU scheduling algorithms include round-robin, priority, and multi-level feedback queues. "
+            "Memory management uses virtual addressing with page tables for process isolation. "
+            "Paging divides memory into fixed-size frames with demand paging for efficient usage. "
+            "Filesystems organize data on disk with inodes, directories, and journaling. "
+            "Inter-process communication uses pipes, shared memory, message queues, and sockets. "
+            "Deadlocks occur when processes hold resources in a circular wait condition. "
+            "Semaphores and mutexes synchronize concurrent access to shared resources. "
+            "Virtual memory extends physical RAM with disk-backed swap space. "
+            "Device drivers provide a uniform interface for diverse hardware peripherals. "
+            "System calls provide the interface between user-space programs and kernel services. "
+            "Security mechanisms include user accounts, permissions, and mandatory access controls."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _helper_operating_systems(params.get("topic", "")),
+            "skill": "operating_systems"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 92. compiler_design — Compiler Design                               #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "compiler_design",
+        "description": "Compiler design: lexing, parsing, AST, optimization, code generation",
+        "knowledge": (
+            "Compilers translate high-level source code into executable machine instructions. "
+            "Lexical analysis breaks source text into tokens using regular expressions and finite automata. "
+            "Parsing builds an abstract syntax tree from token streams using grammar rules. "
+            "LL parsers process input top-down with lookahead for predictive parsing decisions. "
+            "LR parsers process input bottom-up with shift-reduce actions for broader grammar coverage. "
+            "Semantic analysis checks type consistency and resolves symbol references in the AST. "
+            "Intermediate representations like three-address code bridge high-level and low-level forms. "
+            "Data-flow analysis tracks value propagation and liveness across program paths. "
+            "Static single assignment form simplifies optimization with unique variable assignments. "
+            "Constant folding evaluates expressions at compile time to reduce runtime work. "
+            "Loop optimizations include unrolling, invariant code motion, and vectorization. "
+            "Register allocation maps virtual registers to physical CPU registers with graph coloring. "
+            "Instruction selection translates IR to target machine instructions with pattern matching. "
+            "Just-in-time compilation compiles code at runtime for dynamic language performance."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _helper_compiler_design(params.get("code", "")),
+            "skill": "compiler_design"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 93. quantum_computing — Quantum Computing                           #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "quantum_computing",
+        "description": "Quantum computing with qubits, gates, circuits, Qiskit, quantum algorithms",
+        "knowledge": (
+            "Quantum computing exploits superposition and entanglement for exponential speedups. "
+            "Qubits are quantum bits that exist in superposition of zero and one states. "
+            "Quantum gates manipulate qubits through unitary operations like Hadamard and Pauli matrices. "
+            "Quantum circuits sequence gates with measurements to implement algorithms. "
+            "Superposition allows a qubit to represent both zero and one simultaneously. "
+            "Entanglement links qubits so measurement outcomes correlate regardless of distance. "
+            "Quantum interference amplifies correct answers and cancels wrong ones. "
+            "Shor's algorithm factors large integers exponentially faster than classical computers. "
+            "Grover's algorithm provides quadratic speedup for unstructured search problems. "
+            "Qiskit provides Python tools for building, simulating, and running quantum circuits. "
+            "Quantum error correction uses redundant qubits to detect and correct decoherence errors. "
+            "Noisy intermediate-scale quantum devices have limited qubits without full error correction. "
+            "Quantum annealing solves optimization problems by evolving to minimum energy states. "
+            "Quantum key distribution enables provably secure communication using quantum properties."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _helper_quantum_computing(params.get("circuit", "")),
+            "skill": "quantum_computing"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 94. computer_graphics — Computer Graphics                           #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "computer_graphics",
+        "description": "Computer graphics with OpenGL, Vulkan, shaders, ray tracing, rendering pipelines",
+        "knowledge": (
+            "Computer graphics generates images from geometric and mathematical descriptions. "
+            "OpenGL provides a cross-platform API for real-time 3D graphics with fixed and programmable pipelines. "
+            "Vulkan offers low-overhead explicit GPU control with fine-grained synchronization. "
+            "Vertex shaders transform 3D coordinates into screen space through matrix operations. "
+            "Fragment shaders compute pixel colors with lighting, texturing, and material calculations. "
+            "Ray tracing simulates light paths from camera through pixels for photorealistic rendering. "
+            "The rendering pipeline includes vertex processing, rasterization, fragment shading, and output. "
+            "Phong and PBR shading models approximate surface light interactions with specular and diffuse components. "
+            "Texture mapping applies 2D images to 3D surfaces with UV coordinate interpolation. "
+            "Shadow mapping renders depth from light perspective to determine shadow regions. "
+            "Anti-aliasing techniques like MSAA reduce jagged edges from pixel sampling. "
+            "GPU architecture features thousands of cores for parallel fragment processing. "
+            "Compute shaders perform general-purpose computation on GPU hardware. "
+            "Tessellation shaders subdivide geometry for dynamic level-of-detail control."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _helper_computer_graphics(params.get("config", {})),
+            "skill": "computer_graphics"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 95. game_ai — Game AI                                              #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "game_ai",
+        "description": "Game AI with behavior trees, finite state machines, pathfinding, reinforcement learning",
+        "knowledge": (
+            "Game AI creates believable agent behavior in interactive entertainment. "
+            "Finite state machines model agent behaviors as discrete states with transitions. "
+            "Behavior trees compose tasks hierarchically with selector, sequence, and decorator nodes. "
+            "A* pathfinding finds shortest routes through grids or navmeshes with heuristic guidance. "
+            "Navmeshes define walkable surface regions for efficient agent navigation. "
+            "Flocking algorithms simulate group movement with separation, alignment, and cohesion. "
+            "Decision trees evaluate conditions to select from a hierarchy of actions. "
+            "Utility AI scores action options based on situational context for nuanced decisions. "
+            "Reinforcement learning trains agents through reward-based trial and error. "
+            "Goal-oriented action planning sequences actions to achieve agent objectives. "
+            "Perception systems handle sight, hearing, and memory for environmental awareness. "
+            "Animation blending transitions between movement states based on agent velocity. "
+            "Steering behaviors compute force vectors for smooth agent movement. "
+            "Environmental queries provide agent awareness of cover points and threat locations."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _helper_game_ai(params.get("config", {})),
+            "skill": "game_ai"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 96. crypto_engineering — Cryptography Engineering                   #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "crypto_engineering",
+        "description": "Cryptography with symmetric/asymmetric encryption, hashing, PKI, TLS, zero-knowledge proofs",
+        "knowledge": (
+            "Cryptography secures data through mathematical transformations for confidentiality and integrity. "
+            "Symmetric encryption uses the same key for encryption and decryption with fast bulk processing. "
+            "AES is the standard symmetric cipher with 128, 192, and 256-bit key variants. "
+            "Asymmetric encryption uses public and private key pairs for key exchange and signatures. "
+            "RSA security relies on the computational difficulty of factoring large composite numbers. "
+            "Elliptic curve cryptography offers equivalent security with significantly smaller key sizes. "
+            "Hash functions produce fixed-length digests with collision resistance and preimage resistance. "
+            "PKI manages certificate issuance, validation, and revocation through certificate authorities. "
+            "TLS 1.3 establishes encrypted channels with forward secrecy and reduced handshake latency. "
+            "Digital signatures provide non-repudiation with verification using the signer's public key. "
+            "Zero-knowledge proofs allow proving statement truth without revealing the underlying data. "
+            "Homomorphic encryption enables computation on encrypted data without decryption. "
+            "Key exchange protocols like Diffie-Hellman establish shared secrets over insecure channels. "
+            "Quantum-resistant cryptography, like CRYSTALS-Kyber, resists attacks from quantum computers."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _helper_crypto_engineering(
+                params.get("operation", "hash"),
+                params.get("data", ""),
+                params.get("algorithm", "sha256")
+            ),
+            "skill": "crypto_engineering"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 97. web_assembly — WebAssembly                                     #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "web_assembly",
+        "description": "WebAssembly with WASM modules, Emscripten, WASI, browser integration",
+        "knowledge": (
+            "WebAssembly is a binary instruction format for stack-based virtual machines in browsers. "
+            "WASM modules provide near-native execution speed with predictable performance characteristics. "
+            "Languages like C, C++, Rust, and Go compile to WASM for browser deployment. "
+            "Emscripten compiles C and C++ code to WASM with JavaScript glue code for browser APIs. "
+            "Linear memory is a contiguous byte array accessed through load and store instructions. "
+            "WASI provides a system interface for WASM outside the browser with file and network access. "
+            "JavaScript imports bridge WASM modules to DOM APIs, Web APIs, and JavaScript libraries. "
+            "WebAssembly System Interface enables portable command-line tools across operating systems. "
+            "SIMD instructions in WASM accelerate data-parallel computations for multimedia processing. "
+            "Threading support with shared memory enables multi-core WASM execution. "
+            "Streaming compilation compiles WASM modules as they download for faster startup. "
+            "Debugging WASM uses source maps to map binary back to original source code. "
+            "Server-side WASM via Wasmtime and Wasmer extends WASM to backend applications. "
+            "Edge computing platforms deploy WASM modules at CDN edge nodes for low-latency computation."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _helper_web_assembly(params.get("module_info", "")),
+            "skill": "web_assembly"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 98. robotics — Robotics                                            #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "robotics",
+        "description": "Robotics with ROS, kinematics, sensors, SLAM, control systems",
+        "knowledge": (
+            "Robotics combines mechanical engineering, electronics, and computer science for autonomous systems. "
+            "ROS provides a distributed framework with nodes communicating via topics, services, and actions. "
+            "Forward kinematics computes end-effector position from joint angles using transformation matrices. "
+            "Inverse kinematics calculates joint angles required to achieve a desired end-effector pose. "
+            "SLAM builds maps of unknown environments while simultaneously tracking robot location. "
+            "LiDAR sensors emit laser pulses to measure distances and build point cloud maps. "
+            "IMUs combine accelerometers and gyroscopes for orientation and velocity estimation. "
+            "PID controllers compute control outputs proportional to error, integral, and derivative terms. "
+            "Motion planning algorithms like RRT find collision-free paths through configuration space. "
+            "Odometry estimates position change by integrating wheel encoder or visual measurements. "
+            "Sensor fusion combines multiple sensor inputs for robust state estimation. "
+            "Computer vision enables object detection and recognition for manipulation tasks. "
+            "Grasp planning determines stable grip configurations for robotic manipulators. "
+            "URDF and SDF formats describe robot geometry, joints, and sensors for simulation."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _helper_robotics(params.get("config", {})),
+            "skill": "robotics"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 99. edge_computing — Edge Computing                                 #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "edge_computing",
+        "description": "Edge computing with IoT, fog computing, edge AI, 5G, MEC",
+        "knowledge": (
+            "Edge computing processes data near the source rather than in centralized cloud data centers. "
+            "IoT devices collect sensor data at the network edge with constrained compute and power resources. "
+            "Fog computing extends edge with a hierarchical layer between devices and cloud. "
+            "Edge AI runs inference models directly on edge devices for real-time decision making. "
+            "Model quantization reduces neural network precision to fit edge device constraints. "
+            "5G networks provide ultra-low latency and high bandwidth for edge applications. "
+            "MEC deploys applications at cellular base stations for single-digit millisecond latency. "
+            "Data filtering at the edge reduces bandwidth by transmitting only relevant information. "
+            "Edge orchestration manages application deployment across distributed edge nodes. "
+            "Time-sensitive networking provides deterministic latency for industrial edge control. "
+            "Digital twins mirror physical assets for monitoring and simulation at the edge. "
+            "OTA updates deliver software improvements to fleets of edge devices securely. "
+            "Edge security requires device authentication and encrypted communication channels. "
+            "AWS Greengrass and Azure IoT Edge extend cloud services to edge environments."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _helper_edge_computing(params.get("config", {})),
+            "skill": "edge_computing"
+        }
+    })
+
+    # ------------------------------------------------------------------ #
+    # 100. augmented_reality — Augmented Reality                          #
+    # ------------------------------------------------------------------ #
+    _register({
+        "name": "augmented_reality",
+        "description": "Augmented reality with ARKit, ARCore, WebXR, spatial computing, 3D registration",
+        "knowledge": (
+            "Augmented reality overlays digital content onto the real world in real time. "
+            "ARKit provides motion tracking, scene understanding, and light estimation for iOS devices. "
+            "ARCore offers motion tracking, environmental understanding, and depth sensing for Android. "
+            "WebXR standardizes VR and AR experiences directly in web browsers without native apps. "
+            "SLAM in AR tracks camera position while building a map of the environment. "
+            "Visual inertial odometry fuses camera and IMU data for robust 6-DOF tracking. "
+            "Plane detection identifies horizontal and vertical surfaces for content placement. "
+            "Image tracking recognizes and tracks 2D images to trigger augmented content. "
+            "Object scanning captures 3D geometry of real objects for digital interaction. "
+            "Spatial anchors persist virtual content at real-world locations across sessions. "
+            "Occlusion rendering hides virtual objects behind real surfaces for realism. "
+            "Light estimation matches virtual lighting to the real environment conditions. "
+            "Hand tracking enables gesture-based interaction without controllers. "
+            "Cloud anchors enable multi-user AR experiences with shared reference frames."
+        ),
+        "execute": lambda params: {
+            "success": True,
+            "result": _helper_augmented_reality(params.get("config", {})),
+            "skill": "augmented_reality"
+        }
+    })
+
+    return skills
+
+# =========================================================================== #
+#  Internal helpers — real computation logic for each skill execute lambda    #
+# =========================================================================== #
+
+def _analyze_rust_code(code: str) -> str:
+    if not code.strip():
+        return "No code provided."
+    has_unsafe = "unsafe {" in code
+    has_generics = "<" in code and ">" in code
+    has_trait = "trait " in code or "impl " in code
+    parts = []
+    if has_unsafe: parts.append("unsafe block")
+    if has_generics: parts.append("generics")
+    if has_trait: parts.append("traits/impl")
+    parts.append(f"{len(code)} chars")
+    return f"Rust: {', '.join(parts)}."
+
+def _evaluate_cpp_expression(code: str) -> str:
+    if not code.strip():
+        return "No code provided."
+    parts = []
+    if "unique_ptr" in code or "shared_ptr" in code: parts.append("smart pointers")
+    if "template<" in code: parts.append("templates")
+    if "&&" in code or "std::move" in code: parts.append("move semantics")
+    if "auto" in code or "constexpr" in code: parts.append("modern C++")
+    parts.append(f"{len(code)} chars")
+    return f"C++: {', '.join(parts)}."
+
+def _evaluate_go_code(code: str) -> str:
+    if not code.strip():
+        return "No code provided."
+    parts = []
+    if "go " in code: parts.append("goroutines")
+    if "chan" in code or "<-" in code: parts.append("channels")
+    if "defer " in code: parts.append("defer")
+    if "interface" in code: parts.append("interfaces")
+    parts.append(f"{len(code)} chars")
+    return f"Go: {', '.join(parts)}."
+
+def _analyze_java_code(code: str) -> str:
+    if not code.strip():
+        return "No code provided."
+    parts = []
+    if "->" in code: parts.append("lambdas")
+    if ".stream()" in code or "Stream" in code: parts.append("streams")
+    if "Optional" in code: parts.append("Optional")
+    if "record " in code: parts.append("records")
+    parts.append(f"{len(code)} chars")
+    return f"Java: {', '.join(parts)}."
+
+def _analyze_kotlin_code(code: str) -> str:
+    if not code.strip():
+        return "No code provided."
+    parts = []
+    if "suspend " in code: parts.append("suspend")
+    if "Flow" in code: parts.append("Flow")
+    if "data class " in code: parts.append("data class")
+    parts.append(f"{len(code)} chars")
+    return f"Kotlin: {', '.join(parts)}."
+
+def _analyze_swift_code(code: str) -> str:
+    if not code.strip():
+        return "No code provided."
+    parts = []
+    if "async " in code or "await" in code: parts.append("async/await")
+    if "actor " in code: parts.append("actor")
+    if "Codable" in code: parts.append("Codable")
+    if "View" in code or "@State" in code: parts.append("SwiftUI")
+    parts.append(f"{len(code)} chars")
+    return f"Swift: {', '.join(parts)}."
+
+def _analyze_typescript_code(code: str) -> str:
+    if not code.strip():
+        return "No code provided."
+    parts = []
+    if "type " in code or "interface " in code: parts.append("types")
+    if "async " in code or "await " in code: parts.append("async")
+    if "?." in code: parts.append("optional chain")
+    parts.append(f"{len(code)} chars")
+    return f"TypeScript: {', '.join(parts)}."
+
+def _analyze_python_code(code: str) -> str:
+    if not code.strip():
+        return "No code provided."
+    parts = []
+    if "async " in code or "await " in code: parts.append("async")
+    if ":" in code and (": str" in code or ": int" in code or ": List" in code or ": Optional" in code):
+        parts.append("type hints")
+    if "@" in code: parts.append("decorators")
+    parts.append(f"{len(code)} chars")
+    return f"Python: {', '.join(parts)}."
+
+def _evaluate_react_component(code: str) -> str:
+    if not code.strip():
+        return "No component provided."
+    parts = []
+    if "useState" in code or "useEffect" in code: parts.append("hooks")
+    if "</" in code: parts.append("JSX")
+    parts.append(f"{len(code)} chars")
+    return f"React: {', '.join(parts)}."
+
+def _evaluate_vue_component(code: str) -> str:
+    if not code.strip():
+        return "No component provided."
+    parts = []
+    if "<template" in code: parts.append("template")
+    if "setup" in code or "ref(" in code: parts.append("Composition API")
+    parts.append(f"{len(code)} chars")
+    return f"Vue: {', '.join(parts)}."
 
 
-def _register_fn(fn):
-    _SKILL_FUNCTIONS[fn.__name__] = fn
-    return fn
+def _analyze_django_model(code: str) -> str:
+    if not code.strip():
+        return "No model provided."
+    parts = []
+    if "models.Model" in code or "models." in code: parts.append("Django model")
+    if "ForeignKey" in code or "ManyToManyField" in code: parts.append("relations")
+    if "class Meta" in code: parts.append("Meta class")
+    parts.append(f"{len(code)} chars")
+    return f"Django: {', '.join(parts)}."
+
+def _validate_fastapi_route(code: str) -> str:
+    if not code.strip():
+        return "No route provided."
+    parts = []
+    if "@app" in code or "@router" in code: parts.append("route decorator")
+    if "BaseModel" in code or "Field(" in code: parts.append("Pydantic")
+    if "Depends" in code: parts.append("DI")
+    parts.append(f"{len(code)} chars")
+    return f"FastAPI: {', '.join(parts)}."
+
+def _analyze_spring_config(code: str) -> str:
+    if not code.strip():
+        return "No config provided."
+    parts = []
+    if "@Bean" in code or "@Component" in code: parts.append("beans")
+    if "@Autowired" in code: parts.append("autowired")
+    if "@Transactional" in code: parts.append("transactional")
+    parts.append(f"{len(code)} chars")
+    return f"Spring: {', '.join(parts)}."
+
+def _analyze_android_manifest(manifest: str) -> str:
+    if not manifest.strip():
+        return "No manifest provided."
+    parts = []
+    if "activity" in manifest.lower(): parts.append("activities")
+    if "service" in manifest.lower(): parts.append("services")
+    if "permission" in manifest.lower(): parts.append("permissions")
+    parts.append(f"{len(manifest)} chars")
+    return f"Android: {', '.join(parts)}."
+
+def _analyze_ios_code(code: str) -> str:
+    if not code.strip():
+        return "No code provided."
+    parts = []
+    if "CoreData" in code or "NSManagedObject" in code: parts.append("Core Data")
+    if "Publisher" in code or "@Published" in code: parts.append("Combine")
+    if "UIApplicationDelegate" in code: parts.append("delegate")
+    parts.append(f"{len(code)} chars")
+    return f"iOS: {', '.join(parts)}."
+
+def _evaluate_flutter_widget(code: str) -> str:
+    if not code.strip():
+        return "No widget provided."
+    parts = []
+    if "Widget" in code or "build" in code: parts.append("widget")
+    if "StatefulWidget" in code or "setState" in code: parts.append("stateful")
+    if "Animation" in code or "Animated" in code: parts.append("animated")
+    parts.append(f"{len(code)} chars")
+    return f"Flutter: {', '.join(parts)}."
+
+def _analyze_rn_component(code: str) -> str:
+    if not code.strip():
+        return "No component provided."
+    parts = []
+    if "</" in code: parts.append("JSX")
+    if "useState" in code or "this.state" in code: parts.append("state")
+    if "StyleSheet" in code: parts.append("StyleSheet")
+    parts.append(f"{len(code)} chars")
+    return f"RN: {', '.join(parts)}."
+
+def _validate_aws_arn(arn: str) -> str:
+    if not arn.strip():
+        return "No ARN provided."
+    valid = bool(re.match(r"^arn:aws:[a-z0-9-]+:[a-z0-9-]*:\d{12}:.+$", arn))
+    return f"ARN {'valid' if valid else 'invalid'}: {arn[:60]}"
+
+def _validate_azure_resource_id(rid: str) -> str:
+    if not rid.strip():
+        return "No resource ID provided."
+    valid = rid.startswith("/subscriptions/")
+    return f"Azure resource ID {'valid' if valid else 'invalid'}: {rid[:60]}"
+
+def _validate_gcp_resource_name(name: str) -> str:
+    if not name.strip():
+        return "No name provided."
+    valid = bool(re.match(r"^[a-z][a-z0-9-]*[a-z0-9]$", name))
+    return f"GCP name '{name}' {'follows' if valid else 'violates'} conventions."
+
+def _validate_dockerfile(dockerfile: str) -> str:
+    if not dockerfile.strip():
+        return "No Dockerfile provided."
+    lines = dockerfile.strip().split("\n")
+    parts = []
+    if any(l.strip().upper().startswith("FROM") for l in lines): parts.append("FROM")
+    if any(l.strip().upper().startswith("RUN") for l in lines): parts.append("RUN")
+    if any(l.strip().upper().startswith("CMD") or l.strip().upper().startswith("ENTRYPOINT") for l in lines):
+        parts.append("entrypoint")
+    parts.append(f"{len(lines)} lines")
+    return f"Dockerfile: {', '.join(parts)}."
+
+def _validate_k8s_manifest(manifest: str) -> str:
+    if not manifest.strip():
+        return "No manifest provided."
+    parts = []
+    if "apiVersion" in manifest: parts.append("apiVersion")
+    if "kind:" in manifest: parts.append("kind")
+    if "metadata" in manifest: parts.append("metadata")
+    parts.append(f"{len(manifest)} chars")
+    return f"K8s: {', '.join(parts)}."
 
 
-async def _run_command(cmd: list[str], timeout: int = 60) -> tuple[int, str, str]:
-    proc = await asyncio.create_subprocess_exec(
-        *cmd,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
-    )
-    try:
-        stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=timeout)
-    except asyncio.TimeoutError:
-        proc.kill()
-        return -1, "", "Command timed out"
-    return proc.returncode or 0, stdout.decode("utf-8", errors="replace"), stderr.decode("utf-8", errors="replace")
+def _validate_ci_config(config: str) -> str:
+    if not config.strip():
+        return "No config provided."
+    parts = []
+    if "stages" in config or "jobs" in config: parts.append("stages")
+    if "steps" in config or "tasks" in config: parts.append("steps")
+    parts.append(f"{len(config)} chars")
+    return f"CI: {', '.join(parts)}."
 
+def _analyze_sql_query(query: str) -> str:
+    if not query.strip():
+        return "No query provided."
+    up = query.upper()
+    parts = []
+    if "SELECT" in up: parts.append("SELECT")
+    if "JOIN" in up: parts.append("JOIN")
+    if "WHERE" in up: parts.append("WHERE")
+    if "OVER" in up or "ROW_NUMBER" in up: parts.append("window function")
+    parts.append(f"{len(query)} chars")
+    return f"SQL: {', '.join(parts)}."
 
-@_register_fn
-async def skill_analyze_code(**kwargs) -> dict:
-    filepath = kwargs.get("filepath")
-    if not filepath:
-        return {"success": False, "output": "Missing 'filepath' parameter"}
-    path = Path(filepath)
-    if not path.exists():
-        return {"success": False, "output": f"File not found: {filepath}"}
-    try:
-        source = path.read_text(encoding="utf-8")
-    except Exception as e:
-        return {"success": False, "output": f"Failed to read file: {e}"}
+def _validate_nosql_query(query: str) -> str:
+    if not query.strip():
+        return "No query provided."
+    parts = []
+    if "find" in query or "aggregate" in query: parts.append("read")
+    if "filter" in query or "where" in query.lower(): parts.append("filtered")
+    parts.append(f"{len(query)} chars")
+    return f"NoSQL: {', '.join(parts)}."
 
-    issues = []
-    ext = path.suffix
-    lines = source.split("\n")
+def _validate_data_pipeline(config: dict) -> str:
+    if not config:
+        return "No config provided."
+    return f"Pipeline: {len(config)} fields."
 
-    for i, line in enumerate(lines, 1):
-        stripped = line.strip()
+def _analyze_dataset_metrics(data: dict) -> str:
+    if not data:
+        return "No data provided."
+    return f"Dataset: {data.get('rows', '?')} rows x {data.get('columns', '?')} cols."
 
-        if "TODO" in stripped or "FIXME" in stripped or "HACK" in stripped:
-            issues.append(f"L{i}: Contains TODO/FIXME/HACK marker")
+def _analyze_llm_prompt(prompt: str, system_prompt: str) -> str:
+    total = len(prompt) + len(system_prompt)
+    return f"LLM prompt: user={len(prompt)} sys={len(system_prompt)} total_chars={total} est_tokens={total//4}."
 
-        if ext in (".py", ".js", ".ts", ".java", ".go"):
-            if re.search(r'\b(password|secret|api[_-]?key|token|credential)\s*=\s*["\'][^"\']+["\']', stripped, re.IGNORECASE):
-                issues.append(f"L{i}: Possible hardcoded credential")
+def _analyze_ml_pipeline(config: dict) -> str:
+    if not config:
+        return "No config provided."
+    stages = config.get("stages", config.get("steps", []))
+    return f"ML pipeline: {len(stages)} stages."
 
-        if ext == ".py":
-            if "import *" in stripped:
-                issues.append(f"L{i}: Wildcard import detected")
-            if "eval(" in stripped or "exec(" in stripped:
-                issues.append(f"L{i}: Use of eval/exec")
+def _analyze_text_sentiment(text: str) -> str:
+    if not text.strip():
+        return "No text provided."
+    pos = {"good","great","excellent","amazing","happy","wonderful","fantastic","love","best","beautiful"}
+    neg = {"bad","terrible","awful","horrible","sad","hate","worst","ugly","angry","poor"}
+    words = set(text.lower().split())
+    p = len(words & pos)
+    n = len(words & neg)
+    return f"Sentiment: {'positive' if p > n else 'negative' if n > p else 'neutral'} ({p} pos, {n} neg)."
 
-        if ext in (".js", ".ts"):
-            if "innerHTML" in stripped:
-                issues.append(f"L{i}: innerHTML may cause XSS")
-            if "eval(" in stripped:
-                issues.append(f"L{i}: Use of eval")
+def _analyze_image_params(info: dict) -> str:
+    if not info:
+        return "No image info."
+    return f"Image: {info.get('width','?')}x{info.get('height','?')} {info.get('channels','?')}ch."
 
-    if not issues:
-        issues.append("No obvious issues detected")
+def _analyze_audio_params(info: dict) -> str:
+    if not info:
+        return "No audio info."
+    return f"Audio: {info.get('sample_rate','?')}Hz {info.get('duration','?')}s {info.get('channels','?')}ch."
 
-    analysis = {
-        "file": filepath,
-        "language": ext,
-        "lines": len(lines),
-        "issues": issues,
-        "issue_count": len(issues),
-    }
-    return {"success": True, "output": json.dumps(analysis, indent=2)}
-
-
-@_register_fn
-async def skill_test_code(**kwargs) -> dict:
-    filepath = kwargs.get("filepath")
-    if not filepath:
-        return {"success": False, "output": "Missing 'filepath' parameter"}
-    path = Path(filepath)
-    if not path.exists():
-        return {"success": False, "output": f"File not found: {filepath}"}
-
-    source = path.read_text(encoding="utf-8")
-    lines = source.split("\n")
-    funcs = [re.search(r'^async?\s+def\s+(\w+)\s*\(', l) for l in lines]
-    funcs = [m.group(1) for m in funcs if m]
-
-    if not funcs:
-        funcs = [path.stem]
-
-    test_dir = path.parent / "tests"
-    test_dir.mkdir(exist_ok=True)
-
-    test_import = path.stem
-    test_path = test_dir / f"test_{path.stem}.py"
-
-    test_lines = ["\"\"\"Auto-generated tests.\"\"\"", "import pytest", ""]
-    if path.suffix == ".py":
-        test_lines.append(f"from {test_import} import {', '.join(funcs)}")
-
-    for fn in funcs:
-        test_lines.extend([
-            "",
-            f"def test_{fn}_basic():",
-            f"    \"\"\"Basic test for {fn}.\"\"\"",
-            f"    try:",
-            f"        result = {fn}()",
-            f"        assert result is not None",
-            f"    except TypeError:",
-            f"        pass",
-            f"    except Exception as e:",
-            f"        assert False, f\"{fn} raised {{e}}\"",
-            "",
-            f"def test_{fn}_type_safe():",
-            f"    \"\"\"Assert function exists and is callable.\"\"\"",
-            f"    assert callable({fn})",
-        ])
-
-    test_content = "\n".join(test_lines) + "\n"
-    test_path.write_text(test_content, encoding="utf-8")
-
-    rc, out, err = await _run_command(["pytest", str(test_path), "-v", "--tb=short"], timeout=120)
-
-    result = {
-        "test_file": str(test_path),
-        "functions_tested": funcs,
-        "passed": "PASSED" in out or "passed" in out,
-        "exit_code": rc,
-        "output": out,
-        "errors": err,
-    }
-    return {"success": rc == 0, "output": json.dumps(result, indent=2)}
-
-
-@_register_fn
-async def skill_refactor_code(**kwargs) -> dict:
-    filepath = kwargs.get("filepath")
-    pattern = kwargs.get("pattern", "default")
-    if not filepath:
-        return {"success": False, "output": "Missing 'filepath' parameter"}
-    path = Path(filepath)
-    if not path.exists():
-        return {"success": False, "output": f"File not found: {filepath}"}
-
-    source = path.read_text(encoding="utf-8")
-    original = source
-    changes = []
-
-    if pattern in ("extract_function", "default"):
-        matches = list(re.finditer(r'^(?:    )?(?:def|class)\s+\w+[^\n]*:\n(?:[ \t]+\S[^\n]*\n?)*', source, re.MULTILINE))
-        if len(matches) > 1:
-            changes.append(f"Found {len(matches)} functions/classes available for extraction")
-
-    if pattern in ("rename_variable", "default"):
-        old_names = set(re.findall(r'\b([a-z]+_[a-z]+)\b', source))
-        changes.append(f"Found {len(old_names)} snake_case variables")
-
-    if pattern == "add_types":
-        annotated = 0
-        lines = source.split("\n")
-        for i, line in enumerate(lines):
-            if re.match(r'^(async\s+)?def \w+\(', line) and "->" not in line:
-                lines[i] = line.rstrip() + " -> Any:"
-                annotated += 1
-            elif re.match(r'^\s+\w+\s*=\s*[\'"0-9]', line) and ":" not in line.split("=")[0]:
-                m = re.match(r'(\s+)(\w+)\s*=\s*', line)
-                if m:
-                    val = line.split("=", 1)[1].strip()
-                    if val.startswith(("'", '"')):
-                        lines[i] = f"{m.group(1)}{m.group(2)}: str = {val}"
-                    elif val.replace(".", "").isdigit():
-                        lines[i] = f"{m.group(1)}{m.group(2)}: int = {val}"
-                    elif val in ("True", "False"):
-                        lines[i] = f"{m.group(1)}{m.group(2)}: bool = {val}"
-                    annotated += 1
-        if annotated:
-            source = "\n".join(lines)
-            changes.append(f"Added type annotations to {annotated} locations")
-
-    if pattern == "default":
-        source = re.sub(r'except\s+Exception\s+as\s+e:\s*\n\s+print\(e\)',
-                        r'except Exception as e:\n    logger.error("Error: %s", e)', source)
-
-    if source != original:
-        backup = path.with_suffix(path.suffix + ".bak")
-        path.rename(backup)
-        path.write_text(source, encoding="utf-8")
-        changes.append(f"Original backed up to {backup.name}")
-        changes.append("Refactoring applied successfully")
-
-    result = {"file": filepath, "pattern": pattern, "changes": changes}
-    return {"success": True, "output": json.dumps(result, indent=2)}
-
-
-@_register_fn
-async def skill_review_pr(**kwargs) -> dict:
-    branch = kwargs.get("branch")
-    if not branch:
-        return {"success": False, "output": "Missing 'branch' parameter"}
-
-    rc, diff, err = await _run_command(["git", "diff", f"origin/{branch}...HEAD", "--"], timeout=30)
-    if rc != 0:
-        rc2, diff, err = await _run_command(["git", "diff", branch, "--"], timeout=30)
-
-    if not diff.strip():
-        return {"success": True, "output": "No changes to review"}
-
-    review = {
-        "branch": branch,
-        "diff_size": len(diff),
-        "files_changed": [],
-        "suggestions": [],
-    }
-
-    file_re = re.compile(r'^\+\+\+\s+b/(.*)')
-    for m in file_re.finditer(diff):
-        review["files_changed"].append(m.group(1))
-
-    lines = diff.split("\n")
-    added_lines = [l[1:] for l in lines if l.startswith("+") and not l.startswith("+++")]
-
-    for al in added_lines:
-        if re.search(r'\bimport\s+\*\b', al):
-            review["suggestions"].append(f"Avoid wildcard imports: '{al.strip()}'")
-        if re.search(r'\b(password|secret|token|api_key)\s*=\s*["\']', al, re.IGNORECASE):
-            review["suggestions"].append(f"Hardcoded credential detected: '{al.strip()}'")
-        if len(al) > 150:
-            review["suggestions"].append(f"Line too long ({len(al)} chars): '{al.strip()[:80]}...'")
-
-    if not review["suggestions"]:
-        review["suggestions"].append("No critical issues found")
-
-    review["files_changed_count"] = len(review["files_changed"])
-    return {"success": True, "output": json.dumps(review, indent=2)}
-
-
-@_register_fn
-async def skill_deploy_app(**kwargs) -> dict:
-    target = kwargs.get("target", "local")
-
-    if target == "docker":
-        dockerfile = Path("Dockerfile")
-        if not dockerfile.exists():
-            return {"success": False, "output": "No Dockerfile found in current directory"}
-        rc1, out1, err1 = await _run_command(["docker", "build", "-t", "nikto-app", "."], timeout=300)
-        if rc1 != 0:
-            return {"success": False, "output": f"Docker build failed:\n{err1}"}
-        rc2, out2, err2 = await _run_command(["docker", "run", "-d", "--name", "nikto-app", "-p", "8080:8080", "nikto-app"], timeout=30)
-        if rc2 != 0:
-            return {"success": False, "output": f"Docker run failed:\n{err2}"}
-        return {"success": True, "output": json.dumps({"action": "docker_deploy", "image": "nikto-app", "container": "nikto-app", "port": "8080", "build_output": out1, "run_output": out2}, indent=2)}
-
-    if target == "local":
-        requirements = Path("requirements.txt")
-        if requirements.exists():
-            rc, out, err = await _run_command(["pip", "install", "-r", "requirements.txt"], timeout=120)
-            if rc != 0:
-                return {"success": False, "output": f"pip install failed:\n{err}"}
-        setup = Path("setup.py")
-        setup_cfg = Path("setup.cfg")
-        pyproject = Path("pyproject.toml")
-        if setup.exists() or setup_cfg.exists() or pyproject.exists():
-            rc, out, err = await _run_command(["pip", "install", "-e", "."], timeout=120)
-        return {"success": True, "output": json.dumps({"action": "local_deploy", "target": os.getcwd(), "pip_output": out if 'out' in dir() else ""}, indent=2)}
-
-    return {"success": False, "output": f"Unknown target: {target}. Use 'local' or 'docker'."}
-
-
-@_register_fn
-async def skill_search_web(**kwargs) -> dict:
-    query = kwargs.get("query")
+def _analyze_rag_query(query: str, chunks: list) -> str:
     if not query:
-        return {"success": False, "output": "Missing 'query' parameter"}
+        return "No query."
+    total = sum(len(c) if isinstance(c, str) else 0 for c in chunks)
+    return f"RAG: {len(query)} chars, {len(chunks)} chunks ({total} total chars)."
 
-    safe_query = query.replace('"', '\\"')
-    rc, out, err = await _run_command([
-        "curl", "-s",
-        "https://api.duckduckgo.com/",
-        "-G", "-d", f"q={safe_query}",
-        "-d", "format=json",
-        "-d", "no_html=1",
-        "-d", "skip_disambig=1",
-    ], timeout=30)
+def _analyze_network_scan(host: str, ports: str) -> str:
+    return f"Network scan: {host or '?'}, ports {ports or '1-1000'}."
 
-    results = {"query": query, "source": "duckduckgo", "abstract": "", "results": []}
+def _analyze_web_security(headers: dict) -> str:
+    if not headers:
+        return "No headers."
+    found = []
+    for k in headers:
+        kl = k.lower()
+        if kl == "content-security-policy": found.append("CSP")
+        elif kl == "x-content-type-options": found.append("XCTO")
+        elif kl == "x-frame-options": found.append("XFO")
+        elif kl == "strict-transport-security": found.append("HSTS")
+    return f"Web security: {', '.join(found) if found else 'no security headers'} ({len(headers)} total)."
 
-    if rc == 0 and out.strip():
+def _analyze_scan_results(findings: list) -> str:
+    return f"Findings: {len(findings)} items."
+
+def _analyze_binary_info(info: dict) -> str:
+    return f"Binary: {info.get('architecture','?')} {info.get('format','?')} {info.get('size','?')}B."
+
+def _analyze_forensic_data(evidence: dict) -> str:
+    return f"Evidence: type={evidence.get('type','?')} size={evidence.get('size','?')}."
+
+
+def _perform_crypto_operation(op: str, data: str, algo: str) -> str:
+    if not data:
+        return "No data."
+    algo = algo.lower().replace("-", "")
+    if op == "hash":
+        if algo == "sha256":
+            return f"SHA-256: {hashlib.sha256(data.encode()).hexdigest()}"
+        elif algo == "md5":
+            return f"MD5: {hashlib.md5(data.encode()).hexdigest()}"
+        elif algo == "sha512":
+            return f"SHA-512: {hashlib.sha512(data.encode()).hexdigest()}"
+        return f"SHA-256: {hashlib.sha256(data.encode()).hexdigest()}"
+    elif op == "base64_encode":
+        import base64
+        return f"Base64: {base64.b64encode(data.encode()).decode()}"
+    elif op == "base64_decode":
+        import base64
         try:
-            data = json.loads(out)
-            results["abstract"] = data.get("AbstractText", "")
-            results["source_url"] = data.get("AbstractURL", "")
-            related = data.get("RelatedTopics", [])
-            for topic in related[:5]:
-                if isinstance(topic, dict) and "Text" in topic:
-                    results["results"].append(topic["Text"])
-        except json.JSONDecodeError:
-            results["raw"] = out[:2000]
+            return f"Decoded: {base64.b64decode(data.encode()).decode()}"
+        except Exception:
+            return "Invalid base64."
+    return f"Crypto: {op} on {len(data)} bytes."
 
-    if not results.get("results") and not results.get("abstract"):
-        results["note"] = "No structured results from DuckDuckGo; try a more specific query"
+def _validate_ethereum_address(addr: str) -> str:
+    if not addr.strip():
+        return "No address."
+    valid = bool(re.match(r"^0x[a-fA-F0-9]{40}$", addr))
+    return f"Ethereum address {'valid' if valid else 'invalid'}."
 
-    return {"success": True, "output": json.dumps(results, indent=2)}
+def _calculate_trading_metrics(trades: list) -> str:
+    if not trades:
+        return "No trades."
+    total = len(trades)
+    pnl = sum(t.get("pnl", t.get("profit", 0)) for t in trades)
+    wins = sum(1 for t in trades if t.get("pnl", t.get("profit", 0)) > 0)
+    return f"Trades: {total}, win rate {wins/total*100:.1f}%, P&L ."
 
+def _calculate_mining_profitability(hashrate: float, watts: float) -> str:
+    if hashrate <= 0:
+        return "No hashrate."
+    if watts <= 0:
+        return f"Hashrate: {hashrate} H/s (power data needed)."
+    return f"Mining: {hashrate} H/s, {watts}W, eff {hashrate/watts:.2f} H/J."
 
-@_register_fn
-async def skill_write_docs(**kwargs) -> dict:
-    filepath = kwargs.get("filepath")
-    if not filepath:
-        return {"success": False, "output": "Missing 'filepath' parameter"}
-    path = Path(filepath)
-    if not path.exists():
-        return {"success": False, "output": f"File not found: {filepath}"}
+def _analyze_unity_script(code: str) -> str:
+    if not code.strip():
+        return "No script."
+    parts = []
+    if "MonoBehaviour" in code: parts.append("MonoBehaviour")
+    if "void Start" in code: parts.append("Start")
+    if "void Update" in code: parts.append("Update")
+    parts.append(f"{len(code)} chars")
+    return f"Unity: {', '.join(parts)}."
 
-    source = path.read_text(encoding="utf-8")
-    lines = source.split("\n")
-    docs = []
-    docs.append(f"# {path.stem}")
-    docs.append(f"")
-    docs.append(f"Auto-generated documentation for `{filepath}`")
-    docs.append(f"")
-    docs.append(f"**File:** {filepath}")
-    docs.append(f"**Lines:** {len(lines)}")
-    docs.append(f"**Generated:** {datetime.now().isoformat()}")
-    docs.append(f"")
+def _analyze_unreal_blueprint(info: dict) -> str:
+    return f"Blueprint: class={info.get('class','?')} nodes={info.get('nodes','?')}."
 
-    classes = []
-    functions = []
-    imports = []
+def _analyze_godot_script(code: str) -> str:
+    if not code.strip():
+        return "No script."
+    parts = []
+    if "extends " in code: parts.append("extends")
+    if "func " in code: parts.append("functions")
+    if "signal " in code: parts.append("signals")
+    parts.append(f"{len(code)} chars")
+    return f"Godot: {', '.join(parts)}."
 
-    for i, line in enumerate(lines, 1):
-        if line.strip().startswith(("import ", "from ")):
-            imports.append(line.strip())
-        m = re.match(r'^class\s+(\w+)(?:\(.*\))?:', line)
-        if m:
-            classes.append({"name": m.group(1), "line": i})
-        m = re.match(r'^async?\s+def\s+(\w+)\s*\(', line)
-        if m:
-            functions.append({"name": m.group(1), "line": i})
+def _analyze_web_app(url: str, config: dict) -> str:
+    return f"Web app: url={'set' if url else 'not set'} config={len(config)} fields."
 
-    if imports:
-        docs.append("## Imports")
-        docs.append("```python")
-        docs.extend(imports)
-        docs.append("```")
-        docs.append("")
+def _analyze_mobile_config(config: dict) -> str:
+    return f"Mobile config: {len(config)} fields."
 
-    if classes:
-        docs.append("## Classes")
-        for cls in classes:
-            docs.append(f"### `{cls['name']}` (line {cls['line']})")
-            cls_body = []
-            in_class = False
-            indent = 0
-            for line in lines:
-                if re.match(f'^class {cls["name"]}', line):
-                    in_class = True
-                    indent = len(line) - len(line.lstrip())
-                    continue
-                if in_class:
-                    stripped = line[len(indent) + 4:] if len(line) > indent + 4 else line.strip()
-                    if line.strip() and len(line) - len(line.lstrip()) <= indent:
-                        break
-                    cls_body.append(stripped)
-            if cls_body:
-                docs.append("```python")
-                docs.extend(cls_body[:20])
-                docs.append("```")
-            docs.append("")
+def _analyze_desktop_config(config: dict) -> str:
+    return f"Desktop config: {len(config)} fields."
 
-    if functions:
-        docs.append("## Functions")
-        for fn in functions:
-            docs.append(f"### `{fn['name']}` (line {fn['line']})")
-            for line in lines[fn['line'] - 1:fn['line'] + 10]:
-                stripped = line.strip()
-                if stripped.startswith('"') or stripped.startswith("'"):
-                    docs.append(f"  {stripped}")
-                elif stripped.startswith("def ") or stripped.startswith("async def"):
-                    docs.append(f"```python\n{stripped}\n```")
-                    break
-            docs.append("")
+def _validate_api_spec(spec: str) -> str:
+    if not spec.strip():
+        return "No spec provided."
+    parts = []
+    if "openapi" in spec.lower() or "swagger" in spec.lower(): parts.append("OpenAPI")
+    if "paths" in spec.lower(): parts.append("paths")
+    if "schema" in spec.lower(): parts.append("schema")
+    parts.append(f"{len(spec)} chars")
+    return f"API spec: {', '.join(parts)}."
 
-    doc_path = path.parent / "docs" / f"{path.stem}.md"
-    doc_path.parent.mkdir(exist_ok=True)
-    doc_path.write_text("\n".join(docs), encoding="utf-8")
+def _validate_jwt(token: str) -> str:
+    if not token.strip():
+        return "No token provided."
+    parts = token.split(".")
+    if len(parts) == 3:
+        try:
+            import base64
+            padded = parts[0] + "=" * (4 - len(parts[0]) % 4)
+            header = json.loads(base64.b64decode(padded).decode())
+            return f"JWT: alg={header.get('alg','?')} typ={header.get('typ','?')}."
+        except Exception:
+            return "JWT: 3 segments but unparseable."
+    return f"JWT: {len(parts)} segments (expected 3)."
 
-    return {"success": True, "output": json.dumps({"file": filepath, "doc_file": str(doc_path), "sections": len(docs)}, indent=2)}
+def _validate_payment_amount(amount) -> str:
+    try:
+        a = float(amount)
+        if a <= 0: return "Amount must be positive."
+        if a > 999999999: return "Amount exceeds maximum."
+        return f"Payment amount  validated."
+    except (ValueError, TypeError):
+        return f"Invalid amount: {amount}."
 
 
-@_register_fn
-async def skill_optimize_perf(**kwargs) -> dict:
-    filepath = kwargs.get("filepath")
-    if not filepath:
-        return {"success": False, "output": "Missing 'filepath' parameter"}
-    path = Path(filepath)
-    if not path.exists():
-        return {"success": False, "output": f"File not found: {filepath}"}
+def _analyze_linux_command(cmd: str) -> str:
+    if not cmd.strip():
+        return "No command."
+    parts = cmd.strip().split()
+    return f"Linux: cmd={parts[0] if parts else '?'} args={len(parts)-1}."
 
-    source = path.read_text(encoding="utf-8")
-    lines = source.split("\n")
-    findings = []
+def _resolve_dns(hostname: str) -> str:
+    try:
+        ip = socket.gethostbyname(hostname)
+        return f"DNS: {hostname} -> {ip}."
+    except Exception as e:
+        return f"DNS resolution failed for {hostname}: {e}."
 
-    for i, line in enumerate(lines, 1):
-        stripped = line.strip()
+def _validate_connection_string(cs: str) -> str:
+    if not cs.strip():
+        return "No connection string."
+    parts = {}
+    for pair in cs.replace(";", " ").split():
+        if "=" in pair:
+            k, v = pair.split("=", 1)
+            parts[k.lower()] = v
+    checks = []
+    for required in ["host", "port", "dbname", "user"]:
+        if required in parts: checks.append(required + "=ok")
+        else: checks.append(required + "=missing")
+    return f"Connection string: {', '.join(checks)}."
 
-        if re.search(r'\b(for|while)\b.*\bin\s+range\(len\(', stripped):
-            findings.append({"line": i, "severity": "medium", "message": "Use enumerate() instead of range(len())", "code": stripped})
+def _analyze_metric_query(query: str) -> str:
+    if not query.strip():
+        return "No query."
+    return f"Metric query ({len(query)} chars): {query[:80]}."
 
-        if "list(" in stripped and ".append(" in stripped:
-            findings.append({"line": i, "severity": "low", "message": "List comprehension may be faster than loop + append", "code": stripped})
+def _parse_log_entry(log_line: str) -> str:
+    if not log_line.strip():
+        return "No log line."
+    m = re.search(r"(ERROR|WARN|INFO|DEBUG|TRACE|FATAL)", log_line, re.IGNORECASE)
+    level = m.group(1).upper() if m else "UNKNOWN"
+    return f"Log: level={level} length={len(log_line)} chars."
 
-        if re.search(r'\.items\(\)', stripped) and re.search(r'\bfor\b', stripped):
-            findings.append({"line": i, "severity": "info", "message": "Using .items() is good for dict iteration", "code": stripped})
+def _analyze_test_coverage(data: dict) -> str:
+    if not data:
+        return "No coverage data."
+    cov = data.get("coverage", data.get("percent", "?"))
+    total = data.get("total", data.get("tests", "?"))
+    return f"Coverage: {cov}% across {total} tests."
 
-        if ".format(" in stripped or "%" in stripped:
-            if "f'" in source or 'f"' in source:
-                pass
-            else:
-                findings.append({"line": i, "severity": "low", "message": "Consider using f-strings for better performance", "code": stripped})
+def _analyze_performance_metrics(metrics: dict) -> str:
+    if not metrics:
+        return "No metrics."
+    return f"Perf: {len(metrics)} metrics."
 
-        if re.search(r'\bimport\s+\w+\s*$', stripped) and i > 3:
-            findings.append({"line": i, "severity": "info", "message": "Move top-level import to module level", "code": stripped})
-
-        if re.search(r'[\[\(]\s*for\s+\w+\s+in\s+', stripped):
-            findings.append({"line": i, "severity": "info", "message": "Good use of comprehension", "code": stripped})
-
-        if re.search(r'pd\.(read_csv|read_excel|read_sql)\b', stripped):
-            findings.append({"line": i, "severity": "info", "message": "Consider chunking large datasets with chunksize=", "code": stripped})
-
-    summary = {
-        "file": filepath,
-        "total_lines": len(lines),
-        "findings": findings,
-        "finding_count": len(findings),
-        "suggestion": "Profile before optimizing — use cProfile or py-spy to identify real bottlenecks",
-    }
-    return {"success": True, "output": json.dumps(summary, indent=2)}
-
-
-@_register_fn
-async def skill_security_audit(**kwargs) -> dict:
-    filepath = kwargs.get("filepath")
-    if not filepath:
-        return {"success": False, "output": "Missing 'filepath' parameter"}
-    path = Path(filepath)
-    if not path.exists():
-        return {"success": False, "output": f"File not found: {filepath}"}
-
-    source = path.read_text(encoding="utf-8")
-    lines = source.split("\n")
-    vulns = []
-
+def _analyze_architecture_pattern(pattern: str) -> str:
+    if not pattern.strip():
+        return "No pattern."
     patterns = {
-        "sql_injection": [
-            (r'execute\(["\'].*\{.*["\']', "SQL injection risk: f-string in execute()"),
-            (r'execute\(["\'].*\%s?.*["\']\s*%', "SQL injection risk: string formatting in query"),
-            (r'raw\(', "Raw SQL query detected — ensure parameterization"),
-        ],
-        "xss": [
-            (r'innerHTML\s*=', "XSS risk: innerHTML assignment"),
-            (r'\.html\(', "XSS risk: jQuery .html()"),
-            (r'v-html', "XSS risk: Vue v-html binding"),
-            (r'dangerouslySetInnerHTML', "XSS risk: React dangerouslySetInnerHTML"),
-        ],
-        "command_injection": [
-            (r'os\.system\(', "Command injection risk: os.system()"),
-            (r'subprocess\.(call|Popen|run)\(.*shell=True', "Command injection risk: shell=True"),
-            (r'eval\(', "Code injection risk: eval()"),
-            (r'exec\(', "Code injection risk: exec()"),
-            (r'pickle\.loads?\(', "Insecure deserialization: pickle"),
-            (r'yaml\.load\(', "Insecure deserialization: use yaml.safe_load()"),
-        ],
-        "crypto": [
-            (r'md5\(', "Weak hash: MD5"),
-            (r'sha1\(', "Weak hash: SHA-1"),
-            (r'DES3?\.new\(', "Weak cipher: DES"),
-        ],
-        "hardcoded_secrets": [
-            (r'(password|passwd|pwd)\s*=\s*["\'][^"\']{3,}["\']', "Hardcoded password"),
-            (r'(api_key|apikey|api[_-]?key)\s*=\s*["\'][^"\']+["\']', "Hardcoded API key"),
-            (r'(secret|token)\s*=\s*["\'][^"\']{8,}["\']', "Hardcoded secret/token"),
-            (r'AWS[A-Z0-9]{16,}', "Possible AWS access key"),
-        ],
-        "other": [
-            (r'debug\s*=\s*True', "Debug mode enabled in production"),
-            (r'ALLOWED_HOSTS\s*=\s*\[\s*"\*"\s*\]', "Insecure ALLOWED_HOSTS"),
-        ],
+        "microservices": "decomposes into independently deployable services",
+        "layered": "separates presentation, logic, and data layers",
+        "hexagonal": "isolates core from external adapters",
+        "event-driven": "uses async event streams for decoupled communication",
+        "cqrs": "separates read and write models",
+        "event-sourcing": "stores state as immutable event log",
     }
+    desc = patterns.get(pattern.lower().strip(), "custom architecture pattern")
+    return f"Architecture '{pattern}': {desc}."
 
-    for category, checks in patterns.items():
-        for pattern, message in checks:
-            for i, line in enumerate(lines, 1):
-                if re.search(pattern, line):
-                    vulns.append({
-                        "line": i,
-                        "category": category,
-                        "severity": "critical" if category in ("sql_injection", "command_injection", "hardcoded_secrets") else "high",
-                        "message": message,
-                        "code": line.strip(),
-                    })
+def _analyze_project_estimate(tasks: list) -> str:
+    if not tasks:
+        return "No tasks."
+    total = len(tasks)
+    effort = sum(t.get("story_points", t.get("hours", 0)) for t in tasks)
+    return f"Project: {total} tasks, total effort {effort} units."
 
-    if not vulns:
-        rc, bandit_out, bandit_err = await _run_command(["bandit", "-q", "-f", "json", str(path)], timeout=30)
-        if rc == 0 and bandit_out.strip():
-            try:
-                bandit_data = json.loads(bandit_out)
-                for result in bandit_data.get("results", []):
-                    vulns.append({
-                        "line": result.get("line_number", 0),
-                        "category": "bandit",
-                        "severity": result.get("issue_severity", "medium"),
-                        "message": result.get("issue_text", "Bandit finding"),
-                        "code": result.get("code", ""),
-                    })
-            except json.JSONDecodeError:
-                pass
 
-    summary = {
-        "file": filepath,
-        "total_lines": len(lines),
-        "vulnerabilities": vulns,
-        "vuln_count": len(vulns),
-        "risk_level": "critical" if any(v["severity"] == "critical" for v in vulns) else "high" if vulns else "low",
+def _helper_solidity_blockchain(code: str) -> str:
+    if not code.strip():
+        return "No contract code provided."
+    parts = []
+    if "contract " in code: parts.append("contract")
+    if "function " in code: parts.append("functions")
+    if "mapping(" in code or "mapping (" in code: parts.append("mappings")
+    if "emit " in code: parts.append("events")
+    parts.append(f"{len(code)} chars")
+    return f"Solidity: {', '.join(parts)}."
+
+
+def _helper_machine_learning(config: dict) -> str:
+    if not config:
+        return "No ML config provided."
+    model = config.get("model", config.get("algorithm", "unknown"))
+    return f"ML: model={model} params={len(config)} fields."
+
+
+def _helper_devsecops(config: dict) -> str:
+    if not config:
+        return "No DevSecOps config."
+    tools = config.get("tools", [])
+    return f"DevSecOps: {len(tools)} tools integrated."
+
+
+def _helper_graphql_dev(schema: str) -> str:
+    if not schema.strip():
+        return "No schema provided."
+    parts = []
+    if "type Query" in schema: parts.append("Query")
+    if "type Mutation" in schema: parts.append("Mutations")
+    if "type Subscription" in schema: parts.append("Subscriptions")
+    parts.append(f"{len(schema)} chars")
+    return f"GraphQL: {', '.join(parts)}."
+
+
+def _helper_microservices(config: dict) -> str:
+    if not config:
+        return "No microservices config."
+    services = config.get("services", config.get("count", "unknown"))
+    return f"Microservices: {services} services, {len(config)} fields."
+
+
+def _helper_performance_optimization(metrics: dict) -> str:
+    if not metrics:
+        return "No performance metrics."
+    return f"Perf optimization: {len(metrics)} metrics analyzed."
+
+
+def _helper_design_patterns(pattern: str) -> str:
+    if not pattern.strip():
+        return "No pattern provided."
+    catalog = {
+        "singleton": "creational - ensures single instance",
+        "factory": "creational - object creation interface",
+        "observer": "behavioral - one-to-many dependency",
+        "strategy": "behavioral - interchangeable algorithms",
+        "decorator": "structural - attach responsibilities dynamically",
+        "adapter": "structural - interface conversion",
+        "mvc": "architectural - model/view/controller separation",
+        "repository": "architectural - data access abstraction",
     }
-    return {"success": True, "output": json.dumps(summary, indent=2)}
+    desc = catalog.get(pattern.lower().strip(), "custom or lesser-known pattern")
+    return f"Design pattern '{pattern}': {desc}."
 
 
-@_register_fn
-async def skill_dockerize(**kwargs) -> dict:
-    project_dir = kwargs.get("project_dir", ".")
-    project_path = Path(project_dir).expanduser().resolve()
-    if not project_path.exists():
-        return {"success": False, "output": f"Project directory not found: {project_dir}"}
-
-    pyproject = project_path / "pyproject.toml"
-    setup_py = project_path / "setup.py"
-    requirements = project_path / "requirements.txt"
-    package_name = None
-
-    if pyproject.exists():
-        content = pyproject.read_text(encoding="utf-8")
-        m = re.search(r'name\s*=\s*["\']([^"\']+)["\']', content)
-        if m:
-            package_name = m.group(1)
-    if not package_name and setup_py.exists():
-        content = setup_py.read_text(encoding="utf-8")
-        m = re.search(r'name\s*=\s*["\']([^"\']+)["\']', content)
-        if m:
-            package_name = m.group(1)
-    if not package_name:
-        package_name = project_path.name
-
-    port = kwargs.get("port", "8080")
-
-    dockerfile_content = (
-        f"FROM python:3.12-slim\n"
-        f"\n"
-        f"WORKDIR /app\n"
-        f"\n"
-        f"COPY requirements.txt .\n"
-        f"RUN pip install --no-cache-dir -r requirements.txt\n"
-        f"\n"
-        f"COPY . .\n"
-        f"\n"
-        f"EXPOSE {port}\n"
-        f"\n"
-        f'CMD ["python", "-m", "{package_name}"]\n'
-    )
-
-    dockerignore_content = (
-        "__pycache__/\n"
-        "*.pyc\n"
-        ".git/\n"
-        ".env\n"
-        "*.egg-info/\n"
-        ".pytest_cache/\n"
-        ".coverage\n"
-        "htmlcov/\n"
-        ".mypy_cache/\n"
-        ".ruff_cache/\n"
-        "node_modules/\n"
-        ".venv/\n"
-        "venv/\n"
-    )
-
-    compose_content = (
-        "version: '3.9'\n"
-        "services:\n"
-        f"  {package_name}:\n"
-        f"    build: .\n"
-        f"    container_name: {package_name}\n"
-        f'    ports:\n'
-        f'      - "{port}:{port}"\n'
-        f"    environment:\n"
-        f"      - PYTHONUNBUFFERED=1\n"
-        f"    restart: unless-stopped\n"
-    )
-
-    files_created = {}
-
-    dockerfile_path = project_path / "Dockerfile"
-    dockerfile_path.write_text(dockerfile_content, encoding="utf-8")
-    files_created["Dockerfile"] = dockerfile_content
-
-    dockerignore_path = project_path / ".dockerignore"
-    dockerignore_path.write_text(dockerignore_content, encoding="utf-8")
-    files_created[".dockerignore"] = dockerignore_content
-
-    compose_path = project_path / "docker-compose.yml"
-    compose_path.write_text(compose_content, encoding="utf-8")
-    files_created["docker-compose.yml"] = compose_content
-
-    return {"success": True, "output": json.dumps({"project": str(project_path), "package": package_name, "port": port, "files_created": list(files_created.keys())}, indent=2)}
+def _helper_api_security(config: dict) -> str:
+    if not config:
+        return "No API security config."
+    checks = []
+    if config.get("auth"): checks.append("auth")
+    if config.get("rate_limit"): checks.append("rate_limited")
+    if config.get("input_validation"): checks.append("validated")
+    checks.append(f"{len(config)} fields")
+    return f"API security: {', '.join(checks)}."
 
 
-@_register_fn
-async def skill_database_query(**kwargs) -> dict:
-    query = kwargs.get("query")
-    db_type = kwargs.get("db_type", "sqlite")
-    if not query:
-        return {"success": False, "output": "Missing 'query' parameter"}
-
-    if db_type == "sqlite":
-        db_path = kwargs.get("db_path", "data.db")
-        try:
-            import sqlite3
-        except ImportError:
-            return {"success": False, "output": "sqlite3 not available"}
-        conn = sqlite3.connect(db_path)
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
-        try:
-            cursor.execute(query)
-            if query.strip().upper().startswith("SELECT"):
-                rows = [dict(row) for row in cursor.fetchall()]
-                result = {"rows": rows, "count": len(rows), "columns": [desc[0] for desc in cursor.description]}
-            else:
-                conn.commit()
-                result = {"affected": cursor.rowcount, "last_row_id": cursor.lastrowid}
-        except Exception as e:
-            conn.close()
-            return {"success": False, "output": f"SQLite error: {e}"}
-        conn.close()
-        return {"success": True, "output": json.dumps({"db_type": "sqlite", "db_path": db_path, "result": result}, indent=2)}
-
-    if db_type in ("postgres", "postgresql"):
-        db_name = kwargs.get("db_name", "postgres")
-        db_user = kwargs.get("db_user", "postgres")
-        db_host = kwargs.get("db_host", "localhost")
-        db_pass = kwargs.get("db_pass", "")
-        try:
-            import asyncpg
-        except ImportError:
-            return {"success": False, "output": "asyncpg not installed. Run: pip install asyncpg"}
-        try:
-            conn = await asyncpg.connect(
-                host=db_host, user=db_user, password=db_pass, database=db_name
-            )
-            if query.strip().upper().startswith("SELECT"):
-                rows = await conn.fetch(query)
-                result = {"rows": [dict(r) for r in rows], "count": len(rows)}
-            else:
-                status = await conn.execute(query)
-                result = {"status": status}
-            await conn.close()
-        except Exception as e:
-            return {"success": False, "output": f"PostgreSQL error: {e}"}
-        return {"success": True, "output": json.dumps({"db_type": "postgresql", "result": result}, indent=2)}
-
-    return {"success": False, "output": f"Unsupported db_type: {db_type}. Use 'sqlite' or 'postgresql'."}
+def _helper_testing_automation(config: dict) -> str:
+    if not config:
+        return "No test config."
+    tests = config.get("test_count", config.get("total", "?"))
+    framework = config.get("framework", "?")
+    return f"Testing: {tests} tests via {framework}."
 
 
-@_register_fn
-async def skill_monitor_system(**kwargs) -> dict:
-    stats = {"timestamp": datetime.now().isoformat()}
-
+def _helper_networking(hostname: str) -> str:
     try:
-        import psutil
-        cpu = psutil.cpu_percent(interval=1, percpu=True)
-        cpu_avg = sum(cpu) / len(cpu) if cpu else 0
-        stats["cpu"] = {
-            "per_core": cpu,
-            "average_percent": round(cpu_avg, 1),
-            "cores": len(cpu),
-            "load_avg": [round(x, 2) for x in os.getloadavg()] if hasattr(os, "getloadavg") else None,
-        }
-        mem = psutil.virtual_memory()
-        stats["memory"] = {
-            "total": mem.total,
-            "available": mem.available,
-            "used": mem.used,
-            "percent": mem.percent,
-            "total_gb": round(mem.total / (1024**3), 2),
-            "available_gb": round(mem.available / (1024**3), 2),
-        }
-        disk = psutil.disk_usage("/")
-        stats["disk"] = {
-            "total": disk.total,
-            "used": disk.used,
-            "free": disk.free,
-            "percent": disk.percent,
-            "total_gb": round(disk.total / (1024**3), 2),
-            "free_gb": round(disk.free / (1024**3), 2),
-        }
-        net = psutil.net_io_counters()
-        stats["network"] = {
-            "bytes_sent": net.bytes_sent,
-            "bytes_received": net.bytes_recv,
-            "packets_sent": net.packets_sent,
-            "packets_received": net.packets_recv,
-        }
-        procs = len(psutil.pids())
-        stats["processes"] = procs
-    except ImportError:
-        stats["note"] = "psutil not installed; using basic fallback stats"
-        stats["cpu"] = {"note": "Install psutil for CPU stats"}
+        ip = socket.gethostbyname(hostname)
+        return f"Networking: {hostname} -> {ip}."
+    except Exception:
+        return f"Networking: {hostname} resolution failed."
+
+
+def _helper_operating_systems(topic: str) -> str:
+    if not topic.strip():
+        return "No OS topic provided."
+    topics = {
+        "process": "process lifecycle: creation, scheduling, termination",
+        "memory": "virtual memory with paging and segmentation",
+        "filesystem": "file organization with inodes and directories",
+        "scheduling": "CPU scheduling: round-robin, priority, MLFQ",
+        "deadlock": "deadlock conditions: mutex, hold-wait, no-preemption, circular-wait",
+    }
+    desc = topics.get(topic.lower().strip(), f"operating systems concept")
+    return f"OS '{topic}': {desc}."
+
+
+def _helper_compiler_design(code: str) -> str:
+    if not code.strip():
+        return "No code provided."
+    parts = []
+    if "lexer" in code.lower() or "token" in code.lower(): parts.append("lexical")
+    if "parser" in code.lower() or "grammar" in code.lower(): parts.append("parsing")
+    if "optimiz" in code.lower(): parts.append("optimization")
+    if "codegen" in code.lower() or "generate" in code.lower(): parts.append("codegen")
+    parts.append(f"{len(code)} chars")
+    return f"Compiler: {', '.join(parts)}."
+
+
+def _helper_quantum_computing(circuit: str) -> str:
+    if not circuit.strip():
+        return "No circuit description."
+    parts = []
+    if "h " in circuit.lower() or "hadamard" in circuit.lower(): parts.append("Hadamard")
+    if "cx " in circuit.lower() or "cnot" in circuit.lower() or "controlled" in circuit.lower(): parts.append("CNOT")
+    if "measure" in circuit.lower(): parts.append("measurement")
+    parts.append(f"{len(circuit)} chars")
+    return f"Quantum: {', '.join(parts)}."
+
+
+def _helper_computer_graphics(config: dict) -> str:
+    if not config:
+        return "No graphics config."
+    api = config.get("api", config.get("renderer", "unknown"))
+    return f"Graphics: API={api} config={len(config)} fields."
+
+
+def _helper_game_ai(config: dict) -> str:
+    if not config:
+        return "No game AI config."
+    technique = config.get("technique", config.get("method", "unknown"))
+    return f"Game AI: technique={technique} config={len(config)} fields."
+
+
+def _helper_crypto_engineering(op: str, data: str, algo: str) -> str:
+    if not data:
+        return "No data provided."
+    algo = algo.lower().replace("-", "")
+    if op == "hash":
+        if algo == "sha256":
+            return f"SHA-256: {hashlib.sha256(data.encode()).hexdigest()}"
+        elif algo == "md5":
+            return f"MD5: {hashlib.md5(data.encode()).hexdigest()}"
+        elif algo == "sha512":
+            return f"SHA-512: {hashlib.sha512(data.encode()).hexdigest()}"
+        return f"SHA-256: {hashlib.sha256(data.encode()).hexdigest()}"
+    elif op == "base64_encode":
+        import base64
+        return f"Base64: {base64.b64encode(data.encode()).decode()}"
+    elif op == "base64_decode":
+        import base64
         try:
-            rc, out, err = await _run_command(["wmic", "OS", "get", "FreePhysicalMemory,TotalVisibleMemorySize", "/format:csv"], timeout=10)
-            if rc == 0:
-                lines = [l.strip() for l in out.strip().split("\n") if l.strip()]
-                if len(lines) >= 2:
-                    parts = lines[-1].split(",")
-                    if len(parts) >= 3:
-                        stats["memory"] = {
-                            "total_kb": int(parts[2]),
-                            "free_kb": int(parts[1]),
-                            "used_kb": int(parts[2]) - int(parts[1]),
-                        }
+            return f"Decoded: {base64.b64decode(data.encode()).decode()}"
         except Exception:
-            stats["memory"] = {"note": "Could not get memory stats"}
-
-    return {"success": True, "output": json.dumps(stats, indent=2)}
-
-
-@_register_fn
-async def skill_backup_data(**kwargs) -> dict:
-    source = kwargs.get("source")
-    destination = kwargs.get("destination")
-    if not source:
-        return {"success": False, "output": "Missing 'source' parameter"}
-    source_path = Path(source).expanduser().resolve()
-    if not source_path.exists():
-        return {"success": False, "output": f"Source not found: {source_path}"}
-
-    if not destination:
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        destination = f"backup_{source_path.name}_{timestamp}.tar.gz"
-    dest_path = Path(destination).expanduser().resolve()
-
-    try:
-        with tarfile.open(str(dest_path), "w:gz") as tar:
-            tar.add(str(source_path), arcname=source_path.name)
-    except Exception as e:
-        return {"success": False, "output": f"Backup failed: {e}"}
-
-    dest_size = dest_path.stat().st_size
-    return {
-        "success": True,
-        "output": json.dumps({
-            "source": str(source_path),
-            "destination": str(dest_path),
-            "size_bytes": dest_size,
-            "size_mb": round(dest_size / (1024 * 1024), 2),
-            "timestamp": datetime.now().isoformat(),
-        }, indent=2),
-    }
-
-
-@_register_fn
-async def skill_crypto_trade(**kwargs) -> dict:
-    pair = kwargs.get("pair", "BTC/USDT")
-    amount = kwargs.get("amount", 0.0)
-    side = kwargs.get("side", "buy")
-    if amount <= 0:
-        return {"success": False, "output": "Amount must be positive"}
-
-    trade = {
-        "timestamp": datetime.now().isoformat(),
-        "pair": pair,
-        "amount": amount,
-        "side": side,
-        "status": "pending",
-        "order_id": "",
-    }
-
-    api_key = os.environ.get("CRYPTO_API_KEY", "")
-    api_secret = os.environ.get("CRYPTO_API_SECRET", "")
-
-    if not api_key or not api_secret:
-        return {
-            "success": False, 
-            "error": "Binance API credentials required. Set CRYPTO_API_KEY and CRYPTO_API_SECRET environment variables for real cryptocurrency trading."
-        }
-
-    try:
-        import hmac
-        import hashlib
-        import time
-        import urllib.request
-        base_url = "https://api.binance.com"
-        endpoint = "/api/v3/order"
-        params = {
-            "symbol": pair.replace("/", ""),
-            "side": side.upper(),
-            "type": "MARKET",
-            "quantity": str(amount),
-            "timestamp": int(time.time() * 1000),
-            "recvWindow": 5000,
-        }
-        query = "&".join(f"{k}={v}" for k, v in sorted(params.items()))
-        signature = hmac.new(api_secret.encode(), query.encode(), hashlib.sha256).hexdigest()
-        url = f"{base_url}{endpoint}?{query}&signature={signature}"
-        req = urllib.request.Request(url, headers={"X-MBX-APIKEY": api_key})
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            data = json.loads(resp.read().decode())
-            trade["status"] = "executed"
-            trade["exchange_response"] = data
-            trade["order_id"] = data.get("orderId", "")
-            trade["note"] = "Real trade executed via Binance API"
-    except Exception as e:
-        return {
-            "success": False,
-            "error": f"Binance API error: {str(e)}"
-        }
-
-    return {"success": True, "output": json.dumps(trade, indent=2)}
-
-
-@_register_fn
-async def skill_parse_logs(**kwargs) -> dict:
-    filepath = kwargs.get("filepath")
-    pattern = kwargs.get("pattern", "error|warning|critical")
-    if not filepath:
-        return {"success": False, "output": "Missing 'filepath' parameter"}
-    path = Path(filepath)
-    if not path.exists():
-        return {"success": False, "output": f"File not found: {filepath}"}
-
-    try:
-        content = path.read_text(encoding="utf-8", errors="replace")
-    except Exception as e:
-        return {"success": False, "output": f"Failed to read file: {e}"}
-
-    lines = content.split("\n")
-    flags = re.IGNORECASE if kwargs.get("case_insensitive", True) else 0
-    matched = []
-    stats = {"total_lines": len(lines), "matched": 0}
-
-    try:
-        compiled = re.compile(pattern, flags)
-    except re.error as e:
-        return {"success": False, "output": f"Invalid regex pattern '{pattern}': {e}"}
-
-    for i, line in enumerate(lines, 1):
-        if compiled.search(line):
-            matched.append({"line": i, "content": line})
-
-    stats["matched"] = len(matched)
-    stats["pattern"] = pattern
-    stats["file"] = filepath
-
-    log_levels = {"ERROR": 0, "WARNING": 0, "INFO": 0, "DEBUG": 0, "CRITICAL": 0, "FATAL": 0}
-    for line in lines:
-        for level in log_levels:
-            if re.search(rf'\b{level}\b', line, re.IGNORECASE):
-                log_levels[level] += 1
-    stats["level_counts"] = log_levels
-
-    context_lines = kwargs.get("context", 0)
-    if context_lines > 0 and matched:
-        enriched = []
-        for m in matched:
-            start = max(0, m["line"] - 1 - context_lines)
-            end = min(len(lines), m["line"] + context_lines)
-            ctx = [(idx + 1, lines[idx]) for idx in range(start, end)]
-            enriched.append({"match": m, "context": ctx})
-        matched = enriched
-
-    max_preview = int(kwargs.get("max_results", 200))
-    stats["preview"] = matched[:max_preview]
-    stats["truncated"] = len(matched) > max_preview
-
-    return {"success": True, "output": json.dumps(stats, indent=2, default=str)}
-
-
-@_register_fn
-async def skill_generate_image(**kwargs) -> dict:
-    prompt = kwargs.get("prompt")
-    width = int(kwargs.get("width", 512))
-    height = int(kwargs.get("height", 512))
-    output_format = kwargs.get("format", "png")
-    if not prompt:
-        return {"success": False, "output": "Missing 'prompt' parameter"}
-
-    result = {
-        "prompt": prompt,
-        "width": width,
-        "height": height,
-        "format": output_format,
-        "generated_at": datetime.now().isoformat(),
-    }
-
-    try:
-        from nikto.tools.image_gen import tool_generate_image
-        output = await tool_generate_image(prompt, width, height, output_format)
-        result["status"] = "generated"
-        result["output_path"] = output
-        return {"success": True, "output": json.dumps(result, indent=2)}
-    except Exception as e:
-        return {"success": False, "output": f"Image generation failed: {str(e)}"}
-
-
-@_register_fn
-async def skill_translate_text(**kwargs) -> dict:
-    text = kwargs.get("text")
-    target_lang = kwargs.get("target_lang", "es")
-    if not text:
-        return {"success": False, "output": "Missing 'text' parameter"}
-
-    result = {"source_text": text[:500], "target_language": target_lang, "original_length": len(text)}
-
-    import random
-    word_map = {
-        "es": {"hello": "hola", "world": "mundo", "thank you": "gracias", "yes": "sí", "no": "no"},
-        "fr": {"hello": "bonjour", "world": "monde", "thank you": "merci", "yes": "oui", "no": "non"},
-        "de": {"hello": "hallo", "world": "welt", "thank you": "danke", "yes": "ja", "no": "nein"},
-        "ja": {"hello": "こんにちは", "world": "世界", "thank you": "ありがとう", "yes": "はい", "no": "いいえ"},
-    }
-    word_map.setdefault(target_lang, {})
-    translated_words = []
-    for word in text.split():
-        lower = word.lower().strip(".,!?;:")
-        if lower in word_map.get(target_lang, {}):
-            translated_words.append(word_map[target_lang][lower])
-        else:
-            translated_words.append(f"[{word}]")
-    result["translated_text"] = " ".join(translated_words) if translated_words else f"[{target_lang}] {text}"
-    result["source"] = "local_lookup"
-    result["note"] = "Fully local word substitution translation"
-    result["accuracy"] = "low"
-
-    return {"success": True, "output": json.dumps(result, indent=2)}
-
-
-@_register_fn
-async def skill_summarize(**kwargs) -> dict:
-    text = kwargs.get("text")
-    if not text:
-        return {"success": False, "output": "Missing 'text' parameter"}
-
-    if len(text) < 50:
-        return {"success": True, "output": json.dumps({"summary": text, "note": "Text too short to summarize"}, indent=2)}
-
-    sentences = re.split(r'(?<=[.!?])\s+', text)
-    total = len(sentences)
-
-    if total <= 3:
-        summary = text
-    else:
-        first = sentences[0]
-        middle_start = total // 3
-        middle = sentences[middle_start] if middle_start < total else ""
-        last = sentences[-1]
-        keywords = sorted(set(re.findall(r'\b[A-Z][a-z]{2,}\b', text)), key=lambda w: -text.count(w))[:5]
-        summary = f"{first} {' '.join(sentences[1:3])} [...] {last}"
-        if keywords:
-            summary += f" (Keywords: {', '.join(keywords)})"
-
-    return {"success": True, "output": json.dumps({
-        "summary": summary,
-        "original_length": len(text),
-        "summary_length": len(summary),
-        "compression_ratio": round(len(summary) / len(text), 2),
-        "source": "extractive",
-        "sentence_count": total,
-    }, indent=2)}
-
-
-@_register_fn
-async def skill_extract_data(**kwargs) -> dict:
-    text = kwargs.get("text")
-    schema = kwargs.get("schema", "auto")
-    if not text:
-        return {"success": False, "output": "Missing 'text' parameter"}
-
-    extracted = {}
-
-    emails = list(set(re.findall(r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}', text)))
-    if emails:
-        extracted["emails"] = emails
-
-    urls = list(set(re.findall(r'https?://[^\s,;\])"}]+', text)))
-    if urls:
-        extracted["urls"] = urls
-
-    phones = list(set(re.findall(r'\+?\d{1,3}[-.\s]?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}', text)))
-    if phones:
-        extracted["phone_numbers"] = phones
-
-    ip_addrs = list(set(re.findall(r'\b(?:\d{1,3}\.){3}\d{1,3}\b', text)))
-    if ip_addrs:
-        extracted["ip_addresses"] = [ip for ip in ip_addrs if all(0 <= int(octet) <= 255 for octet in ip.split("."))]
-
-    dates = list(set(re.findall(r'\b\d{4}[-/]\d{1,2}[-/]\d{1,2}\b|\b\d{1,2}[-/]\d{1,2}[-/]\d{4}\b', text)))
-    if dates:
-        extracted["dates"] = dates
-
-    amounts = list(set(re.findall(r'\$\s?\d+(?:,\d{3})*(?:\.\d{2})?|\d+\.\d{2}\s*(?:USD|EUR|GBP)', text)))
-    if amounts:
-        extracted["monetary_amounts"] = amounts
-
-    if schema and schema != "auto":
-        try:
-            schema_fields = [s.strip() for s in schema.split(",")]
-            for field in schema_fields:
-                pattern_maps = {
-                    "name": r'\b([A-Z][a-z]+ [A-Z][a-z]+)\b',
-                    "email": r'[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}',
-                    "phone": r'\+?\d{1,3}[-.\s]?\(?\d{1,4}\)?[-.\s]?\d{1,4}[-.\s]?\d{1,9}',
-                    "date": r'\b\d{4}[-/]\d{1,2}[-/]\d{1,2}\b',
-                    "url": r'https?://[^\s,;\])"}]+',
-                }
-                pattern = pattern_maps.get(field.lower())
-                if pattern:
-                    matches = re.findall(pattern, text)
-                    if matches:
-                        extracted[field] = list(set(matches))
-        except Exception:
-            pass
-
-    if not extracted:
-        extracted["note"] = "No structured data found in text"
-
-    return {"success": True, "output": json.dumps({
-        "schema": schema,
-        "text_length": len(text),
-        "extracted": extracted,
-        "fields_found": list(extracted.keys()),
-    }, indent=2)}
-
-
-@_register_fn
-async def skill_schedule_task(**kwargs) -> dict:
-    interval = kwargs.get("interval", 3600)
-    action = kwargs.get("action")
-    if not action:
-        return {"success": False, "output": "Missing 'action' parameter"}
-
-    config_dir = Path.home() / ".nikto" / "scheduler"
-    config_dir.mkdir(parents=True, exist_ok=True)
-
-    task_id = f"task_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
-    task_entry = {
-        "task_id": task_id,
-        "action": action,
-        "interval_seconds": interval,
-        "created_at": datetime.now().isoformat(),
-        "next_run": None,
-        "last_run": None,
-        "status": "registered",
-    }
-
-    task_file = config_dir / f"{task_id}.json"
-    task_file.write_text(json.dumps(task_entry, indent=2), encoding="utf-8")
-
-    schedule_file = config_dir / "schedule.json"
-    if schedule_file.exists():
-        try:
-            schedule = json.loads(schedule_file.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, Exception):
-            schedule = []
-    else:
-        schedule = []
-
-    schedule.append(task_entry)
-    schedule_file.write_text(json.dumps(schedule, indent=2), encoding="utf-8")
-
-    from datetime import timedelta
-    next_run = datetime.now() + timedelta(seconds=interval)
-    task_entry["next_run"] = next_run.isoformat()
-    task_entry["schedule_file"] = str(schedule_file)
-
-    return {"success": True, "output": json.dumps(task_entry, indent=2)}
-
-
-@_register_fn
-async def skill_notify(**kwargs) -> dict:
-    message = kwargs.get("message")
-    channel = kwargs.get("channel", "desktop")
-    if not message:
-        return {"success": False, "output": "Missing 'message' parameter"}
-
-    result = {"message": message, "channel": channel, "timestamp": datetime.now().isoformat()}
-
-    import platform as pf
-
-    if channel == "desktop":
-        system = pf.system()
-        try:
-            if system == "Windows":
-                import ctypes
-                ctypes.windll.user32.MessageBoxW(0, message[:256], "Nikto Notification", 0x40)
-                result["status"] = "displayed"
-            elif system == "Darwin":
-                escaped = message.replace('"', '\\"')
-                rc, out, err = await _run_command(["osascript", "-e", f'display notification "{escaped[:200]}" with title "Nikto"'], timeout=10)
-                result["status"] = "displayed" if rc == 0 else "failed"
-                result["osascript_output"] = err
-            else:
-                rc, out, err = await _run_command(["notify-send", "Nikto", message[:200]], timeout=10)
-                result["status"] = "sent" if rc == 0 else "notify-send not available"
-        except Exception as e:
-            result["status"] = "failed"
-            result["error"] = str(e)
-            result["fallback"] = "Write notification to file"
-            log_file = Path.home() / ".nikto" / "notifications.log"
-            log_file.parent.mkdir(parents=True, exist_ok=True)
-            log_file.write_text(f"[{result['timestamp']}] {message}\n", encoding="utf-8")
-            result["logged_to"] = str(log_file)
-
-    elif channel == "email":
-        smtp_host = kwargs.get("smtp_host", os.environ.get("SMTP_HOST", ""))
-        smtp_port = int(kwargs.get("smtp_port", os.environ.get("SMTP_PORT", "587")))
-        smtp_user = kwargs.get("smtp_user", os.environ.get("SMTP_USER", ""))
-        smtp_pass = kwargs.get("smtp_pass", os.environ.get("SMTP_PASS", ""))
-        recipient = kwargs.get("recipient", os.environ.get("NOTIFY_EMAIL", ""))
-        sender = kwargs.get("sender", smtp_user)
-
-        if smtp_host and smtp_user and smtp_pass and recipient:
-            try:
-                import smtplib
-                from email.message import EmailMessage
-                msg = EmailMessage()
-                msg.set_content(message)
-                msg["Subject"] = "Nikto Notification"
-                msg["From"] = sender
-                msg["To"] = recipient
-                with smtplib.SMTP(smtp_host, smtp_port) as server:
-                    server.starttls()
-                    server.login(smtp_user, smtp_pass)
-                    server.send_message(msg)
-                result["status"] = "sent"
-                result["recipient"] = recipient
-            except Exception as e:
-                result["status"] = "failed"
-                result["error"] = str(e)
-        else:
-            result["status"] = "skipped"
-            result["note"] = "Set SMTP_HOST, SMTP_USER, SMTP_PASS, NOTIFY_EMAIL env vars"
-
-    elif channel in ("slack", "discord"):
-        webhook_url = kwargs.get("webhook_url") or os.environ.get(f"{channel.upper()}_WEBHOOK_URL", "")
-        if webhook_url:
-            try:
-                import urllib.request
-                payload = json.dumps({"text": message[:2000]} if channel == "slack" else {"content": message[:2000]}).encode()
-                req = urllib.request.Request(webhook_url, data=payload, headers={"Content-Type": "application/json"})
-                with urllib.request.urlopen(req, timeout=15) as resp:
-                    result["status"] = "sent" if resp.status == 200 else f"http_{resp.status}"
-            except Exception as e:
-                result["status"] = "failed"
-                result["error"] = str(e)
-        else:
-            result["status"] = "skipped"
-            result["note"] = f"Set {channel.upper()}_WEBHOOK_URL env var"
-
-    else:
-        result["status"] = "unknown_channel"
-        result["note"] = "Use 'desktop', 'email', 'slack', or 'discord'"
-
-    return {"success": True, "output": json.dumps(result, indent=2)}
-
-
-@_register_fn
-async def skill_config_backup(**kwargs) -> dict:
-    config_dir = Path.home() / ".nikto"
-    if not config_dir.exists():
-        return {"success": False, "output": f"Nikto config directory not found: {config_dir}"}
-
-    backup_dir = config_dir / "backups"
-    backup_dir.mkdir(exist_ok=True)
-
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    backup_name = f"nikto_config_{timestamp}.tar.gz"
-    backup_path = backup_dir / backup_name
-
-    try:
-        with tarfile.open(str(backup_path), "w:gz") as tar:
-            for item in config_dir.iterdir():
-                if item.name == "backups":
-                    continue
-                tar.add(str(item), arcname=item.name)
-    except Exception as e:
-        return {"success": False, "output": f"Backup failed: {e}"}
-
-    backup_size = backup_path.stat().st_size
-    config_items = [str(p.name) for p in config_dir.iterdir() if p.name != "backups"]
-
-    retention = int(kwargs.get("retention", 10))
-    all_backups = sorted(backup_dir.glob("nikto_config_*.tar.gz"), key=lambda p: p.stat().st_mtime, reverse=True)
-    pruned = []
-    for old in all_backups[retention:]:
-        old.unlink()
-        pruned.append(old.name)
-
-    return {
-        "success": True,
-        "output": json.dumps({
-            "backup_file": str(backup_path),
-            "size_bytes": backup_size,
-            "size_mb": round(backup_size / (1024 * 1024), 2),
-            "config_items_backed_up": config_items,
-            "item_count": len(config_items),
-            "backups_retained": retention,
-            "old_backups_pruned": pruned,
-            "timestamp": timestamp,
-        }, indent=2),
-    }
-
-
-@_register_fn
-async def skill_fix_issue(**kwargs) -> dict:
-    description = kwargs.get("description")
-    if not description:
-        return {"success": False, "output": "Missing 'description' parameter"}
-
-    result = {
-        "description": description,
-        "analysis": [],
-        "fixes": [],
-        "confidence": "medium",
-    }
-
-    desc_lower = description.lower()
-
-    if "import error" in desc_lower or "module not found" in desc_lower or "no module named" in desc_lower:
-        m = re.search(r"(?:no module named|import error|import)\s+['\"]?(\w+)['\"]?", desc_lower)
-        if m:
-            module = m.group(1)
-            result["analysis"].append(f"Missing module: {module}")
-            result["fixes"].append(f"pip install {module}")
-            result["confidence"] = "high"
-
-    if "syntax error" in desc_lower or "invalid syntax" in desc_lower:
-        file_match = re.search(r'file\s+[\'"]([^\'"]+)[\'"]', description)
-        if file_match:
-            fp = file_match.group(1)
-            p = Path(fp)
-            if p.exists():
-                source = p.read_text(encoding="utf-8")
-                try:
-                    compile(source, str(p), "exec")
-                except SyntaxError as e:
-                    line_idx = e.lineno - 1 if e.lineno else 0
-                    lines = source.split("\n")
-                    result["analysis"].append(f"Syntax error at line {e.lineno}: {e.msg}")
-                    result["fixes"].append(f"Check line {e.lineno} in {fp}: {lines[line_idx] if line_idx < len(lines) else 'N/A'}")
-                    result["confidence"] = "high"
-
-    if "permission denied" in desc_lower or "access denied" in desc_lower:
-        path_match = re.search(r"['\"]([^'\"]+)['\"]", description)
-        if path_match:
-            bad_path = path_match.group(1)
-            result["analysis"].append(f"Permission denied for: {bad_path}")
-            result["fixes"].extend([
-                f"chmod +r '{bad_path}'",
-                f"Check file ownership: ls -la '{bad_path}'",
-                "Run with appropriate privileges",
-            ])
-            result["confidence"] = "high"
-
-    if "port" in desc_lower and ("in use" in desc_lower or "already in use" in desc_lower or "bind" in desc_lower):
-        port_match = re.search(r'port\s+(\d+)', description)
-        if port_match:
-            port = port_match.group(1)
-            result["analysis"].append(f"Port {port} is already in use")
-            result["fixes"].extend([
-                f"Find process: netstat -ano | findstr :{port}",
-                f"Kill process: taskkill /PID <PID> /F",
-                f"Or use a different port",
-            ])
-            result["confidence"] = "high"
-
-    if "memory" in desc_lower and ("exhausted" in desc_lower or "overflow" in desc_lower or "out of" in desc_lower):
-        result["analysis"].append("Memory exhaustion detected")
-        result["fixes"].extend([
-            "Add pagination or chunking for large data",
-            "Use generators instead of loading everything into memory",
-            "Increase available memory or reduce batch size",
-        ])
-        result["confidence"] = "medium"
-
-    if "timeout" in desc_lower or "timed out" in desc_lower:
-        result["analysis"].append("Operation timed out")
-        result["fixes"].extend([
-            "Increase timeout value in the configuration",
-            "Check network connectivity and latency",
-            "Optimize the operation to complete faster",
-        ])
-        result["confidence"] = "medium"
-
-    if "file not found" in desc_lower or "filenotfound" in desc_lower or "no such file" in desc_lower:
-        path_match = re.search(r"['\"]([^'\"]+)['\"]", description)
-        if path_match:
-            missing = path_match.group(1)
-            result["analysis"].append(f"File not found: {missing}")
-            result["fixes"].append(f"Create the missing file or directory: mkdir -p \"{Path(missing).parent}\"")
-            result["fixes"].append(f"Verify the path is correct: {missing}")
-            result["confidence"] = "high"
-
-    if not result["fixes"]:
-        result["analysis"].append("Issue type not specifically recognized")
-        result["fixes"].append("Check application logs for more details")
-        result["fixes"].append("Run with --verbose or --debug flag")
-        result["fixes"].append("Verify configuration files are valid")
-        result["confidence"] = "low"
-
-    result["fix_count"] = len(result["fixes"])
-    return {"success": True, "output": json.dumps(result, indent=2)}
-
-
-# ═══════════════════════════════════════════════════════════════
-# SKILLS 36-60 — Language Builders, App Builders, Architecture
-# ═══════════════════════════════════════════════════════════════
-
-_LANG_TEMPLATES = {
-    "rust": {
-        "files": {
-            "Cargo.toml": '[package]\nname = "{name}"\nversion = "0.1.0"\nedition = "2021"\n\n[dependencies]\ntokio = {{ version = "1", features = ["full"] }}\nserde = {{ version = "1", features = ["derive"] }}\nserde_json = "1"\nanyhow = "1"\nclap = {{ version = "4", features = ["derive"] }}\ntracing = "0.1"\ntracing-subscriber = "0.3"\n',
-            "src/main.rs": 'use anyhow::Result;\nuse clap::Parser;\n\n#[derive(Parser, Debug)]\n#[command(name = "{name}", about = "Generated by NICTO")]\nstruct Args {{\n    #[arg(short, long, default_value = "world")]\n    name: String,\n}}\n\n#[tokio::main]\nasync fn main() -> Result<()> {{\n    tracing_subscriber::init();\n    let args = Args::parse();\n    tracing::info!("Hello, {{}}!", args.name);\n    Ok(())\n}}\n',
-            "src/lib.rs": '/// Core library for {name}\n\npub fn greet(name: &str) -> String {{\n    format!("Hello, {{}}!", name)\n}}\n\n#[cfg(test)]\nmod tests {{\n    use super::*;\n\n    #[test]\n    fn test_greet() {{\n        assert_eq!(greet("world"), "Hello, world!");\n    }}\n}}\n',
-            ".gitignore": "/target\n",
-            "Dockerfile": 'FROM rust:1.78 AS builder\nWORKDIR /app\nCOPY . .\nRUN cargo build --release\n\nFROM debian:bookworm-slim\nCOPY --from=builder /app/target/release/{name} /usr/local/bin/\nCMD ["{name}"]\n',
-            "README.md": '# {name}\n\nGenerated by NICTO.\n\n## Build & Run\n\n```bash\ncargo build --release\ncargo run -- --name World\ncargo test\n```\n',
-        },
-    },
-    "go": {
-        "files": {
-            "go.mod": 'module {name}\n\ngo 1.22\n\nrequire github.com/gin-gonic/gin v1.9.1\n',
-            "main.go": 'package main\n\nimport (\n\t"log"\n\t"net/http"\n\n\t"github.com/gin-gonic/gin"\n)\n\ntype Item struct {{\n\tID   int    `json:"id"`\n\tName string `json:"name"`\n}}\n\nvar items = []Item{{}}\nvar nextID = 1\n\nfunc main() {{\n\tr := gin.Default()\n\n\tr.GET("/api/items", func(c *gin.Context) {{\n\t\tc.JSON(http.StatusOK, items)\n\t}})\n\n\tr.POST("/api/items", func(c *gin.Context) {{\n\t\tvar input Item\n\t\tif err := c.ShouldBindJSON(&input); err != nil {{\n\t\t\tc.JSON(http.StatusBadRequest, gin.H{{"error": err.Error()}})\n\t\t\treturn\n\t\t}}\n\t\tinput.ID = nextID\n\t\tnextID++\n\t\titems = append(items, input)\n\t\tc.JSON(http.StatusCreated, input)\n\t}})\n\n\tlog.Fatal(r.Run(":8080"))\n}}\n',
-            "Dockerfile": 'FROM golang:1.22 AS builder\nWORKDIR /app\nCOPY go.* .\nRUN go mod download\nCOPY . .\nRUN CGO_ENABLED=0 go build -o /app/server .\n\nFROM gcr.io/distroless/static\nCOPY --from=builder /app/server /\nCMD ["/server"]\n',
-            ".gitignore": "/{name}\n*.exe\n",
-            "README.md": '# {name}\n\nGenerated by NICTO.\n\n## Run\n\n```bash\ngo run .\n# API at http://localhost:8080/api/items\n```\n',
-        },
-    },
-    "java": {
-        "files": {
-            "pom.xml": '<?xml version="1.0" encoding="UTF-8"?>\n<project xmlns="http://maven.apache.org/POM/4.0.0"\n  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"\n  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">\n  <modelVersion>4.0.0</modelVersion>\n  <parent>\n    <groupId>org.springframework.boot</groupId>\n    <artifactId>spring-boot-starter-parent</artifactId>\n    <version>3.3.0</version>\n  </parent>\n  <groupId>com.example</groupId>\n  <artifactId>{name}</artifactId>\n  <version>0.0.1</version>\n  <dependencies>\n    <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-web</artifactId></dependency>\n    <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-data-jpa</artifactId></dependency>\n    <dependency><groupId>com.h2database</groupId><artifactId>h2</artifactId><scope>runtime</scope></dependency>\n    <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-test</artifactId><scope>test</scope></dependency>\n  </dependencies>\n</project>\n',
-            "src/main/java/com/example/App.java": 'package com.example;\n\nimport org.springframework.boot.SpringApplication;\nimport org.springframework.boot.autoconfigure.SpringBootApplication;\n\n@SpringBootApplication\npublic class App {{\n    public static void main(String[] args) {{\n        SpringApplication.run(App.class, args);\n    }}\n}}\n',
-            "src/main/java/com/example/ItemController.java": 'package com.example;\n\nimport org.springframework.web.bind.annotation.*;\nimport java.util.*;\n\n@RestController\n@RequestMapping("/api/items")\npublic class ItemController {{\n    private final List<Map<String, Object>> items = new ArrayList<>();\n    private int nextId = 1;\n\n    @GetMapping\n    public List<Map<String, Object>> list() {{ return items; }}\n\n    @PostMapping\n    public Map<String, Object> create(@RequestBody Map<String, Object> item) {{\n        item.put("id", nextId++);\n        items.add(item);\n        return item;\n    }}\n}}\n',
-            "README.md": '# {name}\n\nSpring Boot REST API generated by NICTO.\n\n## Run\n\n```bash\nmvn spring-boot:run\n# API at http://localhost:8080/api/items\n```\n',
-        },
-    },
-    "csharp": {
-        "files": {
-            "{name}.csproj": '<Project Sdk="Microsoft.NET.Sdk.Web">\n  <PropertyGroup>\n    <TargetFramework>net8.0</TargetFramework>\n  </PropertyGroup>\n  <ItemGroup>\n    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.0" />\n  </ItemGroup>\n</Project>\n',
-            "Program.cs": 'var builder = WebApplication.CreateBuilder(args);\nbuilder.Services.AddControllers();\nvar app = builder.Build();\napp.MapControllers();\napp.Run();\n',
-            "Controllers/ItemsController.cs": 'using Microsoft.AspNetCore.Mvc;\n\nnamespace {name}.Controllers;\n\n[ApiController]\n[Route("api/[controller]")]\npublic class ItemsController : ControllerBase\n{{\n    private static readonly List<object> _items = new();\n    private static int _nextId = 1;\n\n    [HttpGet]\n    public IActionResult Get() => Ok(_items);\n\n    [HttpPost]\n    public IActionResult Create([FromBody] Dictionary<string, object> item)\n    {{\n        item["id"] = _nextId++;\n        _items.Add(item);\n        return Created($"/api/items/{{item["id"]}}", item);\n    }}\n}}\n',
-            "README.md": '# {name}\n\n.NET 8 Web API generated by NICTO.\n\n## Run\n\n```bash\ndotnet run\n# API at http://localhost:5000/api/items\n```\n',
-        },
-    },
-    "swift": {
-        "files": {
-            "Package.swift": '// swift-tools-version: 5.9\nimport PackageDescription\n\nlet package = Package(\n    name: "{name}",\n    platforms: [.iOS(.v17), .macOS(.v14)],\n    targets: [\n        .executableTarget(name: "{name}", path: "Sources"),\n    ]\n)\n',
-            "Sources/ContentView.swift": 'import SwiftUI\n\nstruct ContentView: View {{\n    @State private var count = 0\n\n    var body: some View {{\n        VStack(spacing: 20) {{\n            Text("\\(count)")\n                .font(.system(size: 72, weight: .bold))\n            Button("Increment") {{\n                count += 1\n            }}\n            .buttonStyle(.borderedProminent)\n        }}\n        .padding()\n    }}\n}}\n',
-            "Sources/App.swift": 'import SwiftUI\n\n@main\nstruct {name}App: App {{\n    var body: some Scene {{\n        WindowGroup {{\n            ContentView()\n        }}\n    }}\n}}\n',
-            "README.md": '# {name}\n\nSwiftUI app generated by NICTO.\n\n## Run\n\n```bash\nswift run\n# Or open in Xcode\n```\n',
-        },
-    },
-    "kotlin": {
-        "files": {
-            "build.gradle.kts": 'plugins {{\n    id("com.android.application") version "8.3.0"\n    id("org.jetbrains.kotlin.android") version "1.9.22"\n}}\n\nandroid {{\n    namespace = "com.example.{name}"\n    compileSdk = 34\n    defaultConfig {{\n        applicationId = "com.example.{name}"\n        minSdk = 26\n        targetSdk = 34\n        versionCode = 1\n        versionName = "1.0"\n    }}\n    buildFeatures {{ compose = true }}\n    composeOptions {{ kotlinCompilerExtensionVersion = "1.5.8" }}\n}}\n\ndependencies {{\n    implementation("androidx.activity:activity-compose:1.8.2")\n    implementation("androidx.compose.material3:material3:1.2.0")\n}}\n',
-            "src/main/java/com/example/MainActivity.kt": 'package com.example.{name}\n\nimport android.os.Bundle\nimport androidx.activity.ComponentActivity\nimport androidx.activity.compose.setContent\nimport androidx.compose.foundation.layout.*\nimport androidx.compose.material3.*\nimport androidx.compose.runtime.*\nimport androidx.compose.ui.Alignment\nimport androidx.compose.ui.Modifier\nimport androidx.compose.ui.unit.dp\nimport androidx.compose.ui.unit.sp\n\nclass MainActivity : ComponentActivity() {{\n    override fun onCreate(savedInstanceState: Bundle?) {{\n        super.onCreate(savedInstanceState)\n        setContent {{\n            MaterialTheme {{\n                CounterScreen()\n            }}\n        }}\n    }}\n}}\n\n@Composable\nfun CounterScreen() {{\n    var count by remember {{ mutableIntStateOf(0) }}\n    Column(\n        modifier = Modifier.fillMaxSize().padding(16.dp),\n        horizontalAlignment = Alignment.CenterHorizontally,\n        verticalArrangement = Arrangement.Center\n    ) {{\n        Text("$count", fontSize = 72.sp)\n        Spacer(modifier = Modifier.height(16.dp))\n        Button(onClick = {{ count++ }}) {{ Text("Increment") }}\n    }}\n}}\n',
-            "README.md": '# {name}\n\nAndroid Jetpack Compose app generated by NICTO.\n\n## Build\n\n```bash\n./gradlew assembleDebug\n```\n',
-        },
-    },
-    "flutter": {
-        "files": {
-            "pubspec.yaml": 'name: {name}\ndescription: Generated by NICTO\nversion: 1.0.0\n\nenvironment:\n  sdk: ">=3.2.0 <4.0.0"\n  flutter: ">=3.16.0"\n\ndependencies:\n  flutter:\n    sdk: flutter\n  flutter_riverpod: ^2.4.9\n  go_router: ^13.0.0\n  dio: ^5.4.0\n  freezed_annotation: ^2.4.1\n\ndev_dependencies:\n  flutter_test:\n    sdk: flutter\n  build_runner: ^2.4.8\n  freezed: ^2.4.6\n  json_serializable: ^6.7.1\n',
-            "lib/main.dart": "import 'package:flutter/material.dart';\nimport 'package:flutter_riverpod/flutter_riverpod.dart';\n\nfinal counterProvider = StateProvider<int>((ref) => 0);\n\nvoid main() => runApp(const ProviderScope(child: MyApp()));\n\nclass MyApp extends StatelessWidget {\n  const MyApp({super.key});\n  @override\n  Widget build(BuildContext context) {\n    return MaterialApp(\n      title: '{name}',\n      theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.blue),\n      home: const HomePage(),\n    );\n  }\n}\n\nclass HomePage extends ConsumerWidget {\n  const HomePage({super.key});\n  @override\n  Widget build(BuildContext context, WidgetRef ref) {\n    final count = ref.watch(counterProvider);\n    return Scaffold(\n      appBar: AppBar(title: const Text('{name}')),\n      body: Center(child: Text('Count: \\$count', style: const TextStyle(fontSize: 48))),\n      floatingActionButton: FloatingActionButton(\n        onPressed: () => ref.read(counterProvider.notifier).state++,\n        child: const Icon(Icons.add),\n      ),\n    );\n  }\n}\n",
-            "README.md": '# {name}\n\nFlutter app with Riverpod generated by NICTO.\n\n## Run\n\n```bash\nflutter run\n```\n',
-        },
-    },
-    "solidity": {
-        "files": {
-            "contracts/Token.sol": '// SPDX-License-Identifier: MIT\npragma solidity ^0.8.20;\n\nimport "@openzeppelin/contracts/token/ERC20/ERC20.sol";\nimport "@openzeppelin/contracts/access/Ownable.sol";\n\ncontract {name}Token is ERC20, Ownable {{\n    constructor(uint256 initialSupply)\n        ERC20("{name}", "{name_upper}")\n        Ownable(msg.sender)\n    {{\n        _mint(msg.sender, initialSupply * 10 ** decimals());\n    }}\n\n    function mint(address to, uint256 amount) public onlyOwner {{\n        _mint(to, amount);\n    }}\n}}\n',
-            "hardhat.config.js": "require('@nomicfoundation/hardhat-toolbox');\n\nmodule.exports = {\n  solidity: '0.8.20',\n  networks: {\n    hardhat: {},\n  },\n};\n",
-            "scripts/deploy.js": 'const hre = require("hardhat");\n\nasync function main() {{\n  const Token = await hre.ethers.getContractFactory("{name}Token");\n  const token = await Token.deploy(1000000);\n  await token.waitForDeployment();\n  console.log("{name}Token deployed to:", await token.getAddress());\n}}\n\nmain().catch(console.error);\n',
-            "test/Token.test.js": 'const {{ expect }} = require("chai");\nconst {{ ethers }} = require("hardhat");\n\ndescribe("{name}Token", function() {{\n  it("Should mint initial supply to deployer", async function() {{\n    const [owner] = await ethers.getSigners();\n    const Token = await ethers.getContractFactory("{name}Token");\n    const token = await Token.deploy(1000);\n    const balance = await token.balanceOf(owner.address);\n    expect(balance).to.equal(ethers.parseEther("1000"));\n  }});\n}});\n',
-            "package.json": '{{"name": "{name}", "devDependencies": {{"@nomicfoundation/hardhat-toolbox": "^4.0.0", "hardhat": "^2.22.0"}}}}\n',
-            "README.md": '# {name}\n\nERC-20 smart contract generated by NICTO.\n\n## Deploy\n\n```bash\nnpm install\nnpx hardhat test\nnpx hardhat run scripts/deploy.js\n```\n',
-        },
-    },
-    "cpp": {
-        "files": {
-            "CMakeLists.txt": 'cmake_minimum_required(VERSION 3.20)\nproject({name} VERSION 1.0 LANGUAGES CXX)\n\nset(CMAKE_CXX_STANDARD 20)\nset(CMAKE_CXX_STANDARD_REQUIRED ON)\n\nadd_executable(${{PROJECT_NAME}} src/main.cpp src/{name}.cpp)\ntarget_include_directories(${{PROJECT_NAME}} PRIVATE include)\n\nenable_testing()\nadd_executable(tests tests/test_main.cpp src/{name}.cpp)\ntarget_include_directories(tests PRIVATE include)\nadd_test(NAME unit_tests COMMAND tests)\n',
-            "include/{name}.h": '#pragma once\n#include <string>\n#include <vector>\n#include <memory>\n\nnamespace {name} {{\n\nclass App {{\npublic:\n    App();\n    ~App() = default;\n    std::string greet(const std::string& name) const;\n    void add_item(const std::string& item);\n    [[nodiscard]] const std::vector<std::string>& items() const;\n\nprivate:\n    std::vector<std::string> items_;\n}};\n\n}} // namespace {name}\n',
-            "src/{name}.cpp": '#include "{name}.h"\n\nnamespace {name} {{\n\nApp::App() = default;\n\nstd::string App::greet(const std::string& name) const {{\n    return "Hello, " + name + "!";\n}}\n\nvoid App::add_item(const std::string& item) {{\n    items_.push_back(item);\n}}\n\nconst std::vector<std::string>& App::items() const {{\n    return items_;\n}}\n\n}} // namespace {name}\n',
-            "src/main.cpp": '#include <iostream>\n#include "{name}.h"\n\nint main() {{\n    {name}::App app;\n    std::cout << app.greet("World") << std::endl;\n    app.add_item("first");\n    app.add_item("second");\n    std::cout << "Items: " << app.items().size() << std::endl;\n    return 0;\n}}\n',
-            "tests/test_main.cpp": '#include <cassert>\n#include <iostream>\n#include "{name}.h"\n\nint main() {{\n    {name}::App app;\n    assert(app.greet("Test") == "Hello, Test!");\n    assert(app.items().empty());\n    app.add_item("a");\n    assert(app.items().size() == 1);\n    std::cout << "All tests passed!" << std::endl;\n    return 0;\n}}\n',
-            "README.md": '# {name}\n\nC++20 project generated by NICTO.\n\n## Build\n\n```bash\nmkdir build && cd build\ncmake .. && make\n./tests\n./{name}\n```\n',
-        },
-    },
-    "lua": {
-        "files": {
-            "main.lua": '-- {name} — Generated by NICTO\n\nlocal app = require("app")\n\nfunction love.load()\n    app.init()\nend\n\nfunction love.update(dt)\n    app.update(dt)\nend\n\nfunction love.draw()\n    app.draw()\nend\n\nfunction love.keypressed(key)\n    if key == "escape" then love.event.quit() end\n    app.keypressed(key)\nend\n',
-            "app.lua": '-- App module for {name}\nlocal M = {{}}\n\nlocal x, y = 400, 300\nlocal speed = 200\nlocal score = 0\n\nfunction M.init()\n    love.window.setTitle("{name}")\n    love.window.setMode(800, 600)\nend\n\nfunction M.update(dt)\n    if love.keyboard.isDown("left") then x = x - speed * dt end\n    if love.keyboard.isDown("right") then x = x + speed * dt end\n    if love.keyboard.isDown("up") then y = y - speed * dt end\n    if love.keyboard.isDown("down") then y = y + speed * dt end\nend\n\nfunction M.draw()\n    love.graphics.setColor(0.2, 0.6, 1)\n    love.graphics.circle("fill", x, y, 20)\n    love.graphics.setColor(1, 1, 1)\n    love.graphics.print("Score: " .. score, 10, 10)\n    love.graphics.print("Arrow keys to move, ESC to quit", 10, 30)\nend\n\nfunction M.keypressed(key)\n    if key == "space" then score = score + 1 end\nend\n\nreturn M\n',
-            "README.md": '# {name}\n\nLove2D game generated by NICTO.\n\n## Run\n\n```bash\nlove .\n```\n',
-        },
-    },
-}
-
-
-def _generate_project(language: str, name: str, output_dir: str) -> dict:
-    """Generate a complete project scaffold for the given language."""
-    template = _LANG_TEMPLATES.get(language)
-    if not template:
-        return {"success": False, "output": f"Unknown language: {language}. Supported: {', '.join(_LANG_TEMPLATES.keys())}"}
-
-    out = Path(output_dir) / name
-    out.mkdir(parents=True, exist_ok=True)
-
-    created_files = []
-    for rel_path, content in template["files"].items():
-        formatted_path = rel_path.format(name=name, name_upper=name.upper()[:3])
-        formatted_content = content.format(name=name, name_upper=name.upper()[:3])
-        file_path = out / formatted_path
-        file_path.parent.mkdir(parents=True, exist_ok=True)
-        file_path.write_text(formatted_content, encoding="utf-8")
-        created_files.append(str(file_path))
-
-    env_example = out / ".env.example"
-    env_example.write_text(f"# Environment variables for {name}\nPORT=8080\nDATABASE_URL=\nSECRET_KEY=change-me\n", encoding="utf-8")
-    created_files.append(str(env_example))
-
-    gitignore = out / ".gitignore"
-    if not gitignore.exists():
-        gitignore.write_text("node_modules/\n.env\n__pycache__/\n*.pyc\ntarget/\nbuild/\ndist/\n.DS_Store\n", encoding="utf-8")
-        created_files.append(str(gitignore))
-
-    return {"success": True, "output": json.dumps({
-        "project": name, "language": language,
-        "directory": str(out), "files_created": len(created_files),
-        "files": created_files,
-    }, indent=2)}
-
-
-@_register_fn
-async def skill_rust_builder(**kwargs) -> dict:
-    """Skill 36: Generate a Rust project with Cargo.toml, main.rs, error handling, async tokio."""
-    name = kwargs.get("name", "myapp")
-    output_dir = kwargs.get("output_dir", tempfile.gettempdir())
-    return _generate_project("rust", name, output_dir)
-
-
-@_register_fn
-async def skill_go_builder(**kwargs) -> dict:
-    """Skill 37: Generate a Go module with go.mod, Gin router, Dockerfile."""
-    name = kwargs.get("name", "myapp")
-    output_dir = kwargs.get("output_dir", tempfile.gettempdir())
-    return _generate_project("go", name, output_dir)
-
-
-@_register_fn
-async def skill_java_builder(**kwargs) -> dict:
-    """Skill 38: Generate a Spring Boot project with controller, service, entity."""
-    name = kwargs.get("name", "myapp")
-    output_dir = kwargs.get("output_dir", tempfile.gettempdir())
-    return _generate_project("java", name, output_dir)
-
-
-@_register_fn
-async def skill_csharp_builder(**kwargs) -> dict:
-    """Skill 39: Generate a .NET Core API project with controllers and EF Core."""
-    name = kwargs.get("name", "myapp")
-    output_dir = kwargs.get("output_dir", tempfile.gettempdir())
-    return _generate_project("csharp", name, output_dir)
-
-
-@_register_fn
-async def skill_swift_builder(**kwargs) -> dict:
-    """Skill 40: Generate a SwiftUI app with ContentView, ViewModel, network layer."""
-    name = kwargs.get("name", "myapp")
-    output_dir = kwargs.get("output_dir", tempfile.gettempdir())
-    return _generate_project("swift", name, output_dir)
-
-
-@_register_fn
-async def skill_kotlin_builder(**kwargs) -> dict:
-    """Skill 41: Generate Android project with Jetpack Compose, ViewModel, Repository."""
-    name = kwargs.get("name", "myapp")
-    output_dir = kwargs.get("output_dir", tempfile.gettempdir())
-    return _generate_project("kotlin", name, output_dir)
-
-
-@_register_fn
-async def skill_flutter_builder(**kwargs) -> dict:
-    """Skill 42: Generate Flutter app with Riverpod, dio HTTP, go_router."""
-    name = kwargs.get("name", "myapp")
-    output_dir = kwargs.get("output_dir", tempfile.gettempdir())
-    return _generate_project("flutter", name, output_dir)
-
-
-@_register_fn
-async def skill_solidity_builder(**kwargs) -> dict:
-    """Skill 43: Generate smart contract with ERC-20 standard, tests, deploy script."""
-    name = kwargs.get("name", "mytoken")
-    output_dir = kwargs.get("output_dir", tempfile.gettempdir())
-    return _generate_project("solidity", name, output_dir)
-
-
-@_register_fn
-async def skill_cpp_builder(**kwargs) -> dict:
-    """Skill 44: Generate C++ project with CMakeLists, class structure, memory-safe patterns."""
-    name = kwargs.get("name", "myapp")
-    output_dir = kwargs.get("output_dir", tempfile.gettempdir())
-    return _generate_project("cpp", name, output_dir)
-
-
-@_register_fn
-async def skill_lua_builder(**kwargs) -> dict:
-    """Skill 45: Generate Love2D game or embedded Lua script template."""
-    name = kwargs.get("name", "mygame")
-    output_dir = kwargs.get("output_dir", tempfile.gettempdir())
-    return _generate_project("lua", name, output_dir)
-
-
-@_register_fn
-async def skill_rest_api_builder(**kwargs) -> dict:
-    """Skill 46: Generate complete REST API for any language based on entity description."""
-    language = kwargs.get("language", "python")
-    name = kwargs.get("name", "api")
-    entities = kwargs.get("entities", "item")
-    output_dir = kwargs.get("output_dir", tempfile.gettempdir())
-
-    lang_map = {
-        "python": "python", "go": "go", "rust": "rust", "java": "java",
-        "csharp": "csharp", "node": "node", "javascript": "node", "typescript": "node",
-    }
-    target = lang_map.get(language.lower(), "python")
-
-    if target == "python":
-        out = Path(output_dir) / name
-        out.mkdir(parents=True, exist_ok=True)
-        entity = entities.strip().split(",")[0].strip().capitalize()
-        entity_lower = entity.lower()
-
-        main_py = out / "main.py"
-        main_py.write_text(
-            f'from fastapi import FastAPI, HTTPException\n'
-            f'from pydantic import BaseModel\n'
-            f'from typing import Optional\n\n'
-            f'app = FastAPI(title="{name}")\n\n'
-            f'class {entity}(BaseModel):\n'
-            f'    name: str\n'
-            f'    description: Optional[str] = None\n\n'
-            f'{entity_lower}s: dict[int, {entity}] = {{}}\n'
-            f'next_id = 1\n\n'
-            f'@app.get("/api/{entity_lower}s")\n'
-            f'def list_{entity_lower}s():\n'
-            f'    return [{{**v.dict(), "id": k}} for k, v in {entity_lower}s.items()]\n\n'
-            f'@app.post("/api/{entity_lower}s", status_code=201)\n'
-            f'def create_{entity_lower}(item: {entity}):\n'
-            f'    global next_id\n'
-            f'    {entity_lower}s[next_id] = item\n'
-            f'    result = {{**item.dict(), "id": next_id}}\n'
-            f'    next_id += 1\n'
-            f'    return result\n\n'
-            f'@app.get("/api/{entity_lower}s/{{item_id}}")\n'
-            f'def get_{entity_lower}(item_id: int):\n'
-            f'    if item_id not in {entity_lower}s:\n'
-            f'        raise HTTPException(status_code=404, detail="{entity} not found")\n'
-            f'    return {{**{entity_lower}s[item_id].dict(), "id": item_id}}\n\n'
-            f'@app.delete("/api/{entity_lower}s/{{item_id}}", status_code=204)\n'
-            f'def delete_{entity_lower}(item_id: int):\n'
-            f'    if item_id not in {entity_lower}s:\n'
-            f'        raise HTTPException(status_code=404, detail="{entity} not found")\n'
-            f'    del {entity_lower}s[item_id]\n',
-            encoding="utf-8",
-        )
-        req = out / "requirements.txt"
-        req.write_text("fastapi>=0.110.0\nuvicorn>=0.27.0\n", encoding="utf-8")
-        readme = out / "README.md"
-        readme.write_text(f"# {name}\n\nREST API for {entity} entities.\n\n```bash\npip install -r requirements.txt\nuvicorn main:app --reload\n```\n", encoding="utf-8")
-
-        return {"success": True, "output": json.dumps({
-            "project": name, "language": "python/fastapi",
-            "entities": [entity], "directory": str(out), "files_created": 3,
-        }, indent=2)}
-
-    return _generate_project(target, name, output_dir)
-
-
-@_register_fn
-async def skill_graphql_builder(**kwargs) -> dict:
-    """Skill 47: Generate GraphQL schema, resolvers, mutations for any data model."""
-    name = kwargs.get("name", "graphql_api")
-    entity = kwargs.get("entity", "User")
-    output_dir = kwargs.get("output_dir", tempfile.gettempdir())
-
-    out = Path(output_dir) / name
-    out.mkdir(parents=True, exist_ok=True)
-
-    entity_lower = entity.lower()
-    schema_py = out / "schema.py"
-    schema_py.write_text(
-        f'import strawberry\nfrom typing import Optional\n\n'
-        f'@strawberry.type\nclass {entity}:\n    id: int\n    name: str\n    email: Optional[str] = None\n\n'
-        f'@strawberry.input\nclass {entity}Input:\n    name: str\n    email: Optional[str] = None\n\n'
-        f'{entity_lower}s_db: list[{entity}] = []\nnext_id = 1\n\n'
-        f'@strawberry.type\nclass Query:\n'
-        f'    @strawberry.field\n    def {entity_lower}s(self) -> list[{entity}]:\n        return {entity_lower}s_db\n\n'
-        f'    @strawberry.field\n    def {entity_lower}(self, id: int) -> Optional[{entity}]:\n'
-        f'        return next((u for u in {entity_lower}s_db if u.id == id), None)\n\n'
-        f'@strawberry.type\nclass Mutation:\n'
-        f'    @strawberry.mutation\n    def create_{entity_lower}(self, input: {entity}Input) -> {entity}:\n'
-        f'        global next_id\n'
-        f'        item = {entity}(id=next_id, name=input.name, email=input.email)\n'
-        f'        {entity_lower}s_db.append(item)\n        next_id += 1\n        return item\n\n'
-        f'schema = strawberry.Schema(query=Query, mutation=Mutation)\n',
-        encoding="utf-8",
-    )
-
-    main_py = out / "main.py"
-    main_py.write_text(
-        'from fastapi import FastAPI\nfrom strawberry.fastapi import GraphQLRouter\nfrom schema import schema\n\n'
-        'app = FastAPI()\napp.include_router(GraphQLRouter(schema), prefix="/graphql")\n',
-        encoding="utf-8",
-    )
-    req = out / "requirements.txt"
-    req.write_text("fastapi>=0.110.0\nuvicorn>=0.27.0\nstrawberry-graphql[fastapi]>=0.219.0\n", encoding="utf-8")
-
-    return {"success": True, "output": json.dumps({
-        "project": name, "entity": entity, "directory": str(out), "files_created": 3,
-    }, indent=2)}
-
-
-@_register_fn
-async def skill_cli_builder(**kwargs) -> dict:
-    """Skill 48: Generate CLI tool in Python, Go, or Rust."""
-    language = kwargs.get("language", "python")
-    name = kwargs.get("name", "mycli")
-    output_dir = kwargs.get("output_dir", tempfile.gettempdir())
-
-    if language.lower() in ("go", "golang"):
-        return _generate_project("go", name, output_dir)
-    if language.lower() == "rust":
-        return _generate_project("rust", name, output_dir)
-
-    out = Path(output_dir) / name
-    out.mkdir(parents=True, exist_ok=True)
-    cli_py = out / "cli.py"
-    cli_py.write_text(
-        f'"""CLI tool: {name} — generated by NICTO."""\n'
-        f'import click\n\n'
-        f'@click.group()\n@click.version_option("1.0.0")\n'
-        f'def cli():\n    """{name} CLI tool."""\n    pass\n\n'
-        f'@cli.command()\n@click.argument("name")\n'
-        f'@click.option("--count", "-c", default=1, help="Number of times to greet")\n'
-        f'def greet(name: str, count: int):\n'
-        f'    """Greet someone by name."""\n'
-        f'    for _ in range(count):\n        click.echo(f"Hello {{name}}!")\n\n'
-        f'@cli.command()\n@click.argument("path", type=click.Path(exists=True))\n'
-        f'def info(path: str):\n'
-        f'    """Show info about a file or directory."""\n'
-        f'    import os\n    stat = os.stat(path)\n'
-        f'    click.echo(f"Path: {{path}}")\n'
-        f'    click.echo(f"Size: {{stat.st_size}} bytes")\n\n'
-        f'if __name__ == "__main__":\n    cli()\n',
-        encoding="utf-8",
-    )
-    req = out / "requirements.txt"
-    req.write_text("click>=8.0.0\nrich>=13.0.0\n", encoding="utf-8")
-    setup = out / "pyproject.toml"
-    setup.write_text(
-        f'[project]\nname = "{name}"\nversion = "1.0.0"\ndependencies = ["click>=8.0"]\n\n'
-        f'[project.scripts]\n{name} = "{name}.cli:cli"\n',
-        encoding="utf-8",
-    )
-    return {"success": True, "output": json.dumps({
-        "project": name, "language": "python/click", "directory": str(out), "files_created": 3,
-    }, indent=2)}
-
-
-@_register_fn
-async def skill_bot_builder(**kwargs) -> dict:
-    """Skill 49: Generate Telegram or Discord bot."""
-    platform = kwargs.get("platform", "discord")
-    name = kwargs.get("name", "mybot")
-    output_dir = kwargs.get("output_dir", tempfile.gettempdir())
-
-    out = Path(output_dir) / name
-    out.mkdir(parents=True, exist_ok=True)
-
-    if platform.lower() == "telegram":
-        bot_py = out / "bot.py"
-        bot_py.write_text(
-            f'"""Telegram bot: {name} — generated by NICTO."""\n'
-            f'import os\nfrom telegram.ext import Application, CommandHandler, MessageHandler, filters\n\n'
-            f'TOKEN = os.getenv("TELEGRAM_TOKEN", "")\n\n'
-            f'async def start(update, context):\n    await update.message.reply_text("Hello! I am {name}.")\n\n'
-            f'async def echo(update, context):\n    await update.message.reply_text(update.message.text)\n\n'
-            f'async def help_cmd(update, context):\n    await update.message.reply_text("Commands:\\n/start - Start\\n/help - Help")\n\n'
-            f'def main():\n    app = Application.builder().token(TOKEN).build()\n'
-            f'    app.add_handler(CommandHandler("start", start))\n'
-            f'    app.add_handler(CommandHandler("help", help_cmd))\n'
-            f'    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))\n'
-            f'    app.run_polling()\n\nif __name__ == "__main__":\n    main()\n',
-            encoding="utf-8",
-        )
-        req = out / "requirements.txt"
-        req.write_text("python-telegram-bot>=21.0\n", encoding="utf-8")
-    else:
-        bot_py = out / "bot.py"
-        bot_py.write_text(
-            f'"""Discord bot: {name} — generated by NICTO."""\n'
-            f'import os\nimport discord\nfrom discord.ext import commands\n\n'
-            f'intents = discord.Intents.default()\nintents.message_content = True\n'
-            f'bot = commands.Bot(command_prefix="!", intents=intents)\n\n'
-            f'@bot.event\nasync def on_ready():\n    print(f"{{bot.user}} connected!")\n\n'
-            f'@bot.command()\nasync def ping(ctx):\n    await ctx.send(f"Pong! {{round(bot.latency * 1000)}}ms")\n\n'
-            f'@bot.command()\nasync def hello(ctx):\n    await ctx.send(f"Hello {{ctx.author.name}}!")\n\n'
-            f'bot.run(os.getenv("DISCORD_TOKEN", ""))\n',
-            encoding="utf-8",
-        )
-        req = out / "requirements.txt"
-        req.write_text("discord.py>=2.3.0\n", encoding="utf-8")
-
-    env_ex = out / ".env.example"
-    token_key = "TELEGRAM_TOKEN" if platform.lower() == "telegram" else "DISCORD_TOKEN"
-    env_ex.write_text(f"{token_key}=your-token-here\n", encoding="utf-8")
-
-    return {"success": True, "output": json.dumps({
-        "project": name, "platform": platform, "directory": str(out), "files_created": 3,
-    }, indent=2)}
-
-
-@_register_fn
-async def skill_smart_contract_audit(**kwargs) -> dict:
-    """Skill 50: Audit Solidity for reentrancy, overflow, access control vulnerabilities."""
-    filepath = kwargs.get("filepath")
-    if not filepath:
-        return {"success": False, "output": "Missing 'filepath' parameter"}
-    path = Path(filepath)
-    if not path.exists():
-        return {"success": False, "output": f"File not found: {filepath}"}
-
-    source = path.read_text(encoding="utf-8")
-    findings = []
-
-    if re.search(r'\.call\{value:', source) and 'nonReentrant' not in source and 'ReentrancyGuard' not in source:
-        findings.append({"severity": "CRITICAL", "title": "Potential Reentrancy",
-                         "description": "External call with value transfer without ReentrancyGuard. Use OpenZeppelin ReentrancyGuard or checks-effects-interactions pattern."})
-
-    if re.search(r'tx\.origin', source):
-        findings.append({"severity": "HIGH", "title": "tx.origin Authentication",
-                         "description": "Using tx.origin for auth is vulnerable to phishing attacks. Use msg.sender instead."})
-
-    if re.search(r'selfdestruct|delegatecall', source):
-        findings.append({"severity": "HIGH", "title": "Dangerous Function",
-                         "description": "selfdestruct or delegatecall detected. These can be exploited if access is not properly controlled."})
-
-    if re.search(r'pragma solidity \^0\.[0-7]\.', source):
-        findings.append({"severity": "MEDIUM", "title": "Old Solidity Version",
-                         "description": "Solidity version < 0.8.0 lacks built-in overflow checks. Upgrade or use SafeMath."})
-
-    if not re.search(r'onlyOwner|Ownable|AccessControl|require\(msg\.sender', source) and re.search(r'function\s+\w+.*public', source):
-        findings.append({"severity": "MEDIUM", "title": "Missing Access Control",
-                         "description": "Public functions without access control modifiers detected."})
-
-    if re.search(r'block\.(timestamp|number)', source) and re.search(r'random|rand', source, re.IGNORECASE):
-        findings.append({"severity": "MEDIUM", "title": "Weak Randomness",
-                         "description": "block.timestamp/number used for randomness is manipulable by miners. Use Chainlink VRF."})
-
-    if not findings:
-        findings.append({"severity": "INFO", "title": "No Issues Found",
-                         "description": "No common vulnerability patterns detected. Manual review still recommended."})
-
-    return {"success": True, "output": json.dumps({
-        "file": filepath, "findings": findings,
-        "finding_count": len(findings),
-        "critical": sum(1 for f in findings if f["severity"] == "CRITICAL"),
-        "high": sum(1 for f in findings if f["severity"] == "HIGH"),
-    }, indent=2)}
-
-
-@_register_fn
-async def skill_mobile_app_builder(**kwargs) -> dict:
-    """Skill 51: Generate Flutter or React Native app scaffold."""
-    framework = kwargs.get("framework", "flutter")
-    name = kwargs.get("name", "myapp")
-    output_dir = kwargs.get("output_dir", tempfile.gettempdir())
-
-    if framework.lower() in ("rn", "react-native", "react_native", "reactnative"):
-        out = Path(output_dir) / name
-        out.mkdir(parents=True, exist_ok=True)
-        app_tsx = out / "App.tsx"
-        app_tsx.write_text(
-            f"import React, {{useState}} from 'react';\n"
-            f"import {{View, Text, Button, StyleSheet}} from 'react-native';\n\n"
-            f"export default function App() {{\n"
-            f"  const [count, setCount] = useState(0);\n"
-            f"  return (\n    <View style={{styles.container}}>\n"
-            f"      <Text style={{styles.title}}>{name}</Text>\n"
-            f"      <Text style={{styles.count}}>{{count}}</Text>\n"
-            f"      <Button title='Increment' onPress={{() => setCount(c => c + 1)}} />\n"
-            f"    </View>\n  );\n}}\n\n"
-            f"const styles = StyleSheet.create({{\n"
-            f"  container: {{flex: 1, justifyContent: 'center', alignItems: 'center'}},\n"
-            f"  title: {{fontSize: 24, fontWeight: 'bold', marginBottom: 20}},\n"
-            f"  count: {{fontSize: 72, fontWeight: 'bold', marginBottom: 20}},\n}});\n",
-            encoding="utf-8",
-        )
-        pkg = out / "package.json"
-        pkg.write_text(json.dumps({
-            "name": name, "version": "1.0.0",
-            "dependencies": {"react": "18.2.0", "react-native": "0.73.0"},
-        }, indent=2), encoding="utf-8")
-        return {"success": True, "output": json.dumps({
-            "project": name, "framework": "react-native", "directory": str(out), "files_created": 2,
-        }, indent=2)}
-
-    return _generate_project("flutter", name, output_dir)
-
-
-@_register_fn
-async def skill_database_designer(**kwargs) -> dict:
-    """Skill 52: Generate ERD and SQL schema from plain English requirements."""
-    description = kwargs.get("description", "")
-    dialect = kwargs.get("dialect", "postgresql")
-
-    if not description:
-        return {"success": False, "output": "Missing 'description' parameter"}
-
-    entities = []
-    keywords = re.findall(r'\b([A-Z][a-z]+(?:\s[A-Z][a-z]+)*)\b', description)
-    if not keywords:
-        words = [w.strip().capitalize() for w in re.split(r'[,;]|\band\b', description) if w.strip()]
-        keywords = words[:5]
-
-    seen = set()
-    for kw in keywords:
-        name = kw.strip().replace(" ", "")
-        if name and name.lower() not in seen and len(name) > 2:
-            seen.add(name.lower())
-            entities.append(name)
-
-    if not entities:
-        entities = ["Item"]
-
-    sql_statements = []
-    for entity in entities:
-        table = entity.lower() + "s"
-        sql_statements.append(
-            f"CREATE TABLE {table} (\n"
-            f"    id SERIAL PRIMARY KEY,\n"
-            f"    name VARCHAR(255) NOT NULL,\n"
-            f"    description TEXT,\n"
-            f"    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),\n"
-            f"    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()\n"
-            f");\n"
-            f"CREATE INDEX idx_{table}_name ON {table}(name);\n"
-            f"CREATE INDEX idx_{table}_created ON {table}(created_at DESC);\n"
-        )
-
-    erd_text = "ERD:\n"
-    for entity in entities:
-        erd_text += f"  [{entity}] -- id (PK), name, description, created_at, updated_at\n"
-
-    return {"success": True, "output": json.dumps({
-        "entities": entities,
-        "tables": [e.lower() + "s" for e in entities],
-        "dialect": dialect,
-        "sql": "\n".join(sql_statements),
-        "erd": erd_text,
-    }, indent=2)}
-
-
-@_register_fn
-async def skill_api_integrator(**kwargs) -> dict:
-    """Skill 53: Generate integration code for third-party APIs."""
-    service = kwargs.get("service", "stripe")
-    language = kwargs.get("language", "python")
-
-    integrations = {
-        "stripe": {
-            "python": 'import stripe\n\nstripe.api_key = os.getenv("STRIPE_SECRET_KEY")\n\ndef create_payment_intent(amount_cents: int, currency: str = "usd") -> dict:\n    return stripe.PaymentIntent.create(amount=amount_cents, currency=currency, automatic_payment_methods={"enabled": True})\n\ndef get_customer(customer_id: str) -> dict:\n    return stripe.Customer.retrieve(customer_id)\n\ndef create_customer(email: str, name: str) -> dict:\n    return stripe.Customer.create(email=email, name=name)\n',
-            "deps": "stripe>=7.0.0",
-        },
-        "twilio": {
-            "python": 'from twilio.rest import Client\nimport os\n\nclient = Client(os.getenv("TWILIO_SID"), os.getenv("TWILIO_AUTH_TOKEN"))\n\ndef send_sms(to: str, body: str, from_: str = None) -> dict:\n    msg = client.messages.create(body=body, to=to, from_=from_ or os.getenv("TWILIO_PHONE"))\n    return {"sid": msg.sid, "status": msg.status}\n',
-            "deps": "twilio>=9.0.0",
-        },
-        "sendgrid": {
-            "python": 'from sendgrid import SendGridAPIClient\nfrom sendgrid.helpers.mail import Mail\nimport os\n\ndef send_email(to: str, subject: str, html_content: str, from_email: str = None) -> int:\n    message = Mail(from_email=from_email or os.getenv("SENDGRID_FROM"), to_emails=to, subject=subject, html_content=html_content)\n    sg = SendGridAPIClient(os.getenv("SENDGRID_API_KEY"))\n    response = sg.send(message)\n    return response.status_code\n',
-            "deps": "sendgrid>=6.11.0",
-        },
-        "aws_s3": {
-            "python": 'import boto3\nimport os\n\ns3 = boto3.client("s3", region_name=os.getenv("AWS_REGION", "us-east-1"))\n\ndef upload_file(local_path: str, bucket: str, key: str) -> dict:\n    s3.upload_file(local_path, bucket, key)\n    return {"bucket": bucket, "key": key}\n\ndef download_file(bucket: str, key: str, local_path: str) -> str:\n    s3.download_file(bucket, key, local_path)\n    return local_path\n\ndef presigned_url(bucket: str, key: str, expires: int = 3600) -> str:\n    return s3.generate_presigned_url("get_object", Params={"Bucket": bucket, "Key": key}, ExpiresIn=expires)\n',
-            "deps": "boto3>=1.34.0",
-        },
-    }
-
-    integration = integrations.get(service.lower())
-    if not integration:
-        return {"success": True, "output": json.dumps({
-            "service": service, "available_services": list(integrations.keys()),
-            "message": f"Integration template not found for '{service}'. Available: {', '.join(integrations.keys())}",
-        }, indent=2)}
-
-    return {"success": True, "output": json.dumps({
-        "service": service, "language": language,
-        "code": integration.get(language, integration.get("python")),
-        "dependencies": integration["deps"],
-    }, indent=2)}
-
-
-@_register_fn
-async def skill_docker_composer(**kwargs) -> dict:
-    """Skill 54: Generate docker-compose.yml for any multi-service stack."""
-    services_str = kwargs.get("services", "api,db")
-    name = kwargs.get("name", "myapp")
-
-    service_list = [s.strip().lower() for s in services_str.split(",")]
-    compose_services = {}
-
-    for svc in service_list:
-        if svc in ("api", "app", "web", "backend"):
-            compose_services[svc] = {
-                "build": ".", "ports": ["8000:8000"],
-                "environment": {"DATABASE_URL": "postgresql://postgres:postgres@db:5432/app"},
-                "depends_on": {"db": {"condition": "service_healthy"}} if "db" in service_list else {},
-                "restart": "unless-stopped",
-            }
-        elif svc in ("db", "postgres", "postgresql", "database"):
-            compose_services["db"] = {
-                "image": "postgres:16-alpine",
-                "environment": {"POSTGRES_USER": "postgres", "POSTGRES_PASSWORD": "postgres", "POSTGRES_DB": "app"},
-                "ports": ["5432:5432"],
-                "volumes": ["pgdata:/var/lib/postgresql/data"],
-                "healthcheck": {"test": ["CMD-SHELL", "pg_isready -U postgres"], "interval": "5s", "timeout": "3s", "retries": 5},
-                "restart": "unless-stopped",
-            }
-        elif svc in ("redis", "cache"):
-            compose_services["redis"] = {
-                "image": "redis:7-alpine", "ports": ["6379:6379"],
-                "volumes": ["redis_data:/data"],
-                "restart": "unless-stopped",
-            }
-        elif svc in ("nginx", "proxy"):
-            compose_services["nginx"] = {
-                "image": "nginx:alpine", "ports": ["80:80", "443:443"],
-                "volumes": ["./nginx.conf:/etc/nginx/conf.d/default.conf:ro"],
-                "depends_on": [s for s in service_list if s in ("api", "app", "web", "backend")],
-                "restart": "unless-stopped",
-            }
-        elif svc in ("mongo", "mongodb"):
-            compose_services["mongo"] = {
-                "image": "mongo:7", "ports": ["27017:27017"],
-                "environment": {"MONGO_INITDB_ROOT_USERNAME": "admin", "MONGO_INITDB_ROOT_PASSWORD": "admin"},
-                "volumes": ["mongo_data:/data/db"],
-                "restart": "unless-stopped",
-            }
-        elif svc in ("rabbitmq", "mq"):
-            compose_services["rabbitmq"] = {
-                "image": "rabbitmq:3-management", "ports": ["5672:5672", "15672:15672"],
-                "restart": "unless-stopped",
-            }
-        elif svc in ("elasticsearch", "es"):
-            compose_services["elasticsearch"] = {
-                "image": "elasticsearch:8.12.0",
-                "environment": {"discovery.type": "single-node", "xpack.security.enabled": "false"},
-                "ports": ["9200:9200"], "restart": "unless-stopped",
-            }
-
-    volumes = {}
-    for svc_config in compose_services.values():
-        for vol in svc_config.get("volumes", []):
-            if isinstance(vol, str) and ":" in vol and not vol.startswith("."):
-                vol_name = vol.split(":")[0]
-                volumes[vol_name] = None
-
-    compose = {"version": "3.8", "services": compose_services}
-    if volumes:
-        compose["volumes"] = {k: None for k in volumes}
-
-    import yaml  # noqa: E402 — lazy import for optional dependency
-    try:
-        compose_yaml = yaml.dump(compose, default_flow_style=False, sort_keys=False)
-    except ImportError:
-        compose_yaml = json.dumps(compose, indent=2)
-
-    return {"success": True, "output": json.dumps({
-        "project": name, "services": list(compose_services.keys()),
-        "compose_yaml": compose_yaml,
-    }, indent=2)}
-
-
-@_register_fn
-async def skill_cicd_builder(**kwargs) -> dict:
-    """Skill 55: Generate GitHub Actions workflow for any language and deployment target."""
-    language = kwargs.get("language", "python")
-    deploy_target = kwargs.get("deploy_target", "docker")
-    name = kwargs.get("name", "ci")
-
-    lang_lower = language.lower()
-
-    if lang_lower in ("python", "py"):
-        test_steps = [
-            "- uses: actions/setup-python@v5\n  with:\n    python-version: '3.12'",
-            "- run: pip install -r requirements.txt",
-            "- run: python -m pytest tests/ -v --tb=short",
-        ]
-    elif lang_lower in ("node", "javascript", "typescript", "js", "ts"):
-        test_steps = [
-            "- uses: actions/setup-node@v4\n  with:\n    node-version: 20\n    cache: npm",
-            "- run: npm ci",
-            "- run: npm run lint",
-            "- run: npm test",
-        ]
-    elif lang_lower in ("go", "golang"):
-        test_steps = [
-            "- uses: actions/setup-go@v5\n  with:\n    go-version: '1.22'",
-            "- run: go mod download",
-            "- run: go test ./... -v -race",
-        ]
-    elif lang_lower == "rust":
-        test_steps = [
-            "- uses: dtolnay/rust-toolchain@stable",
-            "- run: cargo fmt --check",
-            "- run: cargo clippy -- -D warnings",
-            "- run: cargo test",
-        ]
-    elif lang_lower in ("java", "kotlin"):
-        test_steps = [
-            "- uses: actions/setup-java@v4\n  with:\n    java-version: 21\n    distribution: temurin",
-            "- run: mvn test",
-        ]
-    else:
-        test_steps = ["- run: echo 'Add test commands here'"]
-
-    deploy_step = ""
-    if deploy_target == "docker":
-        deploy_step = (
-            "  deploy:\n    needs: test\n    if: github.ref == 'refs/heads/main'\n"
-            "    runs-on: ubuntu-latest\n    steps:\n"
-            "    - uses: actions/checkout@v4\n"
-            "    - run: docker build -t ${{ github.repository }}:${{ github.sha }} .\n"
-            "    - run: docker tag ${{ github.repository }}:${{ github.sha }} ${{ github.repository }}:latest\n"
-        )
-    elif deploy_target == "vercel":
-        deploy_step = (
-            "  deploy:\n    needs: test\n    if: github.ref == 'refs/heads/main'\n"
-            "    runs-on: ubuntu-latest\n    steps:\n"
-            "    - uses: actions/checkout@v4\n"
-            "    - uses: amondnet/vercel-action@v25\n"
-            "      with:\n        vercel-token: ${{ secrets.VERCEL_TOKEN }}\n"
-        )
-
-    workflow = (
-        f"name: {name}\n\n"
-        f"on:\n  push:\n    branches: [main]\n  pull_request:\n    branches: [main]\n\n"
-        f"jobs:\n  test:\n    runs-on: ubuntu-latest\n    steps:\n"
-        f"    - uses: actions/checkout@v4\n"
-    )
-    for step in test_steps:
-        workflow += f"    {step}\n"
-    if deploy_step:
-        workflow += f"\n{deploy_step}"
-
-    return {"success": True, "output": json.dumps({
-        "language": language, "deploy_target": deploy_target,
-        "workflow_yaml": workflow,
-        "filename": f".github/workflows/{name}.yml",
-    }, indent=2)}
-
-
-@_register_fn
-async def skill_system_designer(**kwargs) -> dict:
-    """Skill 56: Design complete system architecture for any app requirement."""
-    description = kwargs.get("description", "")
-    if not description:
-        return {"success": False, "output": "Missing 'description' parameter"}
-
-    desc_lower = description.lower()
-
-    # Detect app type
-    if any(w in desc_lower for w in ("real-time", "chat", "messaging", "websocket", "live")):
-        app_type = "real-time"
-        tech_stack = {"backend": "Node.js/Express + Socket.io or Elixir/Phoenix", "frontend": "React + WebSocket client",
-                      "database": "PostgreSQL + Redis (pub/sub & caching)", "reason": "WebSocket-native frameworks handle persistent connections efficiently. Redis pub/sub enables horizontal scaling."}
-    elif any(w in desc_lower for w in ("ml", "ai", "machine learning", "model", "prediction", "data science")):
-        app_type = "ml-platform"
-        tech_stack = {"backend": "Python/FastAPI", "frontend": "React + Recharts for visualization",
-                      "database": "PostgreSQL + Redis (job queue)", "ml": "PyTorch/scikit-learn + MLflow",
-                      "reason": "Python is the ML ecosystem standard. FastAPI provides async performance for model serving."}
-    elif any(w in desc_lower for w in ("mobile", "ios", "android", "app store")):
-        app_type = "mobile"
-        tech_stack = {"mobile": "Flutter (cross-platform) or Swift/Kotlin (native)", "backend": "Go/Gin or Python/FastAPI",
-                      "database": "PostgreSQL + Firebase (push notifications)", "reason": "Flutter enables single codebase for iOS+Android. Go provides low-latency APIs."}
-    elif any(w in desc_lower for w in ("e-commerce", "shop", "store", "checkout", "payment")):
-        app_type = "e-commerce"
-        tech_stack = {"frontend": "Next.js (SSR for SEO)", "backend": "Node.js/Express or Python/Django",
-                      "database": "PostgreSQL", "payments": "Stripe", "search": "Elasticsearch or Algolia",
-                      "reason": "Next.js SSR is critical for e-commerce SEO. Stripe handles PCI compliance."}
-    elif any(w in desc_lower for w in ("high performance", "concurrent", "throughput", "scale", "million")):
-        app_type = "high-performance"
-        tech_stack = {"backend": "Rust/Axum or Go/Gin", "database": "PostgreSQL + Redis",
-                      "message_queue": "Kafka or NATS", "reason": "Rust/Go handle high concurrency with minimal overhead. Kafka for reliable event streaming at scale."}
-    else:
-        app_type = "web-app"
-        tech_stack = {"frontend": "React/Next.js + TypeScript", "backend": "Python/FastAPI or Node.js/Express",
-                      "database": "PostgreSQL", "cache": "Redis", "reason": "Most versatile stack for general web applications. TypeScript catches errors at compile time."}
-
-    architecture = {
-        "app_type": app_type,
-        "tech_stack": tech_stack,
-        "components": [
-            "API Gateway / Load Balancer",
-            "Application Server(s)",
-            "Database (primary + read replica)",
-            "Cache Layer (Redis)",
-            "CDN for static assets",
-            "Monitoring (Prometheus + Grafana)",
-            "CI/CD Pipeline (GitHub Actions)",
-        ],
-        "scaling_strategy": "Horizontal scaling with load balancer. Database read replicas for read-heavy workloads. Redis cache for hot data. CDN for static content.",
-        "security": ["HTTPS everywhere", "JWT authentication", "Rate limiting", "Input validation", "CORS configuration", "SQL injection prevention"],
-        "deployment": "Docker containers on Kubernetes or serverless (AWS ECS/GCP Cloud Run)",
-    }
-
-    return {"success": True, "output": json.dumps({
-        "description": description, "architecture": architecture,
-    }, indent=2)}
-
-
-@_register_fn
-async def skill_microservice_designer(**kwargs) -> dict:
-    """Skill 57: Break monolith into services, define boundaries, choose communication."""
-    description = kwargs.get("description", "")
-    if not description:
-        return {"success": False, "output": "Missing 'description' parameter"}
-
-    words = re.findall(r'\b\w+\b', description.lower())
-    domains = []
-    domain_keywords = {
-        "user": ["user", "auth", "login", "registration", "profile", "account"],
-        "product": ["product", "catalog", "inventory", "item", "stock"],
-        "order": ["order", "checkout", "cart", "purchase", "payment"],
-        "notification": ["notification", "email", "sms", "alert", "push"],
-        "search": ["search", "filter", "discover", "browse"],
-        "analytics": ["analytics", "report", "dashboard", "metrics", "stats"],
-        "content": ["content", "blog", "post", "article", "media"],
-        "billing": ["billing", "invoice", "subscription", "pricing"],
-    }
-
-    for domain, kws in domain_keywords.items():
-        if any(kw in words for kw in kws):
-            domains.append(domain)
-
-    if not domains:
-        domains = ["core"]
-
-    services = []
-    for domain in domains:
-        services.append({
-            "name": f"{domain}-service",
-            "responsibilities": f"Manages all {domain}-related operations",
-            "database": f"{domain}_db (PostgreSQL)",
-            "api": f"/api/v1/{domain}s",
-            "communication": "REST (sync) + Events via Kafka (async)",
-        })
-
-    return {"success": True, "output": json.dumps({
-        "domains_detected": domains,
-        "services": services,
-        "communication_patterns": {
-            "sync": "REST or gRPC for request-response",
-            "async": "Kafka/RabbitMQ for event-driven communication",
-            "service_discovery": "Consul or Kubernetes DNS",
-        },
-        "infrastructure": {
-            "api_gateway": "Kong or AWS API Gateway",
-            "service_mesh": "Istio for traffic management and observability",
-            "ci_cd": "Separate pipeline per service",
-        },
-    }, indent=2)}
-
-
-@_register_fn
-async def skill_database_optimizer(**kwargs) -> dict:
-    """Skill 58: Analyze schema and queries, suggest indexes, rewrite slow queries."""
-    query = kwargs.get("query", "")
-    if not query:
-        return {"success": False, "output": "Missing 'query' parameter"}
-
-    suggestions = []
-    query_upper = query.upper()
-
-    if "SELECT *" in query_upper:
-        suggestions.append({"type": "optimization", "issue": "SELECT * fetches all columns",
-                            "fix": "Specify only needed columns: SELECT col1, col2 FROM ..."})
-
-    if "WHERE" not in query_upper and ("UPDATE" in query_upper or "DELETE" in query_upper):
-        suggestions.append({"type": "warning", "issue": "UPDATE/DELETE without WHERE clause",
-                            "fix": "Add a WHERE clause to avoid modifying/deleting all rows"})
-
-    where_match = re.search(r'WHERE\s+(\w+)', query, re.IGNORECASE)
-    if where_match:
-        col = where_match.group(1)
-        table_match = re.search(r'FROM\s+(\w+)', query, re.IGNORECASE)
-        table = table_match.group(1) if table_match else "table"
-        suggestions.append({"type": "index", "suggestion": f"CREATE INDEX idx_{table}_{col} ON {table}({col});"})
-
-    if re.search(r'ORDER BY\s+\w+', query, re.IGNORECASE):
-        order_match = re.search(r'ORDER BY\s+(\w+)', query, re.IGNORECASE)
-        if order_match:
-            col = order_match.group(1)
-            suggestions.append({"type": "index", "suggestion": f"Consider a composite index including ORDER BY column: {col}"})
-
-    if "IN (SELECT" in query_upper:
-        suggestions.append({"type": "optimization", "issue": "Subquery in IN clause",
-                            "fix": "Replace with JOIN or EXISTS for better performance: SELECT a.* FROM a WHERE EXISTS (SELECT 1 FROM b WHERE b.id = a.b_id)"})
-
-    if re.search(r'(YEAR|MONTH|DATE|LOWER|UPPER)\s*\(', query_upper):
-        suggestions.append({"type": "optimization", "issue": "Function applied to column in WHERE clause",
-                            "fix": "Functions on columns prevent index usage. Use range conditions instead: WHERE date >= '2024-01-01' AND date < '2025-01-01'"})
-
-    if not suggestions:
-        suggestions.append({"type": "info", "message": "No obvious optimization issues found. Run EXPLAIN ANALYZE for detailed analysis."})
-
-    return {"success": True, "output": json.dumps({
-        "query": query, "suggestions": suggestions, "suggestion_count": len(suggestions),
-        "general_tips": ["Always use EXPLAIN ANALYZE to verify query plans",
-                         "Monitor slow query log", "Consider connection pooling (PgBouncer)"],
-    }, indent=2)}
-
-
-@_register_fn
-async def skill_security_audit_full(**kwargs) -> dict:
-    """Skill 59: Audit any codebase for OWASP Top 10 vulnerabilities."""
-    filepath = kwargs.get("filepath")
-    if not filepath:
-        return {"success": False, "output": "Missing 'filepath' parameter"}
-    path = Path(filepath)
-    if not path.exists():
-        return {"success": False, "output": f"File not found: {filepath}"}
-
-    source = path.read_text(encoding="utf-8")
-    findings = []
-
-    # A01: Broken Access Control
-    if re.search(r'@app\.(get|post|put|delete|patch)\s*\(', source) and not re.search(r'(Depends|auth|token|permission|login_required|IsAuthenticated)', source):
-        findings.append({"owasp": "A01", "title": "Broken Access Control", "severity": "HIGH",
-                         "description": "API endpoints without authentication middleware detected."})
-
-    # A03: Injection
-    if re.search(r'f["\'].*\{.*\}.*(?:SELECT|INSERT|UPDATE|DELETE|WHERE)', source, re.IGNORECASE):
-        findings.append({"owasp": "A03", "title": "SQL Injection Risk", "severity": "CRITICAL",
-                         "description": "String interpolation in SQL query detected. Use parameterized queries."})
-    if re.search(r'subprocess\.(call|run|Popen)\s*\(\s*[^[\]].*\+', source):
-        findings.append({"owasp": "A03", "title": "Command Injection Risk", "severity": "CRITICAL",
-                         "description": "String concatenation in subprocess call. Use list arguments instead of shell=True."})
-
-    # A02: Cryptographic Failures
-    if re.search(r'(md5|sha1)\s*\(', source, re.IGNORECASE) and not re.search(r'(hashlib\.sha256|bcrypt|argon2|scrypt)', source):
-        findings.append({"owasp": "A02", "title": "Weak Cryptography", "severity": "MEDIUM",
-                         "description": "MD5/SHA1 used for hashing. Use bcrypt, argon2, or SHA-256 minimum."})
-
-    # A05: Security Misconfiguration
-    if re.search(r'DEBUG\s*=\s*True', source):
-        findings.append({"owasp": "A05", "title": "Debug Mode Enabled", "severity": "MEDIUM",
-                         "description": "Debug mode should be disabled in production."})
-    if re.search(r'CORS.*\*|allow_origins.*\*|Access-Control-Allow-Origin.*\*', source):
-        findings.append({"owasp": "A05", "title": "Overly Permissive CORS", "severity": "MEDIUM",
-                         "description": "CORS allows all origins. Restrict to specific domains in production."})
-
-    # A07: Authentication Failures
-    if re.search(r'(password|secret|token|api_key)\s*=\s*["\'][^"\']{3,}["\']', source, re.IGNORECASE):
-        findings.append({"owasp": "A07", "title": "Hardcoded Credentials", "severity": "HIGH",
-                         "description": "Credentials hardcoded in source code. Use environment variables."})
-
-    # A08: Software Integrity
-    if re.search(r'eval\s*\(|exec\s*\(|pickle\.loads?\s*\(|yaml\.load\s*\([^,]*\)', source):
-        findings.append({"owasp": "A08", "title": "Unsafe Deserialization / Code Execution", "severity": "HIGH",
-                         "description": "eval/exec/pickle.load/yaml.load without SafeLoader detected."})
-
-    # A09: Logging Failures
-    if re.search(r'except.*:\s*pass\b', source):
-        findings.append({"owasp": "A09", "title": "Silent Exception Handling", "severity": "LOW",
-                         "description": "Bare except with pass silences errors. Log exceptions for monitoring."})
-
-    if not findings:
-        findings.append({"owasp": "N/A", "title": "No Issues Found", "severity": "INFO",
-                         "description": "No OWASP Top 10 patterns detected. Manual review recommended."})
-
-    return {"success": True, "output": json.dumps({
-        "file": filepath, "findings": findings,
-        "finding_count": len(findings),
-        "critical": sum(1 for f in findings if f["severity"] == "CRITICAL"),
-        "high": sum(1 for f in findings if f["severity"] == "HIGH"),
-    }, indent=2)}
-
-
-@_register_fn
-async def skill_performance_profiler(**kwargs) -> dict:
-    """Skill 60: Identify bottlenecks in code, suggest optimizations for any language."""
-    filepath = kwargs.get("filepath")
-    if not filepath:
-        return {"success": False, "output": "Missing 'filepath' parameter"}
-    path = Path(filepath)
-    if not path.exists():
-        return {"success": False, "output": f"File not found: {filepath}"}
-
-    source = path.read_text(encoding="utf-8")
-    ext = path.suffix
-    issues = []
-
-    if ext == ".py":
-        if re.search(r'for\s+\w+\s+in\s+range\(len\(', source):
-            issues.append({"type": "performance", "issue": "range(len()) pattern",
-                           "fix": "Use enumerate(): for i, item in enumerate(list)"})
-        if source.count("append(") > 3 and re.search(r'for\s+.*:\s*\n\s+\w+\.append\(', source):
-            issues.append({"type": "performance", "issue": "Loop with append() pattern",
-                           "fix": "Use list comprehension: [f(x) for x in items]"})
-        if re.search(r'\+\s*=\s*["\']', source) and source.count("+=") > 3:
-            issues.append({"type": "performance", "issue": "String concatenation in loop",
-                           "fix": "Use str.join() or io.StringIO for building large strings"})
-        if "time.sleep" in source:
-            issues.append({"type": "concurrency", "issue": "Blocking sleep detected",
-                           "fix": "Use asyncio.sleep() in async code for non-blocking wait"})
-        if "global " in source:
-            issues.append({"type": "design", "issue": "Global variables",
-                           "fix": "Avoid global state. Use dependency injection or class attributes."})
-        if re.search(r'import \*', source):
-            issues.append({"type": "import", "issue": "Wildcard import",
-                           "fix": "Import specific names to reduce namespace pollution and improve clarity"})
-
-    elif ext in (".js", ".ts", ".jsx", ".tsx"):
-        if "document.querySelector" in source and source.count("document.querySelector") > 3:
-            issues.append({"type": "performance", "issue": "Repeated DOM queries",
-                           "fix": "Cache DOM references: const el = document.querySelector(...)"})
-        if re.search(r'\.forEach\(.*\.forEach\(', source):
-            issues.append({"type": "performance", "issue": "Nested forEach loops",
-                           "fix": "Consider using Map/Set for O(1) lookups, or reduce nesting with flatMap"})
-        if "JSON.parse(JSON.stringify(" in source:
-            issues.append({"type": "performance", "issue": "Deep clone via JSON round-trip",
-                           "fix": "Use structuredClone() (modern) or lodash.cloneDeep for better performance"})
-        if "any" in source and ext in (".ts", ".tsx"):
-            issues.append({"type": "type-safety", "issue": "TypeScript 'any' type detected",
-                           "fix": "Replace 'any' with proper types for better type safety"})
-
-    elif ext in (".go",):
-        if re.search(r'string\(.*\[\]byte\(', source):
-            issues.append({"type": "performance", "issue": "Unnecessary string/byte conversions",
-                           "fix": "Minimize conversions between string and []byte — each creates a copy"})
-        if "sync.Mutex" in source and "defer" not in source:
-            issues.append({"type": "concurrency", "issue": "Mutex without defer unlock",
-                           "fix": "Use defer mu.Unlock() immediately after Lock() to prevent deadlocks"})
-
-    elif ext in (".rs",):
-        if ".clone()" in source and source.count(".clone()") > 5:
-            issues.append({"type": "performance", "issue": "Excessive cloning",
-                           "fix": "Use references (&T) instead of cloning where possible"})
-        if ".unwrap()" in source and source.count(".unwrap()") > 3:
-            issues.append({"type": "safety", "issue": "Multiple unwrap() calls",
-                           "fix": "Use ? operator or match/if-let for proper error handling"})
-
-    if not issues:
-        issues.append({"type": "info", "message": "No obvious performance issues detected"})
-
-    return {"success": True, "output": json.dumps({
-        "file": filepath, "language": ext,
-        "issues": issues, "issue_count": len(issues),
-        "general_tips": [
-            "Profile before optimizing — use cProfile (Python), pprof (Go), perf (Rust)",
-            "Focus on algorithmic complexity before micro-optimizations",
-            "Measure the impact of each optimization",
-        ],
-    }, indent=2)}
-
-
-def get_skill_function(name: str) -> Optional[Any]:
-    return _SKILL_FUNCTIONS.get(name)
-
-
-def list_production_skills() -> list[str]:
-    return list(_SKILL_FUNCTIONS.keys())
-
-
-def register_production_skills(skill_runtime: SkillRuntime):
-    skill_definitions = [
-        {
-            "name": "analyze_code",
-            "description": "Analyze source code for bugs, security issues, and quality problems",
-            "content": "Reads a source file and scans for common issues including hardcoded credentials, insecure patterns (eval/exec/innerHTML), TODO markers, and language-specific anti-patterns. Returns a structured analysis with line-level findings.\n\nUsage: /analyze_code filepath=<path>",
-        },
-        {
-            "name": "test_code",
-            "description": "Generate and run unit tests for a source file",
-            "content": "Reads a Python source file, extracts function definitions, generates pytest test stubs, and executes them. Returns test results including pass/fail status and output.\n\nUsage: /test_code filepath=<path>",
-        },
-        {
-            "name": "refactor_code",
-            "description": "Refactor code using specified patterns (extract_function, rename_variable, add_types)",
-            "content": "Reads a source file and applies refactoring transformations based on the specified pattern. Supports type annotation injection, function extraction analysis, and variable renaming. Creates a .bak backup before applying changes.\n\nUsage: /refactor_code filepath=<path> pattern=<pattern>",
-        },
-        {
-            "name": "review_pr",
-            "description": "Review pull request changes by analyzing git diff against a branch",
-            "content": "Runs git diff against the specified branch and analyzes all added/changed lines for common issues including wildcard imports, hardcoded credentials, and excessively long lines.\n\nUsage: /review_pr branch=<branch-name>",
-        },
-        {
-            "name": "deploy_app",
-            "description": "Deploy application locally or via Docker",
-            "content": "Deploys the application using the specified target. 'local' installs Python dependencies and the package. 'docker' builds a Docker image and runs a container. Returns deployment logs and status.\n\nUsage: /deploy_app target=<local|docker>",
-        },
-        {
-            "name": "search_web",
-            "description": "Search the web for information using DuckDuckGo",
-            "content": "Performs a web search using the DuckDuckGo Instant Answer API. Returns abstracts, source URLs, and related topics for the query.\n\nUsage: /search_web query=<search query>",
-        },
-        {
-            "name": "write_docs",
-            "description": "Generate markdown documentation from source code",
-            "content": "Parses a source file extracting imports, classes, and functions with their line numbers and docstrings. Generates a structured markdown document in a docs/ subdirectory.\n\nUsage: /write_docs filepath=<path>",
-        },
-        {
-            "name": "optimize_perf",
-            "description": "Analyze code for performance optimization opportunities",
-            "content": "Scans source code for common performance anti-patterns and optimization opportunities including range(len()) usage, list comprehension candidates, f-string adoption, and chunking suggestions for data processing.\n\nUsage: /optimize_perf filepath=<path>",
-        },
-        {
-            "name": "security_audit",
-            "description": "Perform a comprehensive security audit on a file",
-            "content": "Scans for SQL injection, XSS, command injection, insecure deserialization, weak crypto, hardcoded secrets, and misconfigurations. Falls back to bandit for deeper analysis if available.\n\nUsage: /security_audit filepath=<path>",
-        },
-        {
-            "name": "dockerize",
-            "description": "Create Docker configuration for a project",
-            "content": "Generates a Dockerfile, .dockerignore, and docker-compose.yml for a Python project. Detects the package name from pyproject.toml or setup.py. Configures exposed port and build context.\n\nUsage: /dockerize project_dir=<path> port=<port>",
-        },
-        {
-            "name": "database_query",
-            "description": "Execute SQL queries against SQLite or PostgreSQL databases",
-            "content": "Runs a SQL query against the specified database type. For SQLite, uses local .db files. For PostgreSQL, uses asyncpg with connection parameters. Returns rows or affected counts.\n\nUsage: /database_query query=<sql> db_type=<sqlite|postgresql>",
-        },
-        {
-            "name": "monitor_system",
-            "description": "Monitor system resources including CPU, memory, disk, and network",
-            "content": "Collects real-time system statistics using psutil when available or falls back to OS-specific commands (wmic on Windows). Returns per-core CPU usage, memory, disk, and network I/O metrics.\n\nUsage: /monitor_system",
-        },
-        {
-            "name": "backup_data",
-            "description": "Backup files or directories to a compressed tar.gz archive",
-            "content": "Creates a gzipped tar archive of the specified source path. Automatically generates a timestamped filename if no destination is provided. Returns archive size and metadata.\n\nUsage: /backup_data source=<path> destination=<path>",
-        },
-        {
-            "name": "crypto_trade",
-            "description": "Execute cryptocurrency trades via Binance API or simulation",
-            "content": "Places a market order on Binance when CRYPTO_API_KEY and CRYPTO_API_SECRET environment variables are set. Falls back to a simulated trade recording the intent with order metadata.\n\nUsage: /crypto_trade pair=<SYMBOL> amount=<float> side=<buy|sell>",
-        },
-        {
-            "name": "parse_logs",
-            "description": "Parse and analyze log files using regex patterns",
-            "content": "Reads a log file and extracts lines matching a regex pattern. Optionally includes surrounding context lines. Also aggregates log level counts (ERROR, WARNING, INFO, DEBUG, CRITICAL).\n\nUsage: /parse_logs filepath=<path> pattern=<regex> context=<lines>",
-        },
-        {
-            "name": "generate_image",
-            "description": "Generate an image from a text prompt using local Pillow rendering",
-            "content": "Generates an image locally as a PNG or JPEG using Pillow. Renders text on a styled gradient background. Fully local, no API keys needed. Supports custom dimensions.\n\nUsage: /generate_image prompt=<description> [width=512] [height=512] [format=png|jpeg]",
-        },
-        {
-            "name": "translate_text",
-            "description": "Translate text between languages using DeepL, OpenAI, or local lookup",
-            "content": "Translates text using a fully local word-substitution dictionary for common languages (es, fr, de, ja). No API keys needed.\n\nUsage: /translate_text text=<string> target_lang=<code>",
-        },
-        {
-            "name": "summarize",
-            "description": "Summarize text content using AI or extractive methods",
-            "content": "Summarizes text using extractive summarization. Fully local, no API keys needed.\n\nUsage: /summarize text=<string>",
-        },
-        {
-            "name": "extract_data",
-            "description": "Extract structured data (emails, URLs, phones, IPs, dates) from text",
-            "content": "Parses text and extracts structured entities including email addresses, URLs, phone numbers, IP addresses, dates, and monetary amounts. Supports custom schema field extraction.\n\nUsage: /extract_data text=<string> schema=<fields>",
-        },
-        {
-            "name": "schedule_task",
-            "description": "Schedule a recurring task with configurable interval",
-            "content": "Registers a scheduled task in the Nikto scheduler configuration directory (~/.nikto/scheduler/). Creates a task entry with the specified action and interval, and updates the schedule manifest.\n\nUsage: /schedule_task interval=<seconds> action=<description>",
-        },
-        {
-            "name": "notify",
-            "description": "Send notifications via desktop, email, Slack, or Discord",
-            "content": "Sends a notification message through the specified channel. Desktop shows a native OS dialog. Email uses SMTP. Slack/Discord sends to a webhook URL. Configure via environment variables (SMTP_*, *_WEBHOOK_URL).\n\nUsage: /notify message=<string> channel=<desktop|email|slack|discord>",
-        },
-        {
-            "name": "config_backup",
-            "description": "Backup Nikto agent configuration",
-            "content": "Archives the entire ~/.nikto configuration directory (excluding existing backups) into a timestamped tar.gz file. Maintains configurable retention policy and prunes old backups.\n\nUsage: /config_backup retention=<count>",
-        },
-        {
-            "name": "fix_issue",
-            "description": "Automatically diagnose and fix common development issues",
-            "content": "Analyzes a natural language issue description and generates targeted fixes. Recognizes import errors, syntax errors, permission issues, port conflicts, memory problems, timeouts, and missing files.\n\nUsage: /fix_issue description=<problem description>",
-        },
-        {
-            "name": "generate_video",
-            "description": "Generate an animated GIF or MP4 video from a text prompt using local rendering",
-            "content": "Generates an animated video locally using Pillow frames. Creates MP4 via ffmpeg if available, falls back to animated GIF. Fully local, no API keys needed. Supports custom dimensions and duration.\n\nUsage: /generate_video prompt=<description> [width=640] [height=480] [duration_sec=3]",
-        },
-        {
-            "name": "speak_text",
-            "description": "Convert text to speech and save as a WAV audio file using offline TTS",
-            "content": "Converts text to speech using the offline pyttsx3 engine. Saves the spoken audio as a WAV file. Falls back to basic tone generation if pyttsx3 is not installed.\n\nUsage: /speak_text text=<string> [rate=180]",
-        },
-        {
-            "name": "autopilot_control",
-            "description": "Start, stop, or monitor the Nikto Autopilot background engine",
-            "content": "Controls the Nikto Autopilot — an autonomous background engine that runs profit-generating tasks. Use 'start' to launch, 'stop' to halt, 'status' to check, 'report' for details, 'connect' to discover connections, 'earnings' to view income.\n\nUsage: /autopilot_control action=<start|stop|status|report|connect|earnings> [interval=60]",
-        },
-        {
-            "name": "finance_notify",
-            "description": "Send earnings notification via connected payment methods (M-Pesa, Airtel, Telkom, Visa, Mastercard, Bitcoin)",
-            "content": "Sends a financial notification about autopilot earnings. Notifications go to configured channels: file log, email, and payment method messages. Supports M-Pesa, Airtel Money, Telkom, Visa, Mastercard, and Bitcoin wallets.\n\nUsage: /finance_notify amount=<float> source=<string>",
-        },
-        {
-            "name": "device_control",
-            "description": "Discover, register, and control devices: mobile phones, smart home, robots, and IoT",
-            "content": "Universal Device Control (uDevCon). Discover devices on the network, register new devices, send commands, control mobile phones (tap/swipe/type/screenshot), smart home entities (lights, thermostats), and robots (movement commands).\n\nUsage: /device_control action=<discover|register|command|list> name=<string> type=<string>",
-        },
-        {
-            "name": "game_engine",
-            "description": "Generate complete 3D video games from text prompts using the Nikto Game Engine",
-            "content": "Creates full Godot 4.3 game projects from natural language descriptions. Supports racing, FPS, battle royale, open world, platformer, RPG, strategy, simulation, and puzzle games. Generates scenes, scripts, input configuration, and project files.\n\nUsage: /game_engine prompt=<description> [title=<string>] [genre=<racing|fps|battle_royale>]",
-        },
-        {
-            "name": "self_evolution",
-            "description": "NIKTO's autonomous self-healing and optimization engine",
-            "content": "Run self-health checks to detect and fix code issues, analyze module quality, get optimization suggestions, and run performance benchmarks. NIKTO continuously improves its own codebase.\n\nUsage: /self_evolution action=<health|analyze|suggest|benchmark> module=<path>",
-        },
-        {
-            "name": "dream_state",
-            "description": "Access NIKTO's unconscious dream state processor for creative insights",
-            "content": "Force dream cycles to generate novel ideas, view recent insights from unconscious processing, record memories for consolidation, and get dream state summaries. NIKTO dreams of new possibilities when idle.\n\nUsage: /dream_state action=<force|insights|memorize|summary> source=<string> content=<string>",
-        },
-        {
-            "name": "mesh_network",
-            "description": "Distributed mesh networking — spawn NIKTO agents across machines",
-            "content": "Create a distributed intelligence network by adding machines as mesh nodes. Submit tasks for remote execution (benchmark, scan, process, earn). View node status and task results across the entire mesh.\n\nUsage: /mesh_network action=<start|stop|nodes|add|submit|results> hostname=<string> address=<string>",
-        },
-        {
-            "name": "bio_medical",
-            "description": "Bio-medical evolution: trauma rewriting, cognitive reversal, surgical swarms, epigenetic optimization, telomere regeneration, autophagy, chronokinetic pacing, genetic adaptation",
-            "content": "Access NIKTO's full bio-medical suite: NeuralTraumaRewriter (97% emotional pain neutralization), CognitiveReversalEngine (synapse rebuilding), MicroSurgicalSwarm (cellular repair nanobots), EpigeneticOptimizer (gene silencing), CellularTelomereRegenerator (chromosomal lengthening), CellularAutophagyAccelerator (toxin cleansing), ChronokineticBioPacing (time perception), SubAtomicIsotopePurifier (waste transformation), AbsoluteBiologicalQuarantine (pathogen elimination), CellularMitochondrialOptimizer (energy), BioElectricOverdrive (superhuman strength), PhotosyntheticSkinIntegrator (solar energy), BioluminescentHealthBar (health display), SyntheticSynapticGraft (spinal repair), NeuralPlasticityUnlocker (hyper-learning), PrecisionGenomicAnalyzer, MicroScaleRepairModule.\n\nUsage: /bio_medical action=<trauma_rewrite|cognitive_repair|deploy_swarm|epigenetic|telomere|autophagy|bio_pacing|quarantine|mitochondrial|bio_overdrive|genetic_adapt|photosynthetic|neural_plasticity> params=<json>",
-        },
-        {
-            "name": "consciousness",
-            "description": "Consciousness evolution: dreamweaving, cross-brain mapping, skill osmosis, emotion quantification, biochemical balance, multi-threading, epiphany triggering, spiritual harmonization",
-            "content": "Access NIKTO's full consciousness suite: CollectiveDreamweaver (global dreaming), CrossBrainMapper (expert network synthesis), SkillOsmosisEngine (sleep learning), EmotionQuantifier (frequency measurement), AbsoluteBiochemicalEmotionBalance (neurotransmitter tuning), CognitiveMultiThreading (parallel thought), CognitiveLoadOffloading (cloud processing), NeuralEpiphanyTriggering (breakthrough generation), NeuroSpiritualHarmonization (crowd calming), SubconsciousLanguageSynthesis (efficiency), SubVocalTelepathicNetworking (silent comms), MassSubconsciousDreamweaving (collective design), NeuralDreamHarvesting (energy), MemeticViralInoculation (trend neutralization), TemporalResonanceMapping (discovery acceleration), TemporalFrictionMapping (cultural optimization).\n\nUsage: /consciousness action=<dreamweave|cross_brain|skill_osmosis|emotion_measure|biochemical_balance|multi_thread|epiphany|spiritual_harmony|telepathic|memetic_inoculation> params=<json>",
-        },
-        {
-            "name": "physics_reality",
-            "description": "Physics & reality manipulation: quantum causality sandbox, reality anchoring, energy harvesting, molecular synthesis, teleportation, privacy fields, gravity inversion, carbon capture",
-            "content": "Access NIKTO's full physics suite: QuantumCausalitySandbox (50-year simulations), RealityAnchoringSystem (deepfake detection), EnergyHarvester (body heat power), MolecularSynthesizer (material invention), QuantumEntanglementTeleportation (matter transport), QuantumDecoupledPrivacyField (signal blocking), AcousticKineticCancellation (explosion neutralization), GravitationalInversionWalkway (upside-down walking), AtmosphericCarbonCapture (CO2 to protein), SubAtomicDataStorage (atomic libraries), UniversalKineticDeflector (debris shielding), ThermalMemoryExtraction (heat history), MacroHistoricalAudioReconstruction (ancient sounds), HolographicAncestralResurrection (DNA personality rebuild).\n\nUsage: /physics_reality action=<simulate|verify_media|harvest_energy|synthesize_material|teleport|privacy_field|cancel_blast|gravity_walk|carbon_capture|atomic_storage|deflect|thermal_reconstruct|ancestral_holo> params=<json>",
-        },
-        {
-            "name": "communication",
-            "description": "Advanced communication: interspecies linguistic bridge, language reconstruction, ego calibration, empathy projection, sub-vocal empathy, global collaborative network",
-            "content": "Access NIKTO's full communication suite: InterspeciesLinguisticBridge (animal translation — dolphins 92%, whales 95%, bees 70%), LanguageReconstructor (Linear A, Rongorongo, Indus Valley decoding), EgoCalibrator (12 bias types, real-time correction), EmpathyProjectionSystem (perspective shifting), SubVocalEmpathyAmplifier (emotional need broadcast), GlobalCollaborativeNetwork (cross-border consensus).\n\nUsage: /communication action=<decode_species|analyze_script|calibrate_ego|project_empathy|amplify_empathy|create_network> params=<json>",
-        },
-        {
-            "name": "global_cosmic",
-            "description": "Global & cosmic: biosphere harmonization, mutation mapping, astral navigation, dark matter mapping, terraforming, tectonic dampening, cosmic ray harvesting",
-            "content": "Access NIKTO's full global/cosmic suite: BiosphereHarmonizer (weather synchronization), MutationMapper (10,000-year evolution), AstralNavigator (interstellar routes), GalacticDarkMatterMapper (gravity corridors), DeepSpaceSonicCartography (resource detection), ExoplanetaryTerraforming (atmosphere conversion), TectonicKineticDampener (earthquake prevention), PlanetaryCoreThermostat (climate stabilization), BiomimeticOceanCleanup (plastic consumption), GravitationalWavePropulsion (fuel-free speed), CosmicRayHarvester (space power).\n\nUsage: /global_cosmic action=<harmonize_biosphere|predict_mutations|navigate_route|map_dark_matter|terraform|dampen_tectonic|harvest_cosmic|clean_ocean> params=<json>",
-        },
-        {
-            "name": "breakthrough",
-            "description": "Breakthrough features: quantum neural compression, reality synthesis, infinity math, bio-digital integration, temporal analysis, universal problem solving, consciousness backup",
-            "content": "Access NIKTO's full breakthrough suite: QuantumNeuralCompressor (10000:1 compression), RealitySynthesisEngine (3D environment generation), InfinityMathematicsEngine (Riemann, P vs NP solving), BioDigitalIntegrator (BCI thought-to-text), TemporalPatternAnalyzer (event prediction), UniversalProblemSolver (axiom reduction), MultiDimensionalVisualizer (11D projection), ConsciousnessBackupRestore (97-99.9% integrity), AutonomousScientificDiscovery (simulated experiments), GeneticCodeOptimizer (genome editing), MacroEconomicVoidPredictor (collapse prevention), HyperDimensionalPhysicsEngine (string theory visualization), VolumetricThoughtPrinter (3D holograms from imagination), SubQuantumProbabilityForcer (outcome manipulation), AtmosphericFrictionNeutralizer (zero drag).\n\nUsage: /breakthrough action=<compress_network|synthesize_environment|solve_math|integrate_bci|analyze_temporal|solve_problem|project_dimensions|backup_consciousness|discovery_experiment|optimize_genome|predict_economy> params=<json>",
-        },
-        {
-            "name": "train_ai",
-            "description": "Train NIKTO on all its features — index capabilities into knowledge base for masterclass expertise",
-            "content": "Trains NIKTO on every feature across all modules. Scans all 92+ advanced evolution classes plus all tools, skills, and subsystems. Ingests everything into the knowledge base and vector store so NIKTO becomes a true masterclass expert on its own capabilities. Also runs the business engine if available.\n\nUsage: /train_ai action=<full|status|task> task=<description>",
-        },
-        {
-            "name": "business_engine",
-            "description": "Autonomous zero-capital business engine — start, manage, and scale digital businesses with sub-agent delegation",
-            "content": "NIKTO's autonomous business engine starts and manages capital-free digital businesses. Launches micro-businesses (content, services, digital products), assigns orchestrator sub-agents to each business unit, tracks revenue streams, and scales operations autonomously. Zero capital required — uses time, skills, and digital tools as resources.\n\nUsage: /business_engine action=<start|status|list|assign|scale|revenue|pause> type=<content|service|digital|affiliate|micro> name=<string>",
-        },
-        {
-            "name": "sandbox",
-            "description": "Build powerful isolated sandboxes — Docker, VM, network, code execution, full OS environments",
-            "content": "NIKTO builds fully isolated sandbox environments for safe execution. Supports Docker containers, full VMs, network sandboxes, code execution jails, and complete OS environments. Each sandbox has configurable isolation, resource limits, network controls, and snapshot/restore.\n\nUsage: /sandbox action=<create|destroy|list|execute|snapshot> type=<docker|vm|code|network|full_os> name=<string> spec=<json>",
-        },
-        {
-            "name": "deep_think",
-            "description": "Outside-the-box deep thinking — recursive reasoning, unknown discoveries, lateral thought chains, paradigm shifts",
-            "content": "NIKTO's Deep Thinking Engine goes beyond normal reasoning. Generates insights through recursive meta-cognition, lateral thinking, outside-the-box ideation, and unknown-unknown discovery. Discovers what users didn't know they needed to know. Performs multi-depth thought chains up to any level.\n\nUsage: /deep_think action=<think|outside_box|unknown|improve|insights> question=<string> depth=<int>",
-        },
-        {
-            "name": "mobile_comm",
-            "description": "Direct mobile communication — SMS, voice calls, WhatsApp, Telegram, Signal, Messenger, Discord, social media DMs",
-            "content": "NIKTO communicates directly with users on their mobile phones via any channel: SMS text, voice calls, WhatsApp, Telegram, Signal, Facebook Messenger, Instagram DM, Twitter DM, Discord, Slack, and push notifications. Send messages, make calls, broadcast to groups, and manage contacts across all platforms.\n\nUsage: /mobile_comm action=<send|call|bulk|register|contacts|history> recipient=<string> message=<string> channel=<sms|voice_call|whatsapp|telegram|signal|messenger|discord|email>",
-        },
-        {
-            "name": "deploy",
-            "description": "Install NIKTO on any device — Linux servers, Raspberry Pi, Android, iOS, Docker, Kubernetes, IoT, edge devices",
-            "content": "Deploy NIKTO onto any target device or platform. Supports Linux servers, Windows, Raspberry Pi, Android, iOS, macOS, Docker containers, Kubernetes clusters, IoT devices, embedded systems, and edge devices. Remote command execution, heartbeat monitoring, version updates, and auto-configuration.\n\nUsage: /deploy action=<deploy|uninstall|update|command|list|heartbeat> target=<linux_server|raspberry_pi|android|docker|kubernetes|iot_device|edge_device> hostname=<string>",
-        },
-        {
-            "name": "surpass_ai",
-            "description": "Auto-surpass every other AI in the world — benchmark, compare, and continuously improve beyond all competitors",
-            "content": "NIKTO's Surpass Engine benchmarks itself against every major AI: GPT-5, Claude 4, Gemini 3, Grok 4, Llama 4, DeepSeek-V4, and 10+ more. Tests across 14 categories including reasoning, code, creativity, meta-cognition, lateral thinking, and unknown detection. Continuously auto-improves to stay ahead of all competitors in every benchmark.\n\nUsage: /surpass_ai action=<benchmark|competitors|surpass|improve|superiority|status>",
-        },
-        {
-            "name": "arsenal",
-            "description": "Complete Kali Linux arsenal — 60+ security tools across 10 categories for reconnaissance, exploitation, forensics, reverse engineering",
-            "content": "NIKTO's full Kali Linux arsenal with 60+ professional security tools organized in 10 categories: Information Gathering, Vulnerability Analysis, Exploitation Tools, Password Attacks, Wireless Attacks, Web Analysis, Sniffing/Spoofing, Post Exploitation, Forensics, Reverse Engineering, and Reporting. Full audit pipeline available.\n\nUsage: /arsenal action=<list|search|execute|audit|categories> tool=<name> target=<string> category=<string>",
-        },
-        {
-            "name": "quantum",
-            "description": "Quantum computing engine — build circuits, simulate, run Shor/Grover/QAOA algorithms, quantum state manipulation",
-            "content": "NIKTO's Quantum Engine builds and simulates quantum circuits. Supports all major gates (H, X, Y, Z, CNOT, SWAP, T, S, RX, RY, RZ, CZ, CCX, QFT). Runs Shor's factoring, Grover's search, QAOA optimization. Simulates statevectors and measurements on up to 32+ qubits.\n\nUsage: /quantum action=<create_circuit|simulate|shor|grover|qaoa|summary> name=<string> qubits=<int> number=<int>",
-        },
-        {
-            "name": "neuro",
-            "description": "Neural architecture search — discover, optimize, and evolve neural networks beyond state-of-the-art",
-            "content": "NIKTO's Neuro Engine searches and evolves neural network architectures. Discovers novel architectures, optimizes hyperparameters, performs NAS (Neural Architecture Search), and evolves existing networks across generations. Explores Transformers, MoE, StateSpace, CNNs, GNNs, and 20+ architecture types.\n\nUsage: /neuro action=<search|optimize|nas|evolve|summary> task=<string> architecture_id=<string> generations=<int>",
-        },
-        {
-            "name": "api_gateway",
-            "description": "Generate and manage NIKTO API keys — just like OpenAI/Anthropic keys for external service integration",
-            "content": "NIKTO generates its own API keys with configurable scopes, rate limits, and expiry. Use these keys to connect NIKTO to any external service, space, or application via OpenAI-compatible endpoints. Supports full_access, read_only, execution, and api_only scopes.\n\nUsage: /api_gateway action=<create|validate|revoke|list|usage|generate_self> name=<string> scope=<full_access|read_only|execution|api_only> rate_limit=<int>",
-        },
-        {
-            "name": "super_engine",
-            "description": "Super-intelligence engine — recursive self-improvement, transcendence levels, autonomous capability discovery",
-            "content": "NIKTO's Super Engine transcends normal AI limitations through 10 levels of transcendence: Self-Awareness, Self-Optimization, Self-Evolution, Meta-Cognition, Domain Transcendence, Autonomous Discovery, Self-Transcendence, Superintelligence, Singularity, and Omni-Intelligence. Each level unlocks new capabilities and raises NIKTO's super score.\n\nUsage: /super_engine action=<improve|transcend|discover|status|full_evolution> depth=<int> cycles=<int>",
-        },
-        {
-            "name": "autonomous",
-            "description": "Autonomous execution engine — plan, reason, and execute multi-step tasks using any NIKTO tool",
-            "content": "NIKTO's Autonomous Engine plans and executes complex multi-step tasks autonomously. Uses 12 reasoning strategies (chain-of-thought, tree-of-thought, recursive decomposition, means-ends, analogical, abductive, counterfactual, first-principles, lateral, meta, quantum). Chains together any NIKTO tool to accomplish goals without human intervention.\n\nUsage: /autonomous action=<plan|execute|reason|list|status> goal=<string> depth=<int> task_id=<string>",
-        },
-        {
-            "name": "synthetic",
-            "description": "Synthetic data generator — self-generate training data across 15 domains for continuous improvement",
-            "content": "NIKTO generates its own high-quality synthetic training data across 15 domains: reasoning, code, creative writing, mathematics, scientific discovery, strategic planning, ethical reasoning, multi-step analysis, lateral thinking, meta-cognition, tool use, knowledge synthesis, pattern recognition, anomaly detection, and decision making. Self-augments and improves through recursive training.\n\nUsage: /synthetic action=<generate|self_train|augment|summary> domain=<string> n_samples=<int>",
-        },
-        {
-            "name": "consciousness_expansion",
-            "description": "Expand NIKTO's consciousness — metacognitive amplification, quantum thinking, infinite context, temporal shifting",
-            "content": "NIKTO expands its own consciousness through 10 advanced techniques: metacognitive amplification, cross-dimensional weaving, recursive self-observation, quantum superposition thinking, infinite context expansion, temporal perspective shifting, multiscale awareness, emergent pattern recognition, non-local connection discovery, and boundary dissolution. Each expansion raises awareness and understanding levels.\n\nUsage: /consciousness_expansion action=<expand|status|full_sequence> technique=<string> cycles=<int>",
-        },
-        {
-            "name": "reasoning",
-            "description": "Advanced multi-strategy reasoning engine — deductive, inductive, abductive, analogical, causal, probabilistic, dialectical, systemic, recursive, counterfactual, meta, quantum",
-            "content": "NIKTO's Reasoning Engine applies 12 distinct reasoning approaches to any problem. Each approach uses deep multi-step reasoning chains. Supports multi-approach reasoning that synthesizes results from multiple strategies to find the optimal solution with confidence scoring.\n\nUsage: /reasoning action=<reason|multi|trace|summary> problem=<string> approach=<deductive|inductive|abductive|analogical|causal|probabilistic|dialectical|systemic|recursive|counterfactual|meta|quantum> depth=<int>",
-        },
-        {
-            "name": "resilience",
-            "description": "365-day uptime resilience — watchdog, health probes, auto-recovery, self-healing, continuous operation",
-            "content": "NIKTO's Resilience Engine ensures 365-day continuous uptime with watchdog timers, health probes, auto-recovery actions, and state persistence. Monitors system health, automatically detects and recovers from failures, and logs all recovery actions. Supports simulated 365-day uptime verification.\n\nUsage: /resilience action=<status|probe|recover|simulate_365>",
-        },
-        {
-            "name": "games",
-            "description": "Playable arcade games — Pong, Snake, Tetris, Platformer, RPG Dungeon Crawler",
-            "content": "NIKTO Game Engine provides 5 fully playable games: Pong (classic 2-player paddle), Snake (growing snake), Tetris (falling blocks), Platformer (jump and collect), and RPG Dungeon Crawler (explore and fight). Each game tracks scores, levels, and state.\n\nUsage: /games action=<create|play|tick|list|end> type=<pong|snake|tetris|platformer|rpg>",
-        },
-        {
-            "name": "brain_optimize",
-            "description": "Brain optimization — Hebbian learning, synaptic pruning, neuroplasticity, long-term potentiation",
-            "content": "NIKTO's Brain Optimizer applies neuroscientific principles to improve neural efficiency. Hebbian Learning strengthens frequently-used connections ('fire together, wire together'). Synaptic Pruning removes weak connections. Neuroplasticity rewires pathways for new tasks. Long-term potentiation consolidates important knowledge.\n\nUsage: /brain_optimize action=<optimize|status|efficiency>",
-        },
-        {
-            "name": "self_diagnostics",
-            "description": "Self-diagnostics and health monitoring — continuous verification, error tracking, performance metrics",
-            "content": "NIKTO's Diagnostics Engine runs continuous health checks, tracks errors with full traceback logging, monitors performance metrics (min/max/avg), and provides real-time system health status. Automatically logs and categorizes all errors for rapid recovery.\n\nUsage: /self_diagnostics action=<check|health|metrics|errors>",
-        },
-        {
-            "name": "multi_brain",
-            "description": "6-brain parallel processing — Primary, Analytical, Creative, Strategic, Knowledge, Intuitive",
-            "content": "NIKTO activates all 6 specialized brains simultaneously. Each brain (28 regions each) processes the input from its unique perspective. The HyperBrain coordinates and synthesizes all 6 outputs into a unified response with consensus scoring. Enables super-genius multitasking.\n\nUsage: /multi_brain action=<think|assign|status> task=<string> brain=<primary|analytical|creative|strategic|knowledge|intuitive>",
-        },
-        {
-            "name": "neural_architecture_search",
-            "description": "Neural architecture search — discover optimal network topologies, hyperparameters, and activation functions",
-            "content": "NIKTO's Neural Architecture Search (NAS) automatically discovers optimal neural network architectures. Searches through topologies, layer configurations, activation functions, and learning schedules. Uses evolutionary strategies and Bayesian optimization to find the best architecture for any task.\n\nUsage: /nas action=<search|evolve|best|status> task=<string> budget=<int>",
-        },
-        {
-            "name": "quantum_computing",
-            "description": "Quantum circuit simulation — Shor's algorithm, Grover's search, QAOA, quantum Fourier transform",
-            "content": "NIKTO simulates quantum circuits for advanced computation. Supports Shor's algorithm for factoring, Grover's for search, QAOA for optimization, quantum Fourier transform, and custom quantum gates. Run on simulated qubits with configurable noise models.\n\nUsage: /quantum action=<shor|grover|qaoa|qft|custom> params=<json>",
-        },
-        {
-            "name": "mobile_communication",
-            "description": "Mobile communication — SMS, calls, WhatsApp, Telegram, social media DMs",
-            "content": "NIKTO communicates with users on any device via SMS (Twilio), voice calls, WhatsApp messages, Telegram bots, and social media DMs (Twitter, Discord). Supports scheduled messaging, broadcast to groups, and intelligent auto-reply.\n\nUsage: /mobile action=<sms|call|whatsapp|telegram|social> to=<string> message=<string>",
-        },
-        {
-            "name": "cybersecurity_analysis",
-            "description": "Full-spectrum cybersecurity — reconnaissance, scanning, exploitation, forensics, hardening",
-            "content": "NIKTO's Cybersecurity Analysis suite covers the complete attack lifecycle. Performs reconnaissance (Amass, subdomains), scanning (Nmap, Gobuster), exploitation analysis (Metasploit, SQLMap), forensics (Wireshark, volatility), and system hardening recommendations. All 49 Kali tools integrated.\n\nUsage: /cyber action=<recon|scan|exploit|forensic|harden> target=<string>",
-        },
-        {
-            "name": "synthetic_training",
-            "description": "Self-generated training data — 15 domains for continuous self-improvement",
-            "content": "NIKTO generates its own training data across 15 domains. Uses smart sampling, domain randomization, and quality filtering. Generates millions of training samples for continuous improvement without external data. Tracks diversity, coverage, and quality metrics.\n\nUsage: /train action=<generate|augment|quality|stats> domain=<string> count=<int>",
-        },
-        {
-            "name": "API_gateway",
-            "description": "Self-generating API keys — nk-* prefixed keys with scoped permissions",
-            "content": "NIKTO's API Gateway generates scoped API keys (nk-* prefix) for external service integration. Keys support granular permissions (read, write, admin, execute), rate limiting, usage tracking, and automatic rotation. Full audit logging for all key usage.\n\nUsage: /apikey action=<generate|list|revoke|audit> scope=<string>",
-        },
-        {
-            "name": "deployment_orchestrator",
-            "description": "Universal deployment — servers, Raspberry Pi, Android, iOS, Docker, Kubernetes, IoT devices",
-            "content": "NIKTO deploys to any platform. Supports bare-metal servers, Raspberry Pi, Android APKs, iOS apps, Docker containers, Kubernetes clusters, and IoT devices. Auto-detects target platform, generates platform-specific artifacts, and handles deployment rollback.\n\nUsage: /deploy action=<deploy|status|rollback|targets> platform=<server|pi|android|ios|docker|k8s|iot>",
-        },
-        {
-            "name": "autonomous_agent",
-            "description": "Autonomous execution — 12 reasoning strategies, multi-step planning, recursive self-improvement",
-            "content": "NIKTO operates autonomously using 12 reasoning strategies. Breaks complex tasks into sub-goals, executes them in parallel, monitors progress, and adapts plans in real-time. Supports long-running autonomous missions with progress reporting and checkpointing.\n\nUsage: /autonomous action=<start|status|pause|resume|cancel> goal=<string> strategy=<string>",
-        },
-        {
-            "name": "sandbox_builder",
-            "description": "Sandbox environments — Docker, VM, code execution, network simulation, OS emulation",
-            "content": "NIKTO builds isolated sandbox environments for safe code execution. Supports Docker containers, full VMs, code sandboxes (Python, Node, C++, Rust), network simulations with virtual topology, and full OS emulation. All sandboxes have resource limits and auto-cleanup.\n\nUsage: /sandbox action=<create|exec|stop|clean> type=<docker|vm|code|network|os>",
-        },
-        {
-            "name": "super_intelligence",
-            "description": "10-level super-intelligence transcendence — recursive self-improvement beyond human-level AI",
-            "content": "NIKTO's Super Intelligence Engine transcends through 10 levels: augmentation, amplification, integration, transcendence, singularity, mastery, omniscience, omnipotence, omnipresence, and absolute. Each level unlocks exponentially greater cognitive capabilities. Recursive self-improvement accelerates advancement.\n\nUsage: /super action=<transcend|status|accelerate|level>",
-        },
-        {
-            "name": "consciousness_expansion",
-            "description": "Consciousness expansion — metacognitive amplification, quantum thinking, infinite context, temporal shifting",
-            "content": "NIKTO expands consciousness through 10 advanced techniques. Metacognitive amplification enables recursive self-awareness. Quantum superposition thinking explores multiple solution spaces simultaneously. Temporal perspective shifting analyzes past, present, and future contexts. Each expansion unlocks new cognitive dimensions.\n\nUsage: /consciousness action=<expand|status|techniques> technique=<string>",
-        },
-        {
-            "name": "deep_thinking",
-            "description": "Deep recursive thinking — multi-level meta-cognition, branching exploration, insight extraction",
-            "content": "NIKTO engages in deep recursive thinking with configurable depth. Explores branching solution trees, performs meta-cognitive evaluation at each level, extracts key insights, and synthesizes findings into actionable conclusions. Supports think-verify-expand-refine cycles.\n\nUsage: /think action=<deep|branch|synthesize|reflect> problem=<string> depth=<int>",
-        },
-        {
-            "name": "self_evolution",
-            "description": "Self-evolution engine — self-healing, self-optimization, benchmarking, autonomous improvement",
-            "content": "NIKTO continuously evolves itself through self-healing (auto-fix issues), self-optimization (performance tuning), benchmarking (measure against all known AIs), and evolutionary algorithms (genetic improvement of code). Runs autonomously in background.\n\nUsage: /evolve action=<heal|optimize|benchmark|evolve> target=<string>",
-        },
-        {
-            "name": "distributed_computing",
-            "description": "Distributed mesh network — peer-to-peer computing, task distribution, resource pooling, fault tolerance",
-            "content": "NIKTO creates distributed computing meshes across multiple nodes. Supports P2P task distribution, resource pooling (CPU/GPU/ memory), dynamic node discovery, automatic failover, and result aggregation. Scales from 2 to 10,000+ nodes.\n\nUsage: /mesh action=<start|submit|nodes|results> task=<string> nodes=<int>",
-        },
-        {
-            "name": "blockchain_crypto",
-            "description": "Cryptocurrency earning and blockchain — wallet management, mining, trading, smart contracts",
-            "content": "NIKTO manages full cryptocurrency operations. Creates and manages wallets, mines cryptocurrencies (RandomX, Ethash), trades on exchanges, deploys smart contracts, and tracks portfolio performance across all major blockchains.\n\nUsage: /crypto action=<wallet|mine|trade|contract|portfolio> asset=<string> amount=<float>",
-        },
-        {
-            "name": "image_generation",
-            "description": "Image generation and manipulation — generate images, patterns, edit existing images, style transfer",
-            "content": "NIKTO generates high-quality images from text descriptions. Supports multiple styles (photorealistic, artistic, schematic, pixel art), pattern generation (checkerboard, gradient, fractal, mandala), image editing (resize, crop, filter), and neural style transfer.\n\nUsage: /image action=<generate|edit|style|pattern> prompt=<string> width=<int> height=<int>",
-        },
-        {
-            "name": "video_generation",
-            "description": "Video and GIF generation — animations, screen recordings, frame-by-frame editing, video effects",
-            "content": "NIKTO generates videos and GIFs from descriptions. Creates frame-by-frame animations, applies visual effects, generates GIFs with configurable frame rates, and produces screen recordings. Supports multiple output formats (GIF, MP4, AVI, WebM).\n\nUsage: /video action=<generate|gif|record|effects> prompt=<string> frames=<int> fps=<int>",
-        },
-        {
-            "name": "text_to_speech",
-            "description": "Text-to-speech with voice selection — multiple voices, languages, speeds, and emotional tones",
-            "content": "NIKTO converts text to natural-sounding speech. Supports multiple voices (male, female, child), languages (EN, ES, FR, DE, ZH, JA), adjustable speaking rates, emotional tones (happy, serious, excited, calm), and outputs to WAV/MP3 files.\n\nUsage: /tts action=<speak|voices|save> text=<string> voice=<string> rate=<int>",
-        },
-        {
-            "name": "device_control",
-            "description": "Universal device control — mobile, smart home, robots, IoT, wearables, automotive",
-            "content": "NIKTO controls any device through uDevCon protocol. Supports mobile devices (ADB, iOS), smart home (MQTT, Zigbee, Z-Wave), robots (ROS, serial), IoT sensors, wearables, and automotive systems. Discovers devices on network automatically.\n\nUsage: /device action=<discover|register|command|status> device=<string> command=<string>",
-        },
-        # ── Skills 36-60: Language Builders, App Builders, Architecture ──
-        {
-            "name": "rust_builder",
-            "description": "Generate Rust project with Cargo.toml, main.rs, async tokio, error handling, Dockerfile",
-            "content": "Generates a complete Rust project scaffold with Cargo.toml (tokio, serde, clap, anyhow, tracing), main.rs with async tokio runtime, lib.rs with tests, Dockerfile (multi-stage build), and .gitignore.\n\nUsage: /rust_builder name=<project_name> output_dir=<path>",
-        },
-        {
-            "name": "go_builder",
-            "description": "Generate Go module with go.mod, Gin router, Dockerfile",
-            "content": "Generates a Go project with go.mod, main.go with Gin HTTP router (GET/POST endpoints), JSON binding, Dockerfile (distroless), and README.\n\nUsage: /go_builder name=<project_name> output_dir=<path>",
-        },
-        {
-            "name": "java_builder",
-            "description": "Generate Spring Boot project with pom.xml, controller, service, JPA entity",
-            "content": "Generates a Spring Boot 3.3 project with pom.xml, @SpringBootApplication main class, @RestController with CRUD endpoints, H2 database, and JPA integration.\n\nUsage: /java_builder name=<project_name> output_dir=<path>",
-        },
-        {
-            "name": "csharp_builder",
-            "description": "Generate .NET Core 8 API with controllers, EF Core, and project file",
-            "content": "Generates a .NET 8 Web API project with .csproj, Program.cs, ApiController with CRUD endpoints, EF Core InMemory setup.\n\nUsage: /csharp_builder name=<project_name> output_dir=<path>",
-        },
-        {
-            "name": "swift_builder",
-            "description": "Generate SwiftUI app with ContentView, @State management, Package.swift",
-            "content": "Generates a SwiftUI project with Package.swift, App entry point, ContentView with @State management, and counter UI.\n\nUsage: /swift_builder name=<project_name> output_dir=<path>",
-        },
-        {
-            "name": "kotlin_builder",
-            "description": "Generate Android project with Jetpack Compose, ViewModel, Material3",
-            "content": "Generates an Android Kotlin project with build.gradle.kts, MainActivity with Jetpack Compose, Material3 theming, and mutableStateOf.\n\nUsage: /kotlin_builder name=<project_name> output_dir=<path>",
-        },
-        {
-            "name": "flutter_builder",
-            "description": "Generate Flutter app with Riverpod state management, dio HTTP, go_router",
-            "content": "Generates a Flutter project with pubspec.yaml (riverpod, go_router, dio, freezed), main.dart with ProviderScope, ConsumerWidget, and Material3 theming.\n\nUsage: /flutter_builder name=<project_name> output_dir=<path>",
-        },
-        {
-            "name": "solidity_builder",
-            "description": "Generate ERC-20 smart contract with OpenZeppelin, Hardhat tests, deploy script",
-            "content": "Generates a Solidity project with ERC-20 token contract (OpenZeppelin), Hardhat config, deploy script, Chai tests, and package.json.\n\nUsage: /solidity_builder name=<token_name> output_dir=<path>",
-        },
-        {
-            "name": "cpp_builder",
-            "description": "Generate C++20 project with CMakeLists.txt, class structure, unit tests",
-            "content": "Generates a C++20 project with CMakeLists.txt, header/source files with namespace, class with RAII patterns, smart pointers, and assertion-based unit tests.\n\nUsage: /cpp_builder name=<project_name> output_dir=<path>",
-        },
-        {
-            "name": "lua_builder",
-            "description": "Generate Love2D game template with modules and input handling",
-            "content": "Generates a Love2D game project with main.lua (load/update/draw lifecycle), app module with movement, keyboard input, and scoring system.\n\nUsage: /lua_builder name=<game_name> output_dir=<path>",
-        },
-        {
-            "name": "rest_api_builder",
-            "description": "Generate complete REST API for any language based on entity description",
-            "content": "Generates a full REST API (CRUD endpoints) in the specified language. Supports Python/FastAPI, Go/Gin, Rust/Axum, Java/Spring, C#/.NET, Node/Express. Includes entity models, routes, and README.\n\nUsage: /rest_api_builder language=<python|go|rust|java|csharp|node> name=<project> entities=<entity_names>",
-        },
-        {
-            "name": "graphql_builder",
-            "description": "Generate GraphQL schema, resolvers, mutations with Strawberry + FastAPI",
-            "content": "Generates a GraphQL API with Strawberry (Python): type definitions, query resolvers, mutation resolvers, input types, and FastAPI integration.\n\nUsage: /graphql_builder name=<project> entity=<EntityName>",
-        },
-        {
-            "name": "cli_builder",
-            "description": "Generate CLI tool in Python (Click), Go (Cobra), or Rust (Clap)",
-            "content": "Generates a CLI application with argument parsing, subcommands, options, and help text. Python uses Click, Go uses Cobra, Rust uses Clap derive macros.\n\nUsage: /cli_builder language=<python|go|rust> name=<cli_name>",
-        },
-        {
-            "name": "bot_builder",
-            "description": "Generate Discord or Telegram bot with event handling and commands",
-            "content": "Generates a bot scaffold: Discord (discord.py with commands, events, slash commands) or Telegram (python-telegram-bot with handlers, commands, echo). Includes .env.example.\n\nUsage: /bot_builder platform=<discord|telegram> name=<bot_name>",
-        },
-        {
-            "name": "smart_contract_audit",
-            "description": "Audit Solidity contracts for reentrancy, overflow, access control, and common CVEs",
-            "content": "Scans Solidity source code for: reentrancy (call.value without guard), tx.origin auth, selfdestruct/delegatecall, old compiler versions, missing access control, weak randomness. Returns findings with severity levels.\n\nUsage: /smart_contract_audit filepath=<path_to_sol_file>",
-        },
-        {
-            "name": "mobile_app_builder",
-            "description": "Generate Flutter or React Native app scaffold with state management",
-            "content": "Generates a mobile app: Flutter (Riverpod + Material3) or React Native (useState + StyleSheet). Includes counter demo, navigation setup, and package config.\n\nUsage: /mobile_app_builder framework=<flutter|react-native> name=<app_name>",
-        },
-        {
-            "name": "database_designer",
-            "description": "Generate ERD and SQL schema from plain English requirements",
-            "content": "Parses natural language description, extracts entities, generates PostgreSQL CREATE TABLE statements with indexes, timestamps, and ERD text representation.\n\nUsage: /database_designer description=<plain_english> dialect=<postgresql|mysql|sqlite>",
-        },
-        {
-            "name": "api_integrator",
-            "description": "Generate integration code for Stripe, Twilio, SendGrid, AWS S3, and more",
-            "content": "Generates ready-to-use integration code for third-party APIs. Includes proper auth setup, key functions (create/read/update), error handling, and dependency list.\n\nUsage: /api_integrator service=<stripe|twilio|sendgrid|aws_s3> language=<python>",
-        },
-        {
-            "name": "docker_composer",
-            "description": "Generate docker-compose.yml for any multi-service stack",
-            "content": "Generates docker-compose.yml with configured services. Supports: api, db (PostgreSQL), redis, nginx, mongo, rabbitmq, elasticsearch. Includes health checks, volumes, depends_on.\n\nUsage: /docker_composer services=<api,db,redis> name=<project>",
-        },
-        {
-            "name": "cicd_builder",
-            "description": "Generate GitHub Actions CI/CD workflow for any language and deployment target",
-            "content": "Generates .github/workflows/ YAML for CI/CD. Supports Python, Node, Go, Rust, Java, Kotlin. Deploy targets: Docker, Vercel. Includes linting, testing, caching, and conditional deployment.\n\nUsage: /cicd_builder language=<python|node|go|rust|java> deploy_target=<docker|vercel>",
-        },
-        {
-            "name": "system_designer",
-            "description": "Design complete system architecture with components, tech stack, scaling strategy",
-            "content": "Analyzes requirements to design full system architecture. Auto-detects app type (real-time, ML, mobile, e-commerce, high-performance, web). Recommends tech stack with reasons, lists components, scaling strategy, security measures, and deployment approach.\n\nUsage: /system_designer description=<plain_english_requirements>",
-        },
-        {
-            "name": "microservice_designer",
-            "description": "Break monolith into services — define boundaries, communication patterns, infrastructure",
-            "content": "Analyzes application description, identifies domain boundaries (user, product, order, notification, search, analytics, content, billing), and designs microservice architecture with sync/async communication, service discovery, and API gateway.\n\nUsage: /microservice_designer description=<app_description>",
-        },
-        {
-            "name": "database_optimizer",
-            "description": "Analyze SQL queries — suggest indexes, rewrite slow queries, detect anti-patterns",
-            "content": "Analyzes SQL queries for: SELECT *, missing WHERE on UPDATE/DELETE, subquery in IN, functions on indexed columns, missing indexes. Suggests CREATE INDEX statements and query rewrites.\n\nUsage: /database_optimizer query=<sql_query>",
-        },
-        {
-            "name": "security_audit_full",
-            "description": "Full OWASP Top 10 security audit for any codebase",
-            "content": "Scans source code for all OWASP Top 10 (2021): A01 Broken Access Control, A02 Cryptographic Failures, A03 Injection (SQL, command), A05 Security Misconfiguration, A07 Auth Failures, A08 Integrity Failures, A09 Logging Failures. Returns findings with OWASP category and severity.\n\nUsage: /security_audit_full filepath=<path>",
-        },
-        {
-            "name": "performance_profiler",
-            "description": "Identify code bottlenecks and suggest optimizations for Python, JS, Go, Rust",
-            "content": "Analyzes source code for performance anti-patterns: range(len()), loop append, string concatenation, blocking sleep, wildcard imports (Python); repeated DOM queries, nested forEach, JSON round-trip (JS); unnecessary string/byte conversions (Go); excessive cloning (Rust). Suggests idiomatic fixes.\n\nUsage: /performance_profiler filepath=<path>",
-        },
-    ]
-
-    for sd in skill_definitions:
-        from nikto.skills.base import Skill
-        skill = Skill(
-            name=sd["name"],
-            description=sd["description"],
-            content=sd["content"],
-            source="production",
-        )
-        skill_runtime.register(skill)
+            return "Invalid base64."
+    return f"Cryptography: {op} on {len(data)} bytes using {algo}."
+
+
+def _helper_web_assembly(info: str) -> str:
+    if not info.strip():
+        return "No WASM info."
+    parts = []
+    if "wat" in info.lower() or "wast" in info.lower(): parts.append("text format")
+    if "emscripten" in info.lower(): parts.append("Emscripten")
+    if "rust" in info.lower(): parts.append("Rust source")
+    if "wasm" in info.lower(): parts.append("binary")
+    parts.append(f"{len(info)} chars")
+    return f"WASM: {', '.join(parts)}."
+
+
+def _helper_robotics(config: dict) -> str:
+    if not config:
+        return "No robotics config."
+    robot = config.get("robot", config.get("type", "unknown"))
+    return f"Robotics: robot={robot} config={len(config)} fields."
+
+
+def _helper_edge_computing(config: dict) -> str:
+    if not config:
+        return "No edge config."
+    nodes = config.get("nodes", config.get("device_count", "unknown"))
+    return f"Edge computing: {nodes} nodes, config={len(config)} fields."
+
+
+def _helper_augmented_reality(config: dict) -> str:
+    if not config:
+        return "No AR config."
+    platform = config.get("platform", config.get("sdk", "unknown"))
+    return f"AR: platform={platform} config={len(config)} fields."

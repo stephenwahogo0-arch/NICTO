@@ -1,3 +1,4 @@
-from nikto.providers.base import ModelProvider, create_provider
+"""NIKTO Providers Module."""
+from nikto.providers.base import create_provider, ModelProvider
 
-__all__ = ["ModelProvider", "create_provider"]
+__all__ = ["create_provider", "ModelProvider"]

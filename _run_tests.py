@@ -1,6 +1,6 @@
-"""Run NIKTO test suite and print summary."""
+"""Run KYROS test suite and print summary."""
 import sys, asyncio, time
-sys.path.insert(0, "packages/nikto-core/src")
+sys.path.insert(0, "packages/kyros-core/src")
 import test_nikto
 
 start = time.time()

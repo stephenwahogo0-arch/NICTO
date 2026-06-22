@@ -1,0 +1,228 @@
+{
+  "sound_synthesis": {
+    "content": "Sound synthesis generates audio from mathematical descriptions. Subtractive synthesis filters harmonically rich waveforms (sawtooth, square, triangle, noise). FM synthesis creates complex evolving timbres by modulating oscillator frequency with another oscillator. Wavetable synthesis cycles through sampled waveforms for evolving, animated sounds. Granular synthesis combines hundreds of short sound grains (1-100ms) for texture, time-stretching, and spectral manipulation effects.",
+    "metadata": {
+      "category": "music_synthesis",
+      "tags": [
+        "synthesis",
+        "fm",
+        "granular"
+      ]
+    }
+  },
+  "dsp": {
+    "content": "Digital Signal Processing manipulates audio signals programmatically. Core operations include convolution (reverberation, filtering through impulse response), FFT for frequency analysis and phase vocoding, and sample rate conversion for format changes. DSP filters include low-pass, high-pass, band-pass, notch, and comb in various topologies (biquad, state-variable, Moog ladder). Effects like delay, chorus, flanger, phaser, distortion, and bitcrushing shape raw sounds.",
+    "metadata": {
+      "category": "music_synthesis",
+      "tags": [
+        "dsp",
+        "filters",
+        "convolution"
+      ]
+    }
+  },
+  "midi": {
+    "content": "MIDI communicates musical performance data between devices and software. Messages include note on/off (velocity, pitch), control change (CC for modulation, volume, pan), program change (instrument selection), pitch bend (14-bit resolution), and SysEx (manufacturer-specific). MIDI 2.0 adds 32-bit resolution, bidirectional communication, per-note controllers, and property exchange. Standard MIDI Files store sequenced multi-track performances compactly.",
+    "metadata": {
+      "category": "music_synthesis",
+      "tags": [
+        "midi",
+        "protocol",
+        "sequencing"
+      ]
+    }
+  },
+  "audio_effects": {
+    "content": "Digital audio effects transform sound through signal processing. Reverb simulates acoustic spaces via convolution (impulse responses of real rooms) or algorithmic methods (plate, spring, hall, room, shimmer). Delay creates echoes with feedback, ping-pong, and modulation. Dynamics processing includes compressors (attack/release/ratio/threshold/knee), limiters (brickwall), expanders, and gates. EQ adjusts frequency balance with parametric, graphic, shelving, and notch filter types.",
+    "metadata": {
+      "category": "music_synthesis",
+      "tags": [
+        "effects",
+        "reverb",
+        "compression",
+        "eq"
+      ]
+    }
+  },
+  "spectral_analysis": {
+    "content": "Spectral analysis decomposes audio into frequency components via STFT, which applies FFT to overlapping windowed segments. Spectrograms visualize frequency content over time with color for magnitude. Phase vocoders manipulate STFT representation for time-stretching (changing duration without pitch), pitch-shifting (changing pitch without duration), and cross-synthesis (combining spectral envelope of one sound with excitation of another).",
+    "metadata": {
+      "category": "music_synthesis",
+      "tags": [
+        "spectral",
+        "fft",
+        "spectrogram",
+        "stft"
+      ]
+    }
+  },
+  "music_theory": {
+    "content": "Music theory provides the framework for understanding and composing music. Western harmony builds chords from scale degrees (I, ii, iii, IV, V, vi, vii°) with functional roles (tonic, subdominant, dominant). Counterpoint combines independent melodic lines following voice-leading rules (Fux species counterpoint, Palestrina style, Bach fugues). Rhythm is structured through meter (simple/compound, duple/triple/quadruple), tempo, subdivision, syncopation, and polyrhythm.",
+    "metadata": {
+      "category": "music_synthesis",
+      "tags": [
+        "music_theory",
+        "harmony",
+        "counterpoint"
+      ]
+    }
+  },
+  "generative_music": {
+    "content": "Generative music creates compositions algorithmically. Markov chains model note-to-note transition probabilities from training corpora for style-consistent generation. L-systems produce fractal musical structures through recursive string rewriting (grammar -> axiom + production rules -> tree/L-system music). Neural music generation uses autoregressive transformers (MusicGen, Jukebox) or diffusion models trained on audio to generate music from text prompts or genre/style conditioning.",
+    "metadata": {
+      "category": "music_synthesis",
+      "tags": [
+        "generative",
+        "markov",
+        "algorithmic"
+      ]
+    }
+  },
+  "music_information_retrieval": {
+    "content": "MIR extracts musical features from audio signals. Beat tracking detects tempo and downbeats using onset detection (spectral flux, complex domain) combined with autocorrelation or IIR comb filters. Chord estimation identifies harmonic content through chroma feature extraction and HMM-based sequence decoding. Key detection determines tonal center via Krumhansl-Schmuckler or Temperley profile correlation. Genre classification uses MFCC timbral features with CNN classifiers.",
+    "metadata": {
+      "category": "music_synthesis",
+      "tags": [
+        "mir",
+        "beat_tracking",
+        "chord_estimation"
+      ]
+    }
+  },
+  "audio_codecs": {
+    "content": "Audio codecs compress audio for efficient storage and transmission. Lossless codecs (FLAC, ALAC, WavPack, TAK) preserve original samples perfectly with 40-60% compression using linear prediction and Rice coding. Lossy codecs (MP3, AAC, Opus, Vorbis) remove perceptually irrelevant information using psychoacoustic models. Opus is the state-of-the-art general-purpose codec, excelling across all bitrates (6-510 kbps) with low latency, ideal for streaming and VoIP.",
+    "metadata": {
+      "category": "music_synthesis",
+      "tags": [
+        "codecs",
+        "compression",
+        "opus",
+        "flac"
+      ]
+    }
+  },
+  "sampling": {
+    "content": "Audio sampling captures and plays back recorded sounds programmatically. Samplers map audio recordings across keyboard ranges with velocity layers (multiple samples per note for dynamic expression), round-robin cycling, and key switching. Time-stretching changes duration without pitch via phase vocoding, elastic audio (zplane elastique), or PSOLA. Pitch-shifting preserves duration through resampling with interpolation, granular methods, or phase vocoder frequency manipulation.",
+    "metadata": {
+      "category": "music_synthesis",
+      "tags": [
+        "sampling",
+        "samplers",
+        "time_stretching"
+      ]
+    }
+  },
+  "modular_synthesis": {
+    "content": "Modular synthesis connects individual electronic modules via patch cables creating custom signal paths. Eurorack is the dominant format with hundreds of manufacturers and module types (VCO, VCF, VCA, envelope, LFO, sequencer, effects, utilities). CV/gate connections carry control voltages (0-10V for pitch, modulation) and gate signals (trigger, clock). West Coast synthesis (Buchla, Make Noise) emphasizes timbral modulation over traditional East Coast subtractive architecture.",
+    "metadata": {
+      "category": "music_synthesis",
+      "tags": [
+        "modular",
+        "eurorack",
+        "synthesis"
+      ]
+    }
+  },
+  "physical_modeling": {
+    "content": "Physical modeling synthesis simulates acoustic instruments mathematically. String models (Karplus-Strong, digital waveguides) simulate plucked/struck strings with delay lines, filters, and nonlinear elements for realistic decay and damping. Wind instrument models simulate bore acoustics with cylindrical/ conical sections, reed excitation as nonlinear function, and breath pressure envelope. Modal synthesis uses resonant bandpass filters to model vibrational modes of bars, plates, membranes.",
+    "metadata": {
+      "category": "music_synthesis",
+      "tags": [
+        "physical_modeling",
+        "acoustic",
+        "simulation"
+      ]
+    }
+  },
+  "tts": {
+    "content": "Text-to-Speech converts written text into spoken audio. Neural TTS systems (VITS, Tacotron 2 + WaveGlow, FastSpeech 2 + HiFi-GAN) generate natural-sounding speech with appropriate prosody, emphasis, and emotion. Voice cloning adapts TTS to target speakers using few-shot fine-tuning or speaker embedding conditioning (YourTTS, Coqui AI). Modern TTS supports multiple languages, voice styles (conversational, authoritative, cheerful), and control over speed, pitch, and volume.",
+    "metadata": {
+      "category": "music_synthesis",
+      "tags": [
+        "tts",
+        "speech_synthesis",
+        "voice"
+      ]
+    }
+  },
+  "audio_programming": {
+    "content": "Audio programming enables custom sound generation and processing. Python libraries include pyo (real-time audio server), sounddevice (PortAudio binding), pydub (easy audio manipulation), and librosa (analysis). C++ frameworks include JUCE (cross-platform audio applications, VST/AU/AAX plugins), Faust (functional DSP with automatic optimization), and RNBO (visual patching to C++ export). SuperCollider provides a real-time audio synthesis server with Smalltalk-derived language for algorithmic composition.",
+    "metadata": {
+      "category": "music_synthesis",
+      "tags": [
+        "audio_programming",
+        "juce",
+        "faust",
+        "supercollider"
+      ]
+    }
+  },
+  "vst_development": {
+    "content": "VST plugins integrate audio effects and instruments into DAWs. VST3 provides improved automation, multiple MIDI inputs/outputs, note expression, and sample-accurate timing. Plugin types include instruments (synthesizers, samplers, drum machines), effects (reverb, delay, dynamics, distortion, modulation), and MIDI processors (arpeggiators, chord generators, sequencers). JUCE and iPlug2 are popular C++ frameworks for cross-platform plugin development with VST3/AU/AAX/CLAP format support.",
+    "metadata": {
+      "category": "music_synthesis",
+      "tags": [
+        "vst",
+        "plugins",
+        "daw"
+      ]
+    }
+  },
+  "da_ws": {
+    "content": "DAWs provide comprehensive environments for recording, editing, mixing, and mastering. Ableton Live excels for electronic music and live performance with its session view and warping engine. Logic Pro provides comprehensive production tools exclusively on Mac with excellent stock plugins. Pro Tools is the industry standard for professional recording and post-production. FL Studio uses pattern-based workflow ideal for beat-making. Reaper is affordable, customizable, and lightweight with extensive scripting via EEL2/Lua/Python.",
+    "metadata": {
+      "category": "music_synthesis",
+      "tags": [
+        "daw",
+        "ableton",
+        "logic",
+        "pro_tools"
+      ]
+    }
+  },
+  "mastering": {
+    "content": "Mastering prepares final mixes for distribution. Key steps: EQ correction for tonal balance (adjusting over sonically analyzed reference tracks), stereo enhancement (widening, M/S processing for center/side separation), dynamic range compression (bus compression for glue, multiband compression for frequency-specific control), limiting for loudness targets (typically -14 LUFS for streaming, -9 LUFS for radio, peak below 0dBTP), dithering for bit-depth reduction, and format-specific encoding.",
+    "metadata": {
+      "category": "music_synthesis",
+      "tags": [
+        "mastering",
+        "loudness",
+        "dynamics"
+      ]
+    }
+  },
+  "mixing": {
+    "content": "Audio mixing balances individual tracks into a cohesive stereo mix. Level balancing sets relative volume with fader automation for dynamic changes. Panning positions sounds in the stereo field (LCR, spectrum-based, binaural). EQ carves frequency space to reduce masking between instruments (kick vs bass, guitar vs vocals). Compression glues the mix (bus compression 2:1, 2-6dB GR) and controls dynamics. Reverb/delay create depth from front to back. Subgroup bussing organizes related tracks for collective processing.",
+    "metadata": {
+      "category": "music_synthesis",
+      "tags": [
+        "mixing",
+        "eq",
+        "compression",
+        "automation"
+      ]
+    }
+  },
+  "score_notation": {
+    "content": "Music notation software transcribes compositions into standard sheet music. MuseScore is a free, open-source notation program supporting all standard notation elements. Dorico provides professional engraving with automatic spacing and voicing. LilyPond generates engraved sheet music from text input with typographic quality rivaling hand-engraving. ABC notation provides a compact text format for folk music and simple scores. MusicXML enables interchange between notation, sequencing, and analysis software via standard XML.",
+    "metadata": {
+      "category": "music_synthesis",
+      "tags": [
+        "notation",
+        "sheet_music",
+        "musicxml"
+      ]
+    }
+  },
+  "algorithmic_composition": {
+    "content": "Algorithmic composition uses formal processes to generate music without direct human note-by-note input. Stochastic methods (Iannis Xenakis) use probability distributions for pitch, rhythm, dynamics, and density. Cellular automata evolve musical patterns through state transitions according to rules (Conway's Game of Life as generative music). Genetic algorithms evolve populations of musical phrases through mutation, crossover, and fitness-based selection. Fractal geometry produces self-similar musical structures at multiple time scales through recursive iteration.",
+    "metadata": {
+      "category": "music_synthesis",
+      "tags": [
+        "algorithmic",
+        "composition",
+        "stochastic"
+      ]
+    }
+  }
+}

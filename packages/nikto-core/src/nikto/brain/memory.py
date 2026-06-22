@@ -1,694 +1,336 @@
-"""
-NiktoLongTermMemory — NICTO's Permanent Memory System.
+"""NIKTO Long-Term Memory — Persistent memory with graph connections, timeline, and semantic compression."""
 
-NICTO remembers everything. Every conversation. Every user.
-Every mistake. Every success. This is not session memory.
-This is permanent, growing, self-organizing memory.
-
-Three memory types working together:
-- Episodic: specific events and conversations
-- Semantic: facts and knowledge learned
-- Procedural: how to do things (skills and patterns)
-"""
-
-import asyncio
-from datetime import datetime
+import json
+import heapq
+import hashlib
+import uuid
+from datetime import datetime, timezone
 from typing import Optional
-from uuid import uuid4
+from collections import defaultdict, deque
 
-from .models import (
-    Memory, MemoryEvent, UserModel, Perception
-)
-
-
-class EpisodicMemory:
-    """
-    Memory of specific events and conversations.
-    
-    Stores the raw experience of interactions - what happened,
-    when, with whom. Used to recall past conversations and
-    understand user patterns over time.
-    """
-
-    def __init__(self):
-        """Initialize empty episodic memory store."""
-        self._memories: list[dict] = []
-        self._user_index: dict[str, list[int]] = {}
-
-    async def store(self, event: MemoryEvent) -> str:
-        """
-        Store a new episodic memory.
-        
-        Args:
-            event: The memory event to store
-            
-        Returns:
-            Memory ID
-        """
-        memory_id = str(uuid4())[:12]
-        
-        memory_data = {
-            "id": memory_id,
-            "input": event.input,
-            "response": event.response,
-            "domain": event.domain,
-            "complexity": event.complexity,
-            "user_id": event.user_id,
-            "timestamp": event.timestamp,
-        }
-        
-        self._memories.append(memory_data)
-        
-        # Index by user
-        if event.user_id:
-            if event.user_id not in self._user_index:
-                self._user_index[event.user_id] = []
-            self._user_index[event.user_id].append(len(self._memories) - 1)
-        
-        return memory_id
-
-    async def search(
-        self,
-        query: str,
-        limit: int = 10
-    ) -> list[Memory]:
-        """
-        Search episodic memories by content similarity.
-        
-        Args:
-            query: Search query
-            limit: Maximum results
-            
-        Returns:
-            List of relevant memories
-        """
-        query_words = set(query.lower().split())
-        
-        scored = []
-        for mem in self._memories:
-            content = f"{mem['input']} {mem['response']}".lower()
-            mem_words = set(content.split())
-            
-            overlap = len(query_words & mem_words)
-            if overlap > 0:
-                score = overlap / max(len(query_words), 1)
-                scored.append((score, mem))
-        
-        scored.sort(key=lambda x: x[0], reverse=True)
-        
-        return [
-            Memory(
-                id=mem["id"],
-                content=f"{mem['input']} -> {mem['response']}",
-                domain=mem["domain"],
-                timestamp=mem["timestamp"],
-                relevance_score=score
-            )
-            for score, mem in scored[:limit]
-        ]
-
-    async def delete_by_user(self, user_id: str) -> int:
-        """
-        Delete all memories for a specific user.
-        
-        Args:
-            user_id: User ID to delete memories for
-            
-        Returns:
-            Number of memories deleted
-        """
-        if user_id not in self._user_index:
-            return 0
-        
-        indices = self._user_index[user_id]
-        deleted = 0
-        
-        for idx in sorted(indices, reverse=True):
-            self._memories.pop(idx)
-            deleted += 1
-        
-        del self._user_index[user_id]
-        
-        # Rebuild index
-        self._rebuild_user_index()
-        
-        return deleted
-
-    def _rebuild_user_index(self) -> None:
-        """Rebuild user index after deletions."""
-        self._user_index = {}
-        for i, mem in enumerate(self._memories):
-            uid = mem.get("user_id")
-            if uid:
-                if uid not in self._user_index:
-                    self._user_index[uid] = []
-                self._user_index[uid].append(i)
-
-    async def count(self) -> int:
-        """Return total number of memories."""
-        return len(self._memories)
-
-
-class SemanticMemory:
-    """
-    Memory of facts and learned knowledge.
-    
-    Stores extracted facts, concepts, and generalizations
-    from interactions. Used for reasoning and understanding.
-    """
-
-    def __init__(self):
-        """Initialize empty semantic memory store."""
-        self._facts: list[dict] = []
-        self._topic_index: dict[str, list[int]] = {}
-
-    async def store(self, event: MemoryEvent) -> str:
-        """
-        Store extracted semantic information.
-        
-        Args:
-            event: The memory event to extract from
-            
-        Returns:
-            Memory ID
-        """
-        memory_id = str(uuid4())[:12]
-        
-        # Extract facts from the interaction
-        facts = self._extract_facts(event)
-        
-        for fact_text in facts:
-            fact_data = {
-                "id": str(uuid4())[:12],
-                "content": fact_text,
-                "domain": event.domain,
-                "timestamp": datetime.utcnow(),
-            }
-            self._facts.append(fact_data)
-            
-            # Index by domain
-            if event.domain not in self._topic_index:
-                self._topic_index[event.domain] = []
-            self._topic_index[event.domain].append(len(self._facts) - 1)
-        
-        return memory_id
-
-    def _extract_facts(self, event: MemoryEvent) -> list[str]:
-        """
-        Extract factual information from a memory event.
-        
-        Args:
-            event: The memory event
-            
-        Returns:
-            List of extracted facts
-        """
-        facts = []
-        
-        # Simple fact extraction based on patterns
-        text = event.input + " " + event.response
-        
-        # Extract programming language mentions
-        languages = ["python", "javascript", "java", "c++", "rust", "go"]
-        for lang in languages:
-            if lang.lower() in text.lower():
-                facts.append(f"User works with {lang}")
-        
-        # Extract domain expertise hints
-        if "security" in text.lower() or "hack" in text.lower():
-            facts.append("User interested in security")
-        
-        if "build" in text.lower() or "create" in text.lower():
-            facts.append("User is building something")
-        
-        # Extract tool mentions
-        tools = ["docker", "kubernetes", "git", "linux", "aws"]
-        for tool in tools:
-            if tool.lower() in text.lower():
-                facts.append(f"User uses {tool}")
-        
-        return facts
-
-    async def search(
-        self,
-        query: str,
-        limit: int = 10
-    ) -> list[Memory]:
-        """
-        Search semantic memories by content.
-        
-        Args:
-            query: Search query
-            limit: Maximum results
-            
-        Returns:
-            List of relevant memories
-        """
-        query_lower = query.lower()
-        
-        scored = []
-        for i, fact in enumerate(self._facts):
-            content = fact["content"].lower()
-            
-            # Calculate relevance
-            if query_lower in content:
-                score = 1.0
-            else:
-                query_words = set(query_lower.split())
-                fact_words = set(content.split())
-                overlap = len(query_words & fact_words)
-                score = overlap / max(len(query_words), 1)
-            
-            if score > 0:
-                scored.append((score, i, fact))
-        
-        scored.sort(key=lambda x: x[0], reverse=True)
-        
-        return [
-            Memory(
-                id=fact["id"],
-                content=fact["content"],
-                domain=fact["domain"],
-                timestamp=fact["timestamp"],
-                relevance_score=score
-            )
-            for score, i, fact in scored[:limit]
-        ]
-
-    async def delete_by_topic(self, topic: str) -> int:
-        """
-        Delete all facts for a specific topic.
-        
-        Args:
-            topic: Topic to delete
-            
-        Returns:
-            Number of facts deleted
-        """
-        if topic not in self._topic_index:
-            return 0
-        
-        indices = self._topic_index[topic]
-        deleted = len(indices)
-        
-        for idx in sorted(indices, reverse=True):
-            self._facts.pop(idx)
-        
-        del self._topic_index[topic]
-        
-        return deleted
-
-    async def count(self) -> int:
-        """Return total number of facts."""
-        return len(self._facts)
-
-
-class ProceduralMemory:
-    """
-    Memory of how to do things.
-    
-    Stores procedures, patterns, and skills - the knowledge
-    of HOW to perform tasks, not just facts about them.
-    """
-
-    def __init__(self):
-        """Initialize empty procedural memory store."""
-        self._procedures: list[dict] = []
-
-    async def store(self, event: MemoryEvent) -> str:
-        """
-        Store a new procedure.
-        
-        Args:
-            event: The memory event to extract from
-            
-        Returns:
-            Memory ID
-        """
-        memory_id = str(uuid4())[:12]
-        
-        # Extract procedures from the interaction
-        procedures = self._extract_procedures(event)
-        
-        for proc_text in procedures:
-            proc_data = {
-                "id": str(uuid4())[:12],
-                "content": proc_text,
-                "domain": event.domain,
-                "timestamp": datetime.utcnow(),
-                "uses": 0,
-            }
-            self._procedures.append(proc_data)
-        
-        return memory_id
-
-    def _extract_procedures(self, event: MemoryEvent) -> list[str]:
-        """
-        Extract procedural knowledge from a memory event.
-        
-        Args:
-            event: The memory event
-            
-        Returns:
-            List of extracted procedures
-        """
-        procedures = []
-        
-        text = event.input + " " + event.response
-        
-        # Look for code patterns
-        if "def " in event.response or "function " in event.response:
-            procedures.append("Writing code function")
-        
-        if "import " in event.response or "require(" in event.response:
-            procedures.append("Importing modules/packages")
-        
-        if "git" in text.lower() and ("commit" in text.lower() or "push" in text.lower()):
-            procedures.append("Git version control workflow")
-        
-        if "docker" in text.lower() and ("build" in text.lower() or "run" in text.lower()):
-            procedures.append("Docker container workflow")
-        
-        if "api" in text.lower() and ("request" in text.lower() or "endpoint" in text.lower()):
-            procedures.append("API request pattern")
-        
-        return procedures
-
-    async def search(
-        self,
-        query: str,
-        limit: int = 10
-    ) -> list[Memory]:
-        """
-        Search procedural memories by content.
-        
-        Args:
-            query: Search query
-            limit: Maximum results
-            
-        Returns:
-            List of relevant procedures
-        """
-        query_words = set(query.lower().split())
-        
-        scored = []
-        for proc in self._procedures:
-            content = proc["content"].lower()
-            proc_words = set(content.split())
-            
-            overlap = len(query_words & proc_words)
-            if overlap > 0:
-                # Boost frequently used procedures
-                score = (overlap / max(len(query_words), 1)) * (1 + proc["uses"] * 0.1)
-                scored.append((score, proc))
-        
-        scored.sort(key=lambda x: x[0], reverse=True)
-        
-        return [
-            Memory(
-                id=proc["id"],
-                content=proc["content"],
-                domain=proc["domain"],
-                timestamp=proc["timestamp"],
-                relevance_score=score
-            )
-            for score, proc in scored[:limit]
-        ]
-
-    async def increment_use(self, procedure_id: str) -> None:
-        """Track that a procedure was used."""
-        for proc in self._procedures:
-            if proc["id"] == procedure_id:
-                proc["uses"] += 1
-                break
-
-    async def count(self) -> int:
-        """Return total number of procedures."""
-        return len(self._procedures)
-
-
-class WorkingMemory:
-    """
-    In-session context memory.
-    
-    Holds information relevant to the current conversation
-    but not needed for long-term storage.
-    """
-
-    def __init__(self):
-        """Initialize empty working memory."""
-        self._context: dict = {}
-        self._recent: list[str] = []
-
-    def store(self, key: str, value: any) -> None:
-        """Store something in working memory."""
-        self._context[key] = value
-        self._recent.append(key)
-
-    def retrieve(self, key: str) -> Optional[any]:
-        """Retrieve from working memory."""
-        return self._context.get(key)
-
-    def clear(self) -> None:
-        """Clear working memory."""
-        self._context = {}
-        self._recent = []
-
-    def get_context(self) -> dict:
-        """Get all working memory context."""
-        return self._context.copy()
-
-
-class UserModelStore:
-    """
-    NICTO builds a personal model of every user it talks to.
-    
-    Tracks: expertise level, communication preferences,
-    past projects, recurring problems, preferred languages,
-    timezone hints, personality patterns.
-    """
-
-    def __init__(self):
-        """Initialize empty user model store."""
-        self._models: dict[str, UserModel] = {}
-
-    async def get(self, user_id: str) -> Optional[UserModel]:
-        """
-        Get user model for a specific user.
-        
-        Args:
-            user_id: User identifier
-            
-        Returns:
-            UserModel if exists, None otherwise
-        """
-        return self._models.get(user_id)
-
-    async def update(
-        self,
-        user_id: str,
-        event: MemoryEvent
-    ) -> None:
-        """
-        Update user model based on a new interaction.
-        
-        Args:
-            user_id: User identifier
-            event: Memory event from the interaction
-        """
-        if user_id not in self._models:
-            self._models[user_id] = UserModel(user_id=user_id)
-
-        model = self._models[user_id]
-
-        # Update expertise estimate
-        if event.domain:
-            model.update_expertise(event.domain, 1.0 - event.complexity)
-
-        # Track language preferences
-        if event.languages_mentioned:
-            model.note_language_preference(event.languages_mentioned)
-
-        # Track active projects
-        if event.project_references:
-            model.update_projects(event.project_references)
-
-        # Track interaction count and recency
-        model.interaction_count += 1
-        model.last_seen = datetime.utcnow()
-
-    async def delete(self, user_id: str) -> bool:
-        """
-        Delete user model.
-        
-        Args:
-            user_id: User identifier
-            
-        Returns:
-            True if deleted, False if not found
-        """
-        if user_id in self._models:
-            del self._models[user_id]
-            return True
-        return False
-
-    async def list_users(self) -> list[str]:
-        """Get list of all known user IDs."""
-        return list(self._models.keys())
+try:
+    from nikto.brain.models import MemoryFragment
+except ImportError:
+    try:
+        from kyros.brain.models import MemoryFragment
+    except ImportError:
+        from dataclasses import dataclass, field, asdict
+        @dataclass
+        class MemoryFragment:
+            content: str; tags: list = field(default_factory=list)
+            importance: float = 0.5; emotional_valence: float = 0.0
+            created: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+            last_accessed: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+            access_count: int = 0; strength: float = 1.0
+            id: str = field(default_factory=lambda: hashlib.sha256(uuid.uuid4().bytes).hexdigest()[:16])
+            metadata: dict = field(default_factory=dict)
+            def to_dict(self) -> dict: return asdict(self)
+            def access(self): self.access_count += 1; self.last_accessed = datetime.now(timezone.utc).isoformat()
+            def decay(self, rate=0.01): self.strength = max(0.0, self.strength - rate * (1.0 - self.importance))
+            def reinforce(self, amount=0.1): self.strength = min(1.0, self.strength + amount)
+            def __post_init__(self):
+                self.importance = max(0.0, min(1.0, self.importance))
+                self.strength = max(0.0, min(1.0, self.strength))
+                self.emotional_valence = max(-1.0, min(1.0, self.emotional_valence))
 
 
 class NiktoLongTermMemory:
-    """
-    NICTO's permanent memory system.
-    
-    Combines three memory types (episodic, semantic, procedural)
-    with user modeling and working memory into a unified system.
-    
-    All memories persist across sessions and are organized
-    for efficient retrieval based on relevance and recency.
-    """
 
-    def __init__(self):
-        """Initialize all memory stores."""
-        self.episodic = EpisodicMemory()
-        self.semantic = SemanticMemory()
-        self.procedural = ProceduralMemory()
-        self.working = WorkingMemory()
-        self.user_models = UserModelStore()
+    def __init__(self, max_size: int = 10000):
+        self.fragments = {}
+        self.max_size = max_size
+        self.index = {}
+        self.clusters = {}
+        self.graph = defaultdict(set)
+        self.timeline_index = []
 
-    async def remember(self, event: MemoryEvent) -> None:
-        """
-        Store a new memory across all relevant stores.
-        
-        Called after every interaction to ensure NICTO
-        remembers everything important.
-        
-        Args:
-            event: The memory event to store
-        """
-        # Always store the episode
-        await self.episodic.store(event)
-
-        # Extract and store semantic facts
-        await self.semantic.store(event)
-
-        # Extract and store procedures
-        await self.procedural.store(event)
-
-        # Update user model if user_id present
-        if event.user_id:
-            await self.user_models.update(event.user_id, event)
-
-    async def recall(
-        self,
-        perception: Perception,
-        limit: int = 10
-    ) -> list[Memory]:
-        """
-        Retrieve relevant memories for current context.
-        
-        Searches all three memory types and ranks by relevance.
-        Combines results and returns top memories.
-        
-        Args:
-            perception: Current perception context
-            limit: Maximum memories to return
-            
-        Returns:
-            List of ranked memories
-        """
-        # Search all memory types in parallel
-        results = await asyncio.gather(
-            self.episodic.search(perception.raw_input, limit),
-            self.semantic.search(perception.raw_input, limit),
-            self.procedural.search(perception.raw_input, limit),
+    def store(self, content: str, tags: list = None, importance: float = 0.5,
+              emotional_valence: float = 0.0) -> str:
+        mem = MemoryFragment(
+            content=content,
+            tags=tags or [],
+            importance=max(0.0, min(1.0, importance)),
+            emotional_valence=max(-1.0, min(1.0, emotional_valence)),
         )
+        self.fragments[mem.id] = mem
+        for tag in mem.tags:
+            if tag not in self.index:
+                self.index[tag] = []
+            self.index[tag].append(mem.id)
+        self._connect_to_graph(mem)
+        self.timeline_index.append(mem.id)
+        if len(self.fragments) > self.max_size:
+            self._evict()
+        return mem.id
 
-        all_memories = []
-        for result_set in results:
-            all_memories.extend(result_set)
+    def _connect_to_graph(self, mem: MemoryFragment):
+        for other_id, other in self.fragments.items():
+            if other_id == mem.id:
+                continue
+            shared_tags = set(mem.tags) & set(other.tags)
+            if shared_tags:
+                self.graph[mem.id].add(other_id)
+                self.graph[other_id].add(mem.id)
 
-        # Rank by relevance + recency
-        ranked = self._rank_memories(all_memories, perception)
-        return ranked[:limit]
+    # ── Graph Methods ─────────────────────────────────────────────────
 
-    def _rank_memories(
-        self,
-        memories: list[Memory],
-        perception: Perception
-    ) -> list[Memory]:
-        """
-        Rank memories by relevance and recency.
-        
-        Combines relevance score with recency bonus.
-        """
-        now = datetime.utcnow()
-        
-        scored = []
-        for mem in memories:
-            # Calculate recency bonus (up to 0.3)
-            age = (now - mem.timestamp).total_seconds()
-            recency_bonus = max(0, 0.3 - (age / 86400) * 0.1)  # Decay over days
-            
-            # Domain bonus if matches current context
-            domain_bonus = 0.2 if mem.domain == perception.domain else 0
-            
-            final_score = mem.relevance_score + recency_bonus + domain_bonus
-            scored.append((final_score, mem))
-        
-        scored.sort(key=lambda x: x[0], reverse=True)
-        
-        return [mem for _, mem in scored]
+    def get_connected(self, memory_id: str, depth: int = 1) -> dict:
+        if memory_id not in self.fragments:
+            return {"error": "Memory not found", "nodes": []}
+        visited = {memory_id}
+        queue = deque([(memory_id, 0)])
+        nodes = []
+        while queue:
+            current, d = queue.popleft()
+            if d >= depth:
+                continue
+            for neighbor in self.graph.get(current, set()):
+                if neighbor not in visited and neighbor in self.fragments:
+                    visited.add(neighbor)
+                    mem = self.fragments[neighbor]
+                    nodes.append({
+                        "id": neighbor,
+                        "content": mem.content[:80],
+                        "tags": mem.tags,
+                        "importance": mem.importance,
+                        "distance": d + 1,
+                    })
+                    queue.append((neighbor, d + 1))
+        return {"source_id": memory_id, "depth": depth, "connected_count": len(nodes), "nodes": nodes}
 
-    async def recall_user(self, user_id: str) -> Optional[UserModel]:
-        """
-        Get everything NICTO knows about a specific user.
-        
-        Args:
-            user_id: User identifier
-            
-        Returns:
-            UserModel with all known information
-        """
-        return await self.user_models.get(user_id)
+    def shortest_path(self, mem1_id: str, mem2_id: str) -> Optional[list]:
+        if mem1_id not in self.fragments or mem2_id not in self.fragments:
+            return None
+        if mem1_id == mem2_id:
+            return [mem1_id]
+        queue = deque([(mem1_id, [mem1_id])])
+        visited = {mem1_id}
+        while queue:
+            current, path = queue.popleft()
+            for neighbor in self.graph.get(current, set()):
+                if neighbor == mem2_id:
+                    return path + [neighbor]
+                if neighbor not in visited:
+                    visited.add(neighbor)
+                    queue.append((neighbor, path + [neighbor]))
+        return None
 
-    async def forget(
-        self,
-        user_id: str = None,
-        topic: str = None
-    ) -> None:
-        """
-        Selective forgetting — NICTO can forget specific things.
-        
-        Can forget by user (all their memories) or by topic
-        (all semantic facts about a topic).
-        
-        Args:
-            user_id: Optional user ID to forget
-            topic: Optional topic to forget
-        """
-        if user_id:
-            await self.user_models.delete(user_id)
-            await self.episodic.delete_by_user(user_id)
-        
-        if topic:
-            await self.semantic.delete_by_topic(topic)
-
-    async def get_memory_stats(self) -> dict:
-        """
-        Get statistics about NICTO's memory.
-        
-        Returns:
-            Dictionary with memory statistics
-        """
+    def memory_graph_summary(self) -> dict:
+        if not self.graph:
+            return {"nodes": 0, "edges": 0, "avg_degree": 0}
+        total_edges = sum(len(neighbors) for neighbors in self.graph.values())
         return {
-            "episodic_count": await self.episodic.count(),
-            "semantic_count": await self.semantic.count(),
-            "procedural_count": await self.procedural.count(),
-            "users_tracked": len(self._models) if hasattr(self, '_models') else 0,
+            "nodes": len(self.graph),
+            "edges": total_edges // 2,
+            "avg_degree": round(total_edges / max(len(self.graph), 1), 2),
         }
 
-    # Property to access user_models' internal dict for stats
-    @property
-    def _models(self):
-        return self.user_models._models
+    # ── Timeline Methods ──────────────────────────────────────────────
+
+    def timeline(self, limit: int = 20, offset: int = 0) -> list:
+        ids = self.timeline_index[offset:offset + limit]
+        result = []
+        for mid in ids:
+            mem = self.fragments.get(mid)
+            if mem:
+                result.append(mem.to_dict())
+        return result
+
+    def timeline_between(self, start_iso: str, end_iso: str) -> list:
+        result = []
+        for mem in self.fragments.values():
+            if start_iso <= mem.created <= end_iso:
+                result.append(mem.to_dict())
+        return sorted(result, key=lambda m: m["created"])
+
+    def timeline_around(self, memory_id: str, window: int = 5) -> dict:
+        if memory_id not in self.timeline_index:
+            return {"error": "Memory not found in timeline"}
+        idx = self.timeline_index.index(memory_id)
+        start = max(0, idx - window)
+        end = min(len(self.timeline_index), idx + window + 1)
+        before = []
+        after = []
+        target = None
+        for i in range(start, end):
+            mid = self.timeline_index[i]
+            mem = self.fragments.get(mid)
+            if not mem:
+                continue
+            entry = {"id": mid, "content": mem.content[:80], "created": mem.created}
+            if i < idx:
+                before.append(entry)
+            elif i > idx:
+                after.append(entry)
+            else:
+                target = entry
+        return {"target": target, "before": before, "after": after}
+
+    # ── Semantic Compression ──────────────────────────────────────────
+
+    def compress(self, tags: list = None, max_entries: int = 10) -> list:
+        candidates = list(self.fragments.values())
+        if tags:
+            candidates = [m for m in candidates if any(t in m.tags for t in tags)]
+        candidates.sort(key=lambda m: -m.importance)
+        candidates = candidates[:max_entries]
+        groups = defaultdict(list)
+        for mem in candidates:
+            primary_tag = mem.tags[0] if mem.tags else "general"
+            groups[primary_tag].append(mem)
+        summaries = []
+        for tag, group in groups.items():
+            group.sort(key=lambda m: -m.importance)
+            total_importance = sum(m.importance for m in group)
+            top = group[0]
+            summaries.append({
+                "tag": tag,
+                "count": len(group),
+                "total_importance": round(total_importance, 2),
+                "compressed": f"[{tag}] {top.content[:150]} (+{len(group) - 1} related)",
+                "time_span": f"{group[-1].created[:10]} to {group[0].created[:10]}",
+            })
+        return summaries
+
+    # ── Core Methods ──────────────────────────────────────────────────
+
+    def recall(self, query: str, top_k: int = 10) -> list:
+        q = query.lower()
+        scored = []
+        for mem in self.fragments.values():
+            score = 0.0
+            if q in mem.content.lower():
+                score += mem.importance * 0.5
+                score += (len(q) / max(len(mem.content), 1)) * 0.3
+            for tag in mem.tags:
+                if q in tag.lower():
+                    score += 0.2
+            score *= mem.strength
+            score *= (1.0 + 0.1 * mem.access_count)
+            if score > 0:
+                scored.append((score, mem))
+        scored.sort(key=lambda x: -x[0])
+        top = scored[:top_k]
+        for _, mem in top:
+            mem.access()
+        return [mem.to_dict() for _, mem in top]
+
+    def remember(self, memory_id: str) -> Optional[dict]:
+        if memory_id in self.fragments:
+            self.fragments[memory_id].access()
+            return self.fragments[memory_id].to_dict()
+        return None
+
+    def forget(self, memory_id: str):
+        if memory_id in self.fragments:
+            mem = self.fragments[memory_id]
+            for tag in mem.tags:
+                if tag in self.index and memory_id in self.index[tag]:
+                    self.index[tag].remove(memory_id)
+            self.graph.pop(memory_id, None)
+            for neighbors in self.graph.values():
+                neighbors.discard(memory_id)
+            if memory_id in self.timeline_index:
+                self.timeline_index.remove(memory_id)
+            del self.fragments[memory_id]
+
+    def consolidate(self):
+        for mem in self.fragments.values():
+            mem.decay(rate=0.005 * (1.0 - mem.importance))
+        self._cluster()
+        self._prune_graph()
+
+    def _prune_graph(self):
+        valid_ids = set(self.fragments.keys())
+        for node_id in list(self.graph.keys()):
+            if node_id not in valid_ids:
+                del self.graph[node_id]
+        for node_id in self.graph:
+            self.graph[node_id] = {n for n in self.graph[node_id] if n in valid_ids}
+
+    def _cluster(self):
+        self.clusters = {}
+        for mem in self.fragments.values():
+            for tag in mem.tags:
+                if tag not in self.clusters:
+                    self.clusters[tag] = []
+                self.clusters[tag].append(mem.id)
+
+    def _evict(self):
+        scored = [(mem.strength * mem.importance, mem.id) for mem in self.fragments.values()]
+        heapq.heapify(scored)
+        while len(self.fragments) > self.max_size * 0.9:
+            _, vid = heapq.heappop(scored)
+            self.forget(vid)
+
+    # ── Search Methods ────────────────────────────────────────────────
+
+    def search_by_tag(self, tag: str) -> list:
+        ids = self.index.get(tag, [])
+        return [self.fragments[vid].to_dict() for vid in ids if vid in self.fragments]
+
+    def search_by_emotional_valence(self, min_valence: float = -1.0, max_valence: float = 1.0) -> list:
+        return [
+            mem.to_dict() for mem in self.fragments.values()
+            if min_valence <= mem.emotional_valence <= max_valence
+        ]
+
+    def search_by_importance(self, min_importance: float = 0.0) -> list:
+        return [
+            mem.to_dict() for mem in self.fragments.values()
+            if mem.importance >= min_importance
+        ]
+
+    def summarize(self) -> dict:
+        return {
+            "total_memories": len(self.fragments),
+            "unique_tags": len(self.index),
+            "clusters": len(self.clusters),
+            "graph_nodes": len(self.graph),
+            "graph_edges": sum(len(v) for v in self.graph.values()) // 2,
+            "timeline_length": len(self.timeline_index),
+            "avg_importance": sum(m.importance for m in self.fragments.values()) / max(len(self.fragments), 1),
+            "avg_strength": sum(m.strength for m in self.fragments.values()) / max(len(self.fragments), 1),
+        }
+
+    def save(self) -> dict:
+        return {
+            "fragments": {vid: mem.to_dict() for vid, mem in self.fragments.items()},
+            "max_size": self.max_size,
+            "graph": {k: list(v) for k, v in self.graph.items()},
+            "timeline_index": self.timeline_index[:],
+        }
+
+    def load(self, data: dict):
+        self.max_size = data.get("max_size", 10000)
+        self.fragments = {}
+        self.index = {}
+        self.clusters = {}
+        self.graph = defaultdict(set)
+        self.timeline_index = data.get("timeline_index", [])
+        for vid, mem_dict in data.get("fragments", {}).items():
+            mem = MemoryFragment(**mem_dict)
+            self.fragments[vid] = mem
+            for tag in mem.tags:
+                if tag not in self.index:
+                    self.index[tag] = []
+                self.index[tag].append(vid)
+        for node_id, neighbors in data.get("graph", {}).items():
+            self.graph[node_id] = set(neighbors)
+        self._cluster()
+
+    def export(self) -> dict:
+        return {vid: mem.to_dict() for vid, mem in self.fragments.items()}
+
+    def import_memories(self, data: dict):
+        for vid, mem_dict in data.items():
+            if vid in self.fragments:
+                continue
+            mem = MemoryFragment(**mem_dict)
+            self.fragments[vid] = mem
+            for tag in mem.tags:
+                if tag not in self.index:
+                    self.index[tag] = []
+                self.index[tag].append(vid)
+            self._connect_to_graph(mem)
+            self.timeline_index.append(vid)

@@ -1,298 +1,237 @@
-# NIKTO — AI System
+# NICTO — Autonomous AI Platform
 
-**NIKTO is not an AI agent. NIKTO is an AI system.**
+**NICTO is not an AI agent. NICTO is an AI system.**
 
-A unified, self-improving artificial intelligence system that integrates the capabilities of every major AI into a single autonomous runtime — chat, code, search, creation, cybersecurity, scientific computing, and a living desktop avatar.
-
-> "I am NIKTO. I am a complete, autonomous artificial intelligence system."
+A unified, self-improving artificial intelligence platform with its own cognitive architecture (NICTO Hyperbrain v2.0), a 4-model inference pipeline (Kyros/Omega/Main/X), a 7-agent frontier system (NICTO X), a professional game engine, and a complete Colab-based training pipeline for fine-tuning foundation models.
 
 ---
 
-## What NIKTO Is
+## Project Status
 
-NIKTO is a full-spectrum AI system combining capabilities from across the AI landscape:
-
-| Domain | Capability |
-|--------|-----------|
-| **Chat & Assistant** | Natural conversation, brainstorming, analysis — like Gemini, ChatGPT, Claude |
-| **Code & Development** | Full software engineering, debugging, architecture — like GitHub Copilot, Devin, Cursor |
-| **Research & Search** | Live web search, data analysis, citations — like Perplexity, Cohere |
-| **Creative Generation** | Images, video, audio, 3D, music — like Midjourney, DALL-E, Sora, Suno |
-| **Cybersecurity** | Full pentesting arsenal: Nmap, Gobuster, SQLMap, Metasploit, and more |
-| **Scientific Computing** | Advanced mathematics, physics, biology, chemistry simulations |
-| **Headless Avatar** | Animated desktop presence with webcam vision, screen control, natural interaction |
-| **Multilingual AI** | 55+ language auto-detection, 30+ UI i18n translations, 75+ language selector |
-| **IBM Quantum** | Real QPU access via Qiskit Runtime with automatic simulator fallback |
-| **Contactless Sensing** | Wi-Fi gesture recognition (11 gestures), sleep monitoring, fall detection |
-| **Quantum Circuits** | 13 pre-built circuit factories: Bell, GHZ, QFT, Grover, Deutsch-Jozsa, and more |
+| Component | Status | Tests |
+|-----------|--------|-------|
+| 4-Model Pipeline (Kyros/Omega/Main/X) | ✅ Verified | 100% pass |
+| NICTO X (7 agents, neural core, reasoning) | ✅ Verified | 66/66 pass |
+| Game Engine (18+ genres, procedural) | ✅ Verified | 17/18 pass |
+| Colab Training Pipeline | ✅ Ready | — |
+| GGUF Integration | ✅ Ready | — |
+| Desktop App (React/Tauri) | ✅ Builds | — |
 
 ---
 
-## Core Architecture
+## Architecture
 
-### 6-Brain Ensemble (HyperBrain)
-NIKTO runs **6 specialized brains in parallel**, each with 28 brain regions:
+```
+┌─────────────────────────────────────────────────────────────┐
+│                        NICTO SYSTEM                          │
+├──────────────────┬──────────────────┬───────────────────────┤
+│   nikto-core     │    nicto-x       │     nicto-game        │
+│   (Brain AI)     │   (Frontier)     │    (Game Engine)      │
+├──────────────────┼──────────────────┼───────────────────────┤
+│   NiktoBrain     │  NictoXOrch      │   GameDirector        │
+│   10 subsystems  │  7 agents        │   11 subsystems       │
+│   4-model API    │  NeuralCore      │   18+ genres          │
+│   Model routing  │  MoE (8 experts) │   Procedural gen      │
+└──────────────────┴──────────────────┴───────────────────────┘
+```
 
-- **Primary Brain** — General reasoning, decision-making, task execution
-- **Analytical Brain** — Deep analysis, logic, pattern recognition
-- **Creative Brain** — Novel ideas, artistic generation, lateral thinking
-- **Strategic Brain** — Long-term planning, resource allocation
-- **Knowledge Brain** — Factual recall, research, information synthesis
-- **Intuitive Brain** — Gut-feeling decisions, rapid pattern matching
+### 4-Model Pipeline
 
-Each brain has **28 regions** (18 core + 10 advanced) including Frontal Lobe, Hippocampus, Amygdala, RAS, Insula, Precuneus, DMN, and more.
+```
+Request → X-Model-Id header → Unified Server (port 5000)
+  ├── ⚡ Kyros  → process_kyros()   → Identity + Memory     (0.6ms)
+  ├── ⚖️ Omega  → process()         → Full NiktoBrain       (2.9ms)
+  ├── 🔧 Main   → process_main()    → + Security Scanner    (3.0ms)
+  └── 🚀 X      → process_x()       → NictoXOrchestrator    (2.4s)
+```
 
-### 28 Brain Regions
-Core: Frontal, Parietal, Occipital, Temporal, Thalamus, Hypothalamus, Amygdala, Hippocampus, Basal Ganglia, Cerebellum, Midbrain, Pons, Medulla, Cerebral Cortex, Gyri & Sulci, Corpus Callosum, Meninges, Ventricles
-Advanced: RAS, Insula, Cingulate, Pineal, Pituitary, Broca, Angular Gyrus, Fusiform, Precuneus, Default Mode Network
+---
 
-### Headless Avatar
-NIKTO's living desktop presence — a transparent, always-on-top animated character that:
-- Moves around your desktop
-- Shows expressions and poses (idle, working, talking, thinking, celebrating)
-- Sees via webcam (face detection, gaze tracking)
-- Controls desktop (types, clicks, opens apps, manages windows)
-- Speaks via TTS with lip-sync animation
+## Repository Structure
+
+```
+NICTO/
+├── packages/
+│   ├── nikto-core/          # Brain AI: NiktoBrain, cognitive subsystems, API server
+│   │   └── src/nikto/
+│   │       ├── brain/       # 10 cognitive subsystems (identity, memory, emotion...)
+│   │       ├── server.py    # Unified API server (4-model routing)
+│   │       ├── run_all.py   # Server launcher
+│   │       ├── security/    # Scanner, exploit DB, threat intel
+│   │       ├── autopilot/   # Autonomous operation
+│   │       └── builder/     # Codegen, project scaffolding
+│   ├── nicto-x/             # Frontier AI: neural core, agents, reasoning
+│   │   └── src/nicto_x/
+│   │       ├── neural/      # NeuralCore (MoE transformer, numpy-accelerated)
+│   │       ├── agents/      # 7 agents (Research, Coding, Planning, Evaluation, Memory, Vision, Security)
+│   │       ├── reasoning/   # TreeOfThought, SelfReflection, ConfidenceEstimator
+│   │       ├── memory/      # Episodic, Semantic, Working, Consolidation
+│   │       ├── knowledge/   # KnowledgeGraph, VectorStore
+│   │       ├── software/    # 8-language code generation
+│   │       ├── research/    # Literature review, hypothesis gen
+│   │       └── distributed/ # Worker pool, task queue
+│   ├── nicto-game/          # Game engine: procedural generation, audio, export
+│   │   └── src/nicto_game/
+│   │       ├── core/        # GameDirector, config, world gen
+│   │       ├── audio/       # Procedural WAV synthesis
+│   │       ├── codegen/     # Pygame code generation
+│   │       └── export/      # Multi-platform export
+│   └── nikto-desktop/       # Desktop app (React + Tauri + Vite)
+│       └── src/
+│           ├── components/  # ModelSelector, CredentialManager, ChatView
+│           ├── config/      # 4-model configuration
+│           └── utils/       # API client with X-Model-Id routing
+├── nicto_neural/            # Training infrastructure, neural modules
+│   ├── training_data/       # ChatML datasets (361K entries)
+│   ├── train_nicto.py       # Unsloth LoRA training pipeline
+│   ├── build_training_data.py  # ChatML data generation
+│   └── build_super_data_v3.py  # 57-domain synthetic data
+├── nikto_cli/               # Command-line interface
+├── scripts/                 # Build, test, deployment scripts
+│   ├── kaggle_prepare_data.py     # Data subset splitting
+│   ├── colab_train_all.py         # Colab training pipeline
+│   ├── integrate_gguf.py          # GGUF weight integration
+│   └── train_and_verify_all_models.py  # Multi-model benchmark
+├── docs/                    # Documentation
+│   ├── architecture.md      # System architecture guide
+│   ├── setup.md             # Installation guide
+│   ├── training.md          # Training guide
+│   └── development.md       # Developer guide
+├── kaggle_data/             # Training data subsets (gitignored)
+├── notebooks/               # Colab notebooks
+├── datasets/                # Dataset documentation
+├── training/                # Training infrastructure docs
+├── evaluation/              # Benchmark and evaluation docs
+├── agents/                  # Agent system docs
+├── memory/                  # Memory system docs
+├── tools/                   # Tool system docs
+├── deployment/              # Deployment configuration
+└── configs/                 # Configuration files
+```
+
+---
+
+## Cognitive Architecture (NiktoBrain)
+
+| Subsystem | Function | File |
+|-----------|----------|------|
+| **Identity** | Self-concept, personality, core values | `brain/identity.py` |
+| **Knowledge** | Fact/concept/belief store, inference engine | `brain/knowledge.py` |
+| **Memory** | Tag-indexed, importance-scored, decay + consolidation | `brain/memory.py` |
+| **Emotion** | Valence/arousal model, trigger learning | `brain/emotion.py` |
+| **Conscience** | Moral reasoning, ethical rules, dilemma detection | `brain/conscience.py` |
+| **Reasoner** | 10 thinking styles, chain-of-thought, metacognition | `brain/reasoner.py` |
+| **Language** | Tokenization, entity extraction, sentiment, intent | `brain/language.py` |
+| **Learner** | Skill acquisition, mastery tracking, curiosity | `brain/learner.py` |
+| **Goals** | Hierarchical goal management, prioritization | `brain/goals.py` |
+| **Truth Engine** | Fact verification, contradiction detection | `brain/truth_engine.py` |
+| **Dream Steerer** | Memory consolidation, pattern extraction | `dream/steerer.py` |
+| **Performance** | Time-series metrics, trend analysis | `metrics/performance_graph.py` |
+| **Meta-Cognition** | Self-awareness, bias detection, quality assessment | `brain/meta_cognition.py` |
+| **Eagle Eye** | Pattern detection, anomaly/threat scanning | `eagle_eye/enhanced_eye.py` |
+| **Future Engine** | Trend extrapolation, Bayesian prediction | `prediction/future_engine.py` |
+
+---
+
+## NICTO X — Frontier Agent System
+
+| Agent | Responsibility | Capabilities |
+|-------|---------------|--------------|
+| **Research** | Web search, literature review | DuckDuckGo + Wikipedia, deep search, gap analysis |
+| **Coding** | Multi-language code generation | Python, JS, TS, Rust, Go, Java, C++, Swift |
+| **Planning** | Task decomposition | Recursive decomposition, dependency tracking |
+| **Evaluation** | Response grading | 6-criterion rubric, A-F scoring |
+| **Memory** | Retrieval and consolidation | Episodic search, semantic query, working memory |
+| **Vision** | Image analysis | Color histograms, edge detection, OCR |
+| **Security** | Vulnerability detection | SQLi/XSS patterns, 17 port signatures, CVE lookup |
+
+**Neural Core**: MoE transformer (8 experts, top-2 routing, 8-head attention, 131K token context, numpy-accelerated 70ms inference)
+
+---
+
+## Game Engine
+
+18+ genres, procedural generation, multi-platform export:
+
+| Genre | Description |
+|-------|-------------|
+| FPS | Raycasting 3D engine |
+| RPG | Top-down with quests, inventory |
+| Platformer | Side-scrolling with physics |
+| Racer | Top-down with AI opponents |
+| Puzzle | Match-3 mechanics |
+| Tower Defense | Wave-based, upgradeable towers |
+| Fighter | Versus combat with combos |
+| Survival | Resource management |
+| Stealth | Line-of-sight, hiding |
+| Open World | Procedural terrain, biomes |
+| Dungeon Crawler | Room-corridor generation |
+| Simulation | Life sim with needs/relationships |
 
 ---
 
 ## Quick Start
 
 ```bash
-# Clone the repository
-git clone https://github.com/stephenwahogo0-arch/NICTO.git
-cd NICTO
-
-# Install dependencies
+# 1. Install dependencies
 pip install -e packages/nikto-core
+pip install -e packages/nicto-x
+pip install -e packages/nicto-game
 
-# Run the full test suite
-python test_nikto.py
+# 2. Start API server (all 4 models)
+python packages/nikto-core/src/nikto/run_all.py --no-auth
 
-# Start NIKTO
-python -m nikto
-```
+# 3. Test with different models
+curl -X POST http://127.0.0.1:5000/chat \
+  -H "X-Model-Id: nicto_kyros" \
+  -d '{"message":"Hello, what is AI?"}'
 
-### Testing NIKTO on Your PC
+curl -X POST http://127.0.0.1:5000/chat \
+  -H "X-Model-Id: nicto_main" \
+  -d '{"message":"Scan this for vulnerabilities: SELECT * FROM users WHERE id=1"}'
 
-```bash
-# Run the comprehensive 745+ feature test suite
-python test_nikto.py
+# 4. Desktop app
+cd packages/nikto-desktop && npm install && npm run dev
 
-# Check module imports
-python -c "from nikto import *; print('NIKTO AI System loaded successfully')"
-
-# Test headless avatar (graphical mode)
-python -c "
-from nikto.avatar.engine import AvatarEngine
-ae = AvatarEngine()
-print('Avatar engine ready')
-print('Animations:', [a.value for a in ae.anim_player.current_anim.__class__])
-"
+# 5. Run verification
+python packages/nicto-x/tests/test_all.py
+python scripts/train_and_verify_all_models.py
 ```
 
 ---
 
-## Features
+## Training on Colab
 
-### 745+ Verified Capabilities
+1. Open `colab_nicto_training.ipynb` in Google Colab with GPU runtime
+2. Trains 4 base models (Phi-3, Llama-3.2, Qwen2.5-7B, Mistral-7B) × 5 adapters each
+3. Outputs GGUF files to Google Drive
+4. Integrate with `python scripts/integrate_gguf.py`
 
-| Module | Tests | Status |
-|--------|-------|--------|
-| HyperBrain (6 brains × 28 regions) | 100+ | ✅ |
-| Brain Training & Optimization | 50+ | ✅ |
-| Headless Avatar System | 48 | ✅ |
-| 87 Production Skills | 10+ | ✅ |
-| Self-Repair Engine | 4 | ✅ |
-| Code Generation Engine | 4 | ✅ |
-| Continuous Improvement | 5 | ✅ |
-| Resilience (365-day uptime) | 11 | ✅ |
-| Diagnostics & Health Monitor | 12 | ✅ |
-| 5 Playable Games (Pong, Snake, Tetris, Platformer, RPG) | 23 | ✅ |
-| Orchestrator (sub-agent management) | 8 | ✅ |
-| Memory Persistence | 3 | ✅ |
-| Security (ASL-3, SIEM, MCP Sandbox) | 6 | ✅ |
-| Crypto Earning Wallet & Miner | 3 | ✅ |
-| Device Control (uDevCon) | 10 | ✅ |
-| Bio-Medical Features | 60 | ✅ |
-| Consciousness Features | 32 | ✅ |
-| Physics & Reality Features | 28 | ✅ |
-| Breakthrough Features | 22 | ✅ |
+**Training data**: 361,800 ChatML entries across 57 domains (super_v3)
 
 ---
 
-## Headless Avatar Command Reference
+## Model Performance Comparison
 
-```python
-from nikto.avatar.engine import AvatarEngine
-
-ae = AvatarEngine()
-
-# Show avatar on desktop
-ae.start_avatar(x=100, y=100)
-
-# Move to position
-ae.move_to(500, 300)
-
-# Move to corner
-ae.move_to_corner("bottom_right")
-
-# Change animation
-ae.set_animation("talking", loop=True)
-ae.set_animation("celebrating", loop=False)
-
-# Change expression
-ae.set_expression("happy")
-ae.set_expression("focused")
-
-# Desktop control
-ae.type_text("Hello, I am NIKTO")
-ae.open_app("notepad.exe")
-ae.click(x=100, y=200)
-
-# Webcam face detection
-ae.start_webcam()
-faces = ae.detect_face()
-direction = ae.get_face_direction()
-ae.look_at_user()
-
-# Training
-ae.masterclass_train(rounds=10)
-ae.train_on_task("type code and open the terminal")
-
-# Hide/show
-ae.hide_avatar()
-ae.show_avatar()
-```
+| Model | Avg Latency | Response Depth | Success | Tier |
+|-------|-------------|----------------|:-------:|------|
+| Kyros | 0.6ms | 44 chars | 100% | ⚡ Fast |
+| Omega | 2.9ms | 71 chars | 100% | ⚖️ Balanced |
+| Main | 3.0ms | 71 chars | 100% | 🔧 Full |
+| X | 2.4s | 9,806 chars | 100% | 🚀 Frontier |
 
 ---
 
-## Project Structure
+## Version History
 
-```
-NIKTO/
-├── packages/nikto-core/src/nikto/
-│   ├── agent/          # Core agent runtime with system prompt
-│   ├── avatar/         # Headless desktop avatar system
-│   │   ├── engine.py   # Avatar coordinator
-│   │   ├── sprites.py  # Premium rendering with anti-aliasing
-│   │   ├── renderer.py # Tkinter transparent overlay (60fps)
-│   │   ├── animations.py  # 10 animation types, 6 expressions
-│   │   ├── webcam.py   # OpenCV face detection
-│   │   └── desktop.py  # Keyboard, mouse, app control
-│   ├── brain/          # 6-brain ensemble with 28 regions
-│   ├── language/       # Multilingual detection (55+ langs) + i18n (30+ UI langs)
-│   ├── quantum/        # IBM Quantum integration (Qiskit Runtime + circuits)
-│   ├── sensors/        # Wi-Fi gesture monitoring (C++ capture + Python AI)
-│   │   └── cpp/        # C++ WLAN API backend (wlanapi.dll)
-│   ├── skills/         # 87 production skills
-│   ├── tools/          # Tool system with security wrappers
-│   ├── memory/         # Persistent memory across sessions
-│   ├── security/       # ASL-3, SIEM, MCP sandbox
-│   ├── predict/        # Predictive modeling, backtesting, R/Julia bridge
-│   ├── ...             # Many more modules
-├── packages/nikto-web/ # React + Vite + TailwindCSS frontend
-│   └── src/gesture-ui/ # ArkTS/TypeScript gesture → visual effects engine
-├── packages/nikto-super-kernel/  # Rust + Go + Julia + R + Zig cross-language stack
-│   ├── go/scanner/     # Pure Go TCP port scanner (CLI, no CGO)
-│   ├── go/odds/        # Sports odds feed (CLI)
-│   ├── go/hsync_engine/ # SHA-256 hash + Merkle-DAG sync (CLI)
-│   ├── go/graph_core/  # Dijkstra + degree centrality (CLI)
-│   └── go/background_monitor/ # CPU/memory/goroutine monitor (CLI)
-├── packages/nikto-core-engine/  # Rust wgpu game engine (ECS + renderer + world gen)
-├── packages/nikto-triple-engine/ # Rust + Mojo + Zig physics/memory engine
-├── test_nikto.py       # Comprehensive 745+ test suite
-```
-
----
-
-## Continuous Self-Improvement
-
-NIKTO includes a built-in continuous improvement loop that:
-1. **Scans** its own modules for weaknesses
-2. **Self-repairs** broken code at runtime
-3. **Generates** new code autonomously
-4. **Trains** all 6 brains × 28 regions
-5. **Optimizes** via Hebbian learning, synaptic pruning, neuroplasticity
-
----
-
-
-## NIKTO Game Engine: Strategy to Outperform Other Engines
-
-To make NIKTO a true Unreal-class competitor, focus on measurable wins instead of marketing-only claims.
-
-### 1) Win Conditions (what “beat Unreal” means)
-- **Frame-time stability:** maintain <16.6ms p95 on target scenes (60 FPS), and publish traces.
-- **Iteration speed:** shader compile, hot-reload, and “edit-to-play” loop faster than alternatives.
-- **Build & deploy speed:** one-click export to Web, desktop, and mobile with reproducible builds.
-- **Total cost:** smaller runtime footprint, faster patch delivery, and lower content production cost.
-
-### 2) Core Technical Roadmap
-- **Virtualized geometry + clustered lighting:** build a Nanite/Lumen-style path in phases (software fallback first, then hardware acceleration).
-- **World streaming stack:** deterministic chunking, async IO scheduler, hierarchical LOD, and predictive prefetch.
-- **Unified render pipeline:** one material model + quality tiers (mobile/console/desktop) instead of separate pipelines.
-- **Deterministic gameplay core:** lockstep/rollback-ready simulation for multiplayer and replays.
-- **Asset build graph:** incremental imports, derived-data cache, and remote cache for teams.
-
-### 3) Creator Experience (where teams switch engines)
-- **Node visual scripting that generates readable code** (C++/C#/Lua/Python-like script targets).
-- **Template-first project bootstrap:** FPS, RPG, strategy, platformer with production-ready save/inventory/dialogue modules.
-- **Integrated marketplace with compatibility checks:** versioned assets, ABI/API validation, dependency conflict warnings.
-- **AI-assisted tooling:** rigging helpers, animation retargeting, terrain/foliage authoring, profiling recommendations.
-
-### 4) Benchmark Suite (publish every release)
-- 10 fixed scenes (indoor GI, dense foliage, destruction, crowds, VFX stress, etc.).
-- Compare: startup time, frame-time distribution, memory, package size, and battery drain (mobile).
-- Keep all benchmark content and scripts in-repo for reproducibility.
-
-### 5) 90-Day Execution Plan
-- **Days 1-30:** instrumentation first (profiler, telemetry, trace viewer), baseline benchmarks, bottleneck map.
-- **Days 31-60:** streaming + LOD + render-path upgrades, editor hot-reload improvements.
-- **Days 61-90:** template system hardening, cross-platform exporter, public benchmark report + sample game.
-
-### 6) Positioning
-NIKTO should position as **"faster iteration + predictable performance + integrated AI workflows"** rather than promising impossible "zero lag" for all cases. Shipping trustworthy benchmarks is what wins studios.
-
----
-
-## Recent Upgrades (May 2026)
-
-### Multilingual AI
-- **Language detection**: auto-detects 55+ languages via `langdetect` with Unicode/heuristic fallback
-- **UI translations**: 30+ languages for the web interface, 75+ language selector with flag emojis
-- **LLM injection**: detected language is injected into the system prompt — the LLM generates responses in the user's native language without NIKTO performing translation
-
-### IBM Quantum Integration
-- **Qiskit Runtime**: connects to real IBM QPU backends with automatic `FakeBelemV2` simulator fallback
-- **13 circuit factories**: Bell state, GHZ state, QFT, inverse QFT, phase estimation, random, RealAmplitudes, EfficientSU2, Grover, Deutsch-Jozsa
-- **API**: `GET /quantum/status`, `POST /quantum/run`, `GET /quantum/backends`
-
-### Wi-Fi Contactless Gesture Monitoring
-- **11 gesture types**: wave, swipe (4 directions), push, pull, circle (CW/CCW), tap, double-tap — with directional disambiguation
-- **Movement classification**: stationary, walking, running, exercising — with multi-person separation
-- **Sleep monitoring**: sleep stage detection (awake/light/deep/REM) via breathing rate analysis
-- **Fall detection**: variance spike detection with post-impact stillness confirmation
-- **C++ backend**: hardware-level capture via Windows WLAN API (wlanapi.dll), 169 KB compiled binary
-- **SciPy signal processing**: Welch FFT, Butterworth bandpass filtering, cross-correlation, kurtosis
-- **Graceful fallback**: C++ → netsh → simulated data
-
-### ArkTS/TypeScript Visual Effects Engine
-- **GestureClient**: WebSocket connection to NIKTO server for real-time gesture events
-- **VisualEffects**: maps 11 gesture types to 16 system commands (minimize, screenshot, volume, media keys, scroll, snap, etc.)
-- **React hook**: `useGesture()` + `useEffectOverlay()` for consuming gesture events in components
-- **Gesture page**: live dashboard with configurable gesture→effect bindings, effect flash overlay
-
-### Go CLI Executables (Zero CGO)
-- **scanner.exe**: TCP port scanning + ping via `net.DialTimeout` (100 concurrent goroutines)
-- **odds.exe**: sports odds fetch + subscribe + cache via `net/http`
-- **monitor.exe**: background CPU/memory/goroutine monitor
-- **hsync.exe**: SHA-256 hash + Merkle-DAG sync
-- **graph.exe**: Dijkstra shortest path + degree centrality
-- Python calls via `subprocess.run()` with JSON I/O — works everywhere with zero C compiler
+| Version | Date | Highlights |
+|---------|------|------------|
+| **v2.1.0** | 2026-06 | 4-model pipeline, unified server, Colab training, GGUF integration, docs overhaul |
+| **v2.0.0** | 2026-05 | NICTO Hyperbrain v2.0 — 12 architectural advances, MoE neural core, 7-agent system |
+| **v1.0.0** | 2026-04 | Initial autonomous brain with 10 subsystems, game engine, CLI |
 
 ---
 
 ## License
 
-Proprietary — NIKTO AI System
+This project is for research and educational purposes.

@@ -1,4 +1,4 @@
-"""NIKTO Super Kernel — Pythonic wrapper around native 8-sector cdylib."""
+"""KYROS Super Kernel — Pythonic wrapper around native 8-sector cdylib."""
 
 import os
 

@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "nicto-game"
+version = "1.0.0"
+description = "NICTO Omega Game Engine — AI-native game creation platform"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=1.24",
+    "pygame>=2.5",
+    "pillow>=10.0",
+    "pydantic>=2.0",
+]
+optional-dependencies = {
+    opengl = ["PyOpenGL>=3.1", "PyOpenGL_accelerate>=3.1"],
+    audio = ["sounddevice>=0.4", "soundfile>=0.12"],
+    full = ["nicto-game[opengl,audio]"],
+}
+
+[project.urls]
+Home = "https://github.com/stephenwahogo0-arch/NICTO"
+
+[tool.setuptools.packages.find]
+where = ["src"]

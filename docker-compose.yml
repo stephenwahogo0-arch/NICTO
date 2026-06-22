@@ -4,7 +4,7 @@ services:
     ports:
       - "4890:4890"
     volumes:
-      - nikto_data:/root/.nikto
+      - kyros_data:/root/.nikto
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
@@ -14,4 +14,4 @@ services:
     network_mode: host
 
 volumes:
-  nikto_data:
+  kyros_data:
