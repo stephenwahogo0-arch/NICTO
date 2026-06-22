@@ -2891,7 +2891,8 @@ async def test_registration_safety_extended():
 async def test_config_edge_cases():
     print("\n=== 60. CONFIG EDGE CASES & BOUNDARY TESTS ===")
     try:
-        from kyros.config.settings import KyrosConfig, MemoryConfig, AgentConfig
+        from nikto.config.settings import NiktoConfig, MemoryConfig
+        from nikto.agent.base import AgentConfig
 
         # KyrosConfig defaults
         nc = KyrosConfig()
