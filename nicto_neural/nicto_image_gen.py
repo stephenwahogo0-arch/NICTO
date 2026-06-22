@@ -154,17 +154,16 @@ class NICTO_CPU_ImageGen:
         enhancer = NICTO_CPU_ImageGen.enhance_prompt(description)
         return enhancer["enhanced"]
 '''
-        code_path = OUTPUT_DIR / f"cpu_fallback_gen_{ts}.py"
-        with open(code_path, "w") as f:
-            f.write(torch_code)
+        script_content = generate_cloud_script(prompt)
+        with open(script_path, "w") as f:
+            f.write(script_content)
 
         return {
             "status": "cpu_mode",
-            "message": "No GPU detected. Generated cloud script and CPU fallback code.",
+            "message": "No GPU detected. Generated cloud training script.",
             "prompt": prompt,
             "enhanced_prompt": self._enhance_prompt(prompt).get("enhanced", prompt),
             "cloud_script": str(script_path),
-            "cpu_code": str(code_path),
         }
 
     def _enhance_prompt(self, prompt: str) -> dict:

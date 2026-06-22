@@ -169,10 +169,10 @@ print(f"  Loss: {{trainer_stats.training_loss:.4f}}")
     return script
 
 
-def run_cpu_demo():
-    """Run a small CPU-compatible demo training."""
+def run_cpu_prepare():
+    """Prepare and analyze training data, generate cloud training script."""
     print("=" * 60)
-    print("NICTO TRAINING — CPU DEMO MODE")
+    print("NICTO TRAINING — CPU DATA PREPARATION MODE")
     print("=" * 60)
 
     if not DATA_PATH.exists():
@@ -184,19 +184,34 @@ def run_cpu_demo():
     with open(data_path, "r", encoding="utf-8") as f:
         data = [json.loads(line) for line in f if line.strip()]
 
-    print(f"\nTraining data: {len(data)} examples loaded from {data_path}")
-    print(f"\nCPU Demo Summary:")
-    print(f"  To train on cloud GPU:")
-    print(f"    1. Upload nicto_neural/ to cloud VM")
-    print(f"    2. Run: python train_nicto.py --mode gpu")
-    print(f"    3. Download LoRA adapters from nicto_outputs/models/")
-    print(f"\n  Recommended cloud providers:")
-    print(f"    - RunPod: $0.34/hr (RTX 4090, 24GB VRAM)")
-    print(f"    - Lambda Labs: $0.29/hr (RTX 4090)")
-    print(f"    - Colab: Free T4 (16GB VRAM)")
-    print(f"    - Vast.ai: $0.15/hr (RTX 3090)")
+    roles = {"system": 0, "user": 0, "assistant": 0}
+    total_chars = 0
+    categories = {}
+    for entry in data:
+        messages = entry.get("messages", [])
+        for msg in messages:
+            r = msg.get("role", "")
+            roles[r] = roles.get(r, 0) + 1
+            total_chars += len(msg.get("content", ""))
+        cat = entry.get("category", entry.get("source", "unknown"))
+        categories[cat] = categories.get(cat, 0) + 1
+
+    print(f"\nTraining data analysis ({len(data)} examples):")
+    print(f"  Messages by role: {roles}")
+    print(f"  Total characters: {total_chars:,}")
+    print(f"  Categories ({len(categories)}):")
+    for cat, count in sorted(categories.items(), key=lambda x: -x[1])[:10]:
+        print(f"    {cat}: {count}")
+
+    config = {"base_model": "Qwen/Qwen2.5-1.5B-Instruct", "examples": len(data), "total_chars": total_chars}
+    script = write_cloud_training_script(config)
+    script_path = HERE / "run_on_cloud.py"
+    with open(script_path, "w") as f:
+        f.write(script)
+    print(f"\nCloud training script: {script_path}")
+    print("Upload to cloud GPU and run: python run_on_cloud.py")
     print()
-    return {"status": "cpu_demo", "examples": len(data)}
+    return {"status": "data_prepared", "examples": len(data), "categories": len(categories)}
 
 
 def run_gpu_train():
@@ -250,7 +265,7 @@ def main():
     if mode == "gpu":
         run_gpu_train()
     elif mode == "cpu":
-        run_cpu_demo()
+        run_cpu_prepare()
     elif mode == "script":
         config = load_config()
         script = write_training_script(config or {"base_model": "Qwen/Qwen2.5-1.5B-Instruct"})
