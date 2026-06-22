@@ -6,7 +6,6 @@ strategic, knowledge, intuitive) and provides ``parallel_think()``
 and ``consensus()`` methods.
 """
 
-import concurrent.futures
 import time
 from typing import Any, Optional
 
@@ -48,6 +47,8 @@ class MultiprocessBrain:
     def __init__(self) -> None:
         self.brains: dict[str, dict[str, Any]] = {}
         self._history: list[dict[str, Any]] = []
+        self._real_brains: dict[str, Any] = {}
+        self._load_real_brains()
         for name, spec in self._BRAIN_SPECS.items():
             self.brains[name] = {
                 "name": name,
@@ -56,20 +57,32 @@ class MultiprocessBrain:
                 "last_output": "",
             }
 
+    def _load_real_brains(self):
+        import importlib
+        brain_map = {
+            "primary": ("nicto.brains.primary", "PrimaryBrain"),
+            "analytical": ("nicto.brains.analytical", "AnalyticalBrain"),
+            "creative": ("nicto.brains.creative", "CreativeBrain"),
+            "strategic": ("nicto.brains.strategic", "StrategicBrain"),
+            "knowledge": ("nicto.brains.knowledge", "KnowledgeBrain"),
+            "intuitive": ("nicto.brains.intuitive", "IntuitiveBrain"),
+        }
+        for name, (mod_path, cls_name) in brain_map.items():
+            try:
+                mod = importlib.import_module(mod_path)
+                cls = getattr(mod, cls_name)
+                self._real_brains[name] = cls()
+            except Exception:
+                pass
+
     def parallel_think(self, input_text: str) -> dict[str, Any]:
-        """Run all 6 brains concurrently and return results."""
+        """Run all 6 brains and return results."""
         results: dict[str, Any] = {}
-        with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
-            future_map = {
-                executor.submit(self._brain_process, name, input_text): name
-                for name in self.brains
-            }
-            for future in concurrent.futures.as_completed(future_map):
-                name = future_map[future]
-                try:
-                    results[name] = future.result()
-                except Exception as e:
-                    results[name] = {"error": str(e)}
+        for name in self.brains:
+            try:
+                results[name] = self._brain_process(name, input_text)
+            except Exception as e:
+                results[name] = {"error": str(e)}
 
         summary = self._consensus(results)
         record = {
@@ -82,16 +95,33 @@ class MultiprocessBrain:
         return record
 
     def _brain_process(self, name: str, input_text: str) -> dict[str, Any]:
-        """Simulate a brain processing the input."""
         spec = self.brains[name]
         spec["cycles"] += 1
-        output = f"[{name.title()} Brain] Processing: {input_text[:80]} | Style: {spec['config']['description']}"
+        real = self._real_brains.get(name)
+        if real and hasattr(real, 'process'):
+            try:
+                result = real.process(input_text)
+                spec["last_output"] = str(result)[:200]
+                return {
+                    "brain": name,
+                    "output": str(result)[:500],
+                    "cycles": spec["cycles"],
+                    "specialization": spec["config"]["description"],
+                    "status": "real",
+                }
+            except Exception:
+                pass
+        words = input_text.split()
+        word_count = len(words)
+        avg_word_len = sum(len(w) for w in words) / max(word_count, 1)
+        output = f"[{name.title()} Brain] Processed {word_count} words | Avg word len: {avg_word_len:.1f} | Style: {spec['config']['description']}"
         spec["last_output"] = output
         return {
             "brain": name,
             "output": output,
             "cycles": spec["cycles"],
             "specialization": spec["config"]["description"],
+            "status": "statistical",
         }
 
     def consensus(self, results: list[dict[str, Any]]) -> str:
@@ -102,7 +132,6 @@ class MultiprocessBrain:
         return " | ".join(opinions) if opinions else "No consensus reached."
 
     def _consensus(self, results: dict[str, Any]) -> dict[str, Any]:
-        """Build a consensus summary dict."""
         agreed = len(results)
         return {
             "agreed_count": agreed,
@@ -111,17 +140,16 @@ class MultiprocessBrain:
         }
 
     def get_brain(self, name: str) -> Optional[dict[str, Any]]:
-        """Return the brain dict for *name*, or ``None``."""
         return self.brains.get(name)
 
     def get_status(self) -> dict[str, Any]:
-        """Return overall status."""
+        real_count = sum(1 for v in self._real_brains.values() if v is not None)
         return {
             "total_brains": len(self.brains),
+            "real_brains_loaded": real_count,
             "brains": {n: {"cycles": b["cycles"]} for n, b in self.brains.items()},
             "history_length": len(self._history),
         }
 
     def get_all_states(self) -> dict[str, Any]:
-        """Return state of every brain."""
         return {n: {"cycles": b["cycles"], "last_output": b["last_output"][:100]} for n, b in self.brains.items()}

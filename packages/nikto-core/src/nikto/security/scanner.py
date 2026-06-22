@@ -99,7 +99,7 @@ class NiktoScanner:
     # ── Scanning ───────────────────────────────────────────────────────
 
     def scan_target(self, host: str, port_range: str = "1-1024",
-                    protocol: str = "tcp") -> dict:
+                    protocol: str = "tcp", timeout: float = 2.0) -> dict:
         target = ScanTarget(host, port_range, protocol)
         ports = self._parse_ports(port_range)
         results = []
@@ -107,9 +107,8 @@ class NiktoScanner:
             if port > 65535 or port < 1:
                 continue
             service = self.COMMON_PORTS.get(port, "unknown")
-            state = "open" if port in self.COMMON_PORTS or port % 1000 == 0 else "filtered"
-            if state == "open" and port < 50000:
-                banner = self._simulate_banner(service)
+            state, banner = self._probe_port(host, port, timeout)
+            if state == "open":
                 vulns = self._check_vulns(service)
             else:
                 banner = ""
@@ -173,6 +172,32 @@ class NiktoScanner:
 
     # ── Helpers ───────────────────────────────────────────────────────
 
+    def _probe_port(self, host: str, port: int, timeout: float = 2.0) -> tuple:
+        state = "filtered"
+        banner = ""
+        try:
+            family = socket.AF_INET
+            sock = socket.socket(family, socket.SOCK_STREAM)
+            sock.settimeout(timeout)
+            result = sock.connect_ex((host, port))
+            if result == 0:
+                state = "open"
+                try:
+                    sock.sendall(b"\r\n")
+                    banner = sock.recv(4096).decode("utf-8", errors="replace").strip()
+                except Exception:
+                    banner = ""
+            else:
+                state = "closed"
+            sock.close()
+        except (socket.gaierror, OSError):
+            state = "filtered"
+        except Exception:
+            state = "filtered"
+        if banner:
+            banner = banner[:512]
+        return state, banner
+
     def _parse_ports(self, port_range: str) -> list:
         ports = set()
         parts = port_range.replace(" ", "").split(",")
@@ -190,18 +215,6 @@ class NiktoScanner:
                 except ValueError:
                     continue
         return sorted(ports)
-
-    def _simulate_banner(self, service: str) -> str:
-        banners = {
-            "ssh": "SSH-2.0-OpenSSH_8.9p1 Ubuntu-3ubuntu0.6",
-            "http": "Apache/2.4.57 (Ubuntu)",
-            "https": "nginx/1.24.0",
-            "ftp": "220 ProFTPD 1.3.5 Server",
-            "smtp": "220 mail.example.com ESMTP Postfix (Ubuntu)",
-            "mysql": "5.7.42-0ubuntu0.18.04.1",
-            "postgresql": "PostgreSQL 14.10",
-        }
-        return banners.get(service, f"{service} service")
 
     def _check_vulns(self, service: str) -> list:
         return self.VULN_SIGNATURES.get(service, [])
