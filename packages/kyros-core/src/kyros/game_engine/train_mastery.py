@@ -1,0 +1,205 @@
+"""KYROS Game Engine Mastery Training — injects game dev knowledge into the training system."""
+
+import json
+import sys
+import os
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+
+TRAINING_DATA = [
+    # Physics mastery
+    {
+        "conversation": [
+            {"role": "user", "content": "How do I make realistic physics in my game?"},
+            {"role": "assistant", "content": "KYROS PhysicsWorld supports RigidBody dynamics with gravity, friction, restitution, and damping. Use DistanceJoint/SpringJoint for constraints, SoftBody for cloth/rope physics, and DestructionSystem for breakable objects. Set PhysicsMaterial (wood, metal, rubber, glass, ice) per body. Enable gravity wells for vortex effects. Always call world.step(dt) for sub-stepped stable physics."}
+        ]
+    },
+    {
+        "conversation": [
+            {"role": "user", "content": "How do I use joints in KYROS physics?"},
+            {"role": "assistant", "content": "Three joint types: DistanceJoint maintains fixed separation between two bodies, SpringJoint has configurable stiffness/damping for elastic connections, HingeJoint limits relative angle between bodies (min_angle to max_angle). All joints have break_force for destruction simulation. Call joint.solve() in your physics loop."}
+        ]
+    },
+    {
+        "conversation": [
+            {"role": "user", "content": "How does the KYROS soft body system work?"},
+            {"role": "assistant", "content": "SoftBody creates a grid of particles connected by SpringJoint instances. Set segments for resolution (4=16 particles, 8=64 particles). Particles share forces, creating cloth/fluid behavior. Pin top particles is_static=True for hanging cloth. Update with multiple spring iterations per frame."}
+        ]
+    },
+
+    # VFX mastery
+    {
+        "conversation": [
+            {"role": "user", "content": "How do I create particle effects in KYROS?"},
+            {"role": "assistant", "content": "Use Emitter with EmitterModule. Configure rate, lifetime, speed, spread, start_size/end_size, start_color/end_color. Presets: fire, smoke, explosion (burst_count=50), spark, magic, rain, snow. Direction modes: outward, cone, target. Use VFXPresets.apply(preset, module) to load built-in effects."}
+        ]
+    },
+    {
+        "conversation": [
+            {"role": "user", "content": "How to make a realistic explosion effect?"},
+            {"role": "assistant", "content": "Use VFXPresets.EXPLOSION which has burst_count=50, star shape particles, speed=200, lifetime=0.6s, outward direction. Set one_shot=True on the emitter for single-use. Chain with smoke emitter for aftermath. Use camera shake via core Camera for impact feel."}
+        ]
+    },
+
+    # Animation mastery
+    {
+        "conversation": [
+            {"role": "user", "content": "How does the KYROS animation system work?"},
+            {"role": "assistant", "content": "Build a Skeleton with Bone hierarchy. Skeleton.create_humanoid() generates a full humanoid rig with spine, head, arms, legs. Use solve_fk() for forward kinematics. Use solve_ik() for 2-bone IK targeting (arm/leg reaching). Create AnimationClip with keyframes per bone, then AnimationStateMachine for blending between states."}
+        ]
+    },
+    {
+        "conversation": [
+            {"role": "user", "content": "How to blend between walk and idle animations?"},
+            {"role": "assistant", "content": "Use AnimationController2 with multiple clips. play('Walk') then when stopping, play('Idle'). The controller automatically blends using blend_speed coefficient. AnimationStateMachine does crossfade with adjustable blend_time. MotionWarper adjusts root bone angle to face movement direction."}
+        ]
+    },
+    {
+        "conversation": [
+            {"role": "user", "content": "How to create a walk cycle animation?"},
+            {"role": "assistant", "content": "AnimationClip.create_walk_cycle() generates a 1-second looping walk. Keyframes at 0, 0.25, 0.5, 0.75 swing left/right leg and arm in opposition. Add idle breathing by creating create_idle_pose() with subtle sine-wave spine/head oscillation. Sample at current_time % duration for seamless loop."}
+        ]
+    },
+
+    # AI mastery
+    {
+        "conversation": [
+            {"role": "user", "content": "How do I make enemy AI in KYROS?"},
+            {"role": "assistant", "content": "Three AI systems: BehaviorTree for simple decision logic (Sequence/Selector/Inverter), StateMachine for state-based behavior (idle/patrol/chase/attack), UtilityAI for weighted multi-factor decisions (attack vs retreat based on health/distance). Chain them: StateMachine states contain BehaviorTree logic."}
+        ]
+    },
+    {
+        "conversation": [
+            {"role": "user", "content": "How does pathfinding work in KYROS?"},
+            {"role": "assistant", "content": "NavGrid builds a 2D grid from walkable_func callback. find_path_a_star() returns waypoints using A* with heuristic. find_path_dijkstra() uses Dijkstra for uniform cost. AIController.follow_path() moves entity along waypoints at configured speed. Grid supports 8-direction movement with diagonal cost=1.414."}
+        ]
+    },
+    {
+        "conversation": [
+            {"role": "user", "content": "How to make a utility AI system?"},
+            {"role": "assistant", "content": "UtilityAI holds a list of UtilityAction. Each action has UtilityConsideration instances with weight and curve type (linear, quadratic, logistic). At runtime, select_action() multiplies all consideration scores and picks the highest. Example: attack action considers enemy_health * distance, flee action considers self_health."}
+        ]
+    },
+
+    # Audio mastery
+    {
+        "conversation": [
+            {"role": "user", "content": "How does 3D audio work in KYROS?"},
+            {"role": "assistant", "content": "AudioSource3D has position (x,y,z), velocity, min_distance, max_distance, rolloff. AudioListener has position and velocity. update_3d() calculates volume based on distance (inverse-square rolloff), stereo panning from angle, and Doppler pitch shift from relative velocity. Use 5 buses: master, music, sfx, voice, ambient."}
+        ]
+    },
+    {
+        "conversation": [
+            {"role": "user", "content": "How do I apply audio effects?"},
+            {"role": "assistant", "content": "Add effects to AudioBus.available: LowPassFilter(cutoff) for muffled sounds, HighPassFilter for tinny sounds, ReverbEffect(decay, delay) for echoes, ChorusEffect(rate, depth) for thickness, DelayEffect(ms, feedback) for repeats. Process audio through bus for spatialized DSP."}
+        ]
+    },
+    {
+        "conversation": [
+            {"role": "user", "content": "How to generate sounds procedurally?"},
+            {"role": "assistant", "content": "Synthesizer supports: generate_tone(freq, duration, waveform) with sine/square/sawtooth/triangle/noise. generate_chord(frequencies) for harmony. generate_drum() for percussion. generate_piano(frequency) with harmonic overtones. save_wav(samples, path) exports to WAV. Use ADSR envelope for realistic decay."}
+        ]
+    },
+
+    # Game builder mastery
+    {
+        "conversation": [
+            {"role": "user", "content": "How to build a realistic platformer?"},
+            {"role": "assistant", "content": "Use KYROS Platformer template: gravity=0.6, jump_power=-12, move_speed=5. Add particle trails to player, coin sparkle VFX, screen shake on landing. Use gradient sky background instead of flat color. Add parallax layers. Enemy AI with patrol + chase states. Difficulty scaling: more enemies, faster speed per level."}
+        ]
+    },
+    {
+        "conversation": [
+            {"role": "user", "content": "How to make a good RPG with KYROS?"},
+            {"role": "assistant", "content": "RPG template uses tile-based world (50x50) with grass/wall/water/road. Entity system handles HP, attack, defense, XP, leveling. Combat mode triggers on contact. Improve with: fog of war, minimap, NPC dialog, inventory system, spell effects via VFX system, quest log, save/load with JSON."}
+        ]
+    },
+    {
+        "conversation": [
+            {"role": "user", "content": "How does the raycasting FPS work?"},
+            {"role": "assistant", "content": "FPS template uses raycasting with FOV=pi/3, NUM_RAYS=W/2. Cast rays from player position scanning angles. Wall height = TILE * DIST_PROJ / dist. Texture mapping via column sampling. Enemy billboard sprites rendered as scaled rectangles. Mouse look for aiming, WASD movement with collision detection."}
+        ]
+    },
+    {
+        "conversation": [
+            {"role": "user", "content": "How to make a tower defense game?"},
+            {"role": "assistant", "content": "Strategy template: grid-based path with waypoints, enemies follow path with increasing HP per wave. Towers placed on non-path cells, auto-target nearest enemy. Upgrade system: tower level increases range/damage/rate. Gold earned per kill, waves escalate. Create interesting maps with branching paths and chokepoints."}
+        ]
+    },
+    {
+        "conversation": [
+            {"role": "user", "content": "How to make a good racing game?"},
+            {"role": "assistant", "content": "Racing template: pseudo-3D road with curves, speed-based steering, lap counting. Use road segments with curve values for track generation. Speed bar color-coded green/yellow/red. Add AI opponents, drifting mechanics, boost power-ups, time trials, multiple tracks. Use the PhysicsWorld with friction materials for realistic handling."}
+        ]
+    },
+
+    # Rendering mastery
+    {
+        "conversation": [
+            {"role": "user", "content": "How does the KYROS rendering pipeline work?"},
+            {"role": "assistant", "content": "RenderLayer handles multi-light dynamic lighting with soft shadows. ShadowCaster uses Gaussian blur on occluder shapes. PostProcessor applies bloom (threshold/intensity), vignette (dark edges), color grading (brightness/contrast/saturation/tint). DecalRenderer projects textures onto surfaces. SkyboxRenderer draws gradient sky with stars, clouds, parallax."}
+        ]
+    },
+    {
+        "conversation": [
+            {"role": "user", "content": "How to add bloom to my game?"},
+            {"role": "assistant", "content": "PostProcessor bloom: set bloom_threshold=0.8 (brightness cutoff), bloom_intensity=1.5. The post-process extracts bright pixels, applies Gaussian blur, and adds them back as glow. Works best with bright emissive objects. Combine with vignette for cinematic look. Color grading adjusts overall mood (warm/cold tint)."}
+        ]
+    },
+
+    # Visual scripting
+    {
+        "conversation": [
+            {"role": "user", "content": "How does KYROS visual scripting work?"},
+            {"role": "assistant", "content": "BlueprintManager manages NodeGraph instances. Nodes have exec pins (flow control) and data pins (values). Types: events (BeginPlay, Tick, KeyPress), flow (Branch, ForLoop, Sequence), actions (Print, PlaySound, SpawnObject), variables (Set/Get). Graphs serialize to JSON. Execution engine runs async with node evaluation."}
+        ]
+    },
+    {
+        "conversation": [
+            {"role": "user", "content": "How to create a visual script for player movement?"},
+            {"role": "assistant", "content": "Create a Blueprint with Tick event node connected to Branch node checking KeyPress. True path: SetPosition with velocity calculations. Use MathAdd and MathMultiply for acceleration. Connect Print nodes for debugging. The NodeLibrary has all math/logic nodes. Save as JSON blueprint for reuse."}
+        ]
+    },
+
+    # Engine architecture
+    {
+        "conversation": [
+            {"role": "user", "content": "What is the architecture of the KYROS game engine?"},
+            {"role": "assistant", "content": "ECS architecture: GameObject has Component list. Components: Transform (position/rotation/scale), SpriteRenderer (visual), PhysicsBody (physics), BoxCollider/CircleCollider (collision), Camera (view), AudioSource (sound), ParticleSystem (VFX), Light (lighting), AnimationController (animation), TextLabel (UI), Button (interactive). GameScene manages object lifecycle. KYROSCoreEngine runs the game loop."}
+        ]
+    },
+    {
+        "conversation": [
+            {"role": "user", "content": "How do I create a custom game scene?"},
+            {"role": "assistant", "content": "Subclass GameScene. Override create() to instantiate GameObjects with components. Override update(dt) for per-frame logic. Use add_object() to register objects. The scene handles component updates, rendering, and cleanup. Set initial_scene on KYROSCoreEngine before run(). Access objects via find() or find_all() methods."}
+        ]
+    },
+
+    # Best practices
+    {
+        "conversation": [
+            {"role": "user", "content": "How to optimize game performance?"},
+            {"role": "assistant", "content": "Use sub-stepping (4 steps per frame) for stable physics at 60fps. Enable RigidBody sleeping for idle objects. Cull off-screen rendering via Camera frustum checks. Use object pooling for bullets/particles. Limit particles with max_particles=500. Use spritesheets instead of individual images. Profile with F3 debug overlay."}
+        ]
+    },
+    {
+        "conversation": [
+            {"role": "user", "content": "How to implement save/load in a KYROS game?"},
+            {"role": "assistant", "content": "Serialize game state to JSON: player position, inventory, level, score, enemy states. Use json.dump() for save files in a 'saves' directory. Load with json.load(). Store in the game's project directory. Auto-save on level transition or manual save on key press. Version save format for backward compatibility."}
+        ]
+    },
+]
+
+if __name__ == "__main__":
+    print(f"KYROS Game Engine Mastery Training Data")
+    print(f"Total training conversations: {len(TRAINING_DATA)}")
+    print(f"Categories: physics, vfx, animation, ai, audio, builder, rendering, visual_scripting, architecture, optimization")
+    
+    output_path = os.path.join(os.path.dirname(__file__), "..", "training", "game_engine_mastery.json")
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    
+    with open(output_path, "w") as f:
+        json.dump(TRAINING_DATA, f, indent=2)
+    
+    print(f"Written to: {output_path}")
+    print("\nReady to inject into KYROS training system.")

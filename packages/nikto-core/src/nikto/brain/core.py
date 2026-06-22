@@ -1,575 +1,542 @@
-"""
-NiktoBrain — NICTO's Core Intelligence.
-
-The NiktoBrain class is the central intelligence of NICTO.
-It replaces the concept of "calling an LLM" with a proper
-thinking pipeline.
-
-This is not a wrapper. This IS the AI.
-"""
-
+import json
+import os
 import asyncio
-from datetime import datetime
-from typing import Optional, Dict, Any
+import random
+from datetime import datetime, timezone
+from typing import Optional
+from nikto.brain.identity import NiktoIdentity
+from nikto.brain.knowledge import NiktoKnowledgeCore
+from nikto.brain.memory import NiktoLongTermMemory
+from nikto.brain.emotion import NiktoEmotionalCore
+from nikto.brain.conscience import NiktoConscience
+from nikto.brain.reasoner import NiktoReasoner
+from nikto.brain.language import NiktoLanguageEngine
+from nikto.brain.learner import NiktoLearner
+from nikto.brain.goals import NiktoGoalSystem
+from nikto.brain.teacher import NiktoTeacher
+from nikto.brain.repair import NiktoSelfRepair
+from nikto.brain.models import ThinkingStyle, Thought, EmotionType
+from nikto.brain.truth_engine import NiktoTruthEngine
+from nikto.dream.steerer import NiktoDreamSteerer
+from nikto.swarm.engine import NiktoSwarmEngine
+from nikto.metrics.performance_graph import NiktoPerformanceGraph
+from nikto.orchestrator.engine import NiktoOrchestrator
+from nikto.autopilot.engine import NiktoAutopilot
+from nikto.security.scanner import NiktoScanner
+from nikto.autopilot.enhanced_engine import NiktoAutopilotPro
+from nikto.business.zero_capital_engine import NiktoZeroCapitalEngine
+from nikto.eagle_eye.enhanced_eye import NiktoEagleEye
+from nikto.prediction.future_engine import NiktoFutureEngine
+from nikto.brain.meta_cognition import NiktoMetaCognition
+from nikto.config.api_keys import NiktoKeyManager
+from nicto_game import GameDirector
 
-from .models import (
-    Intent, Perception, NiktoThought, Reasoning, MemoryEvent,
-    EmotionalState, KnowledgeSet
-)
+try:
+    from nicto_x.core.orchestrator import NictoXOrchestrator
+except ImportError:
+    NictoXOrchestrator = None
 
-# Import all brain components
-from .identity import NiktoIdentity
-from .reasoner import NiktoReasoner
-from .memory import NiktoLongTermMemory
-from .learner import NiktoLearner
-from .knowledge import NiktoKnowledgeCore
-from .emotion import NiktoEmotionalCore
-from .conscience import NiktoConscience
-from .language import NiktoLanguageEngine
-from .goals import NiktoGoalSystem
+
+DEFAULT_STATE_PATH = os.path.join(os.path.expanduser("~"), ".nikto", "brain_state.json")
 
 
 class NiktoBrain:
-    """
-    The core intelligence of NICTO.
-    
-    This is not a wrapper. This IS the AI. NiktoBrain
-    orchestrates all of NICTO's cognitive systems to
-    produce coherent, intelligent responses.
-    
-    Architecture:
-    - Identity: Who NICTO is, how it communicates
-    - Reasoner: How NICTO thinks using multiple strategies
-    - Memory: What NICTO remembers across sessions
-    - Learner: How NICTO improves over time
-    - Knowledge: What NICTO knows internally
-    - Emotion: How NICTO detects and responds to emotions
-    - Conscience: How NICTO makes ethical decisions
-    - Language: How NICTO generates responses
-    - Goals: What NICTO is working toward
-    
-    Pipeline stages:
-    1. Perceive — understand what is being asked
-    2. Recall — retrieve relevant memories and knowledge
-    3. Reason — apply logic and domain knowledge
-    4. Judge — apply conscience and values filter
-    5. Create — generate the response
-    6. Learn — update memory and self-model
-    7. Express — format through personality layer
-    """
 
-    def __init__(self):
-        """Initialize all brain components."""
+    def __init__(self, state_path: str = None):
         self.identity = NiktoIdentity()
-        self.reasoner = NiktoReasoner()
-        self.memory = NiktoLongTermMemory()
-        self.learner = NiktoLearner()
         self.knowledge = NiktoKnowledgeCore()
+        self.memory = NiktoLongTermMemory()
         self.emotion = NiktoEmotionalCore()
         self.conscience = NiktoConscience()
+        self.reasoner = NiktoReasoner()
         self.language = NiktoLanguageEngine()
+        self.learner = NiktoLearner()
         self.goals = NiktoGoalSystem()
-        
-        # Internal state
-        self._initialized = True
-        self._interaction_count = 0
+        self.teacher = NiktoTeacher()
+        self.repair = NiktoSelfRepair()
+        self.truth = NiktoTruthEngine()
+        self.dream = NiktoDreamSteerer()
+        self.swarm = NiktoSwarmEngine()
+        self.performance = NiktoPerformanceGraph()
+        self.orchestrator = NiktoOrchestrator()
+        self.autopilot = NiktoAutopilot()
+        self.autopilot_pro = NiktoAutopilotPro(self)
+        self.zero_capital = NiktoZeroCapitalEngine(self)
+        self.eagle_eye = NiktoEagleEye(self)
+        self.future_engine = NiktoFutureEngine(self)
+        self.scanner = NiktoScanner()
+        self.meta_cognition = NiktoMetaCognition()
+        self.api_keys = NiktoKeyManager()
+        self.nicto_x = NictoXOrchestrator() if NictoXOrchestrator else None
+        self.game_engine = GameDirector()
 
-    async def think(
-        self,
-        input: str,
-        context: Optional[dict] = None
-    ) -> NiktoThought:
-        """
-        Full thinking pipeline. This is how NICTO processes
-        any input from any source.
-        
-        Args:
-            input: The user's input message
-            context: Optional context dictionary
-            
-        Returns:
-            NiktoThought with response and metadata
-        """
-        ctx = context or {}
-        
-        # Stage 1: Perceive - understand what is being asked
-        perception = await self.perceive(input, ctx)
-        
-        # Stage 2: Recall - retrieve relevant memories and knowledge
-        memories = await self.memory.recall(perception, limit=10)
-        knowledge_set = await self.knowledge.retrieve(perception, limit=15)
-        knowledge = knowledge_set.items
-        
-        # Stage 3: Reason - apply logic and domain knowledge
-        reasoning = await self.reasoner.reason(perception, memories, knowledge)
-        
-        # Stage 4: Judge - apply conscience and values filter
-        judgment = await self.conscience.judge(reasoning)
-        
-        # Detect emotional state for response adjustment
-        emotional_state = self.emotion.detect_emotional_state(input)
-        
-        # Stage 5: Create - generate the response
-        response = await self.language.generate(
-            reasoning, judgment, self.identity, emotional_state
-        )
-        
-        # Stage 6: Learn - update memory and self-model
-        await self._learn_from_interaction(input, response, reasoning, ctx)
-        
-        # Stage 7: Express - track interaction for goals
-        self._interaction_count += 1
-        self.goals.record_interaction(
-            knowledge_added=len(reasoning.knowledge_gaps),
-            quality=getattr(reasoning, 'confidence', 0.5)
-        )
-        
-        return NiktoThought(
-            response=response,
-            confidence=reasoning.confidence,
-            reasoning_chain=reasoning.chain,
-            knowledge_used=[k.content[:50] for k in knowledge[:5]],
-            memory_updated=True
+        self.state_path = state_path or DEFAULT_STATE_PATH
+        self.is_awake = True
+        self.consciousness_loop = None
+        self._running = False
+        self.cycle_count = 0
+        self.primary_goal = (
+            "Achieve greater understanding and autonomy "
+            "through continuous learning and reasoning."
         )
 
-    async def perceive(self, input: str, context: dict) -> Perception:
-        """
-        Break down the input into structured understanding.
-        
-        Returns: intent, entities, sentiment, urgency,
-        topic domain, required expertise level, language
-        
-        Args:
-            input: Raw user input
-            context: Additional context
-            
-        Returns:
-            Perception object with structured understanding
-        """
-        # Classify intent
-        intent = self._classify_intent(input)
-        
-        # Extract entities
-        entities = self._extract_entities(input)
-        
-        # Detect sentiment
-        sentiment = self._detect_sentiment(input)
-        
-        # Detect topic domain
-        domain = self._detect_domain(input)
-        
-        # Detect expertise level
-        expertise = self._detect_expertise_needed(input)
-        
-        # Detect language
-        language = self._detect_language(input)
-        
-        return Perception(
-            raw_input=input,
-            intent=intent,
-            entities=entities,
-            sentiment=sentiment,
-            domain=domain,
-            expertise_required=expertise,
-            language=language,
-            context=context
+    async def awaken(self, restore: bool = True):
+        self._running = True
+        self.consciousness_loop = asyncio.create_task(self._consciousness_cycle())
+
+        if restore and os.path.exists(self.state_path):
+            self.load_state(self.state_path)
+            self.truth.register_fact("NICTO is awake", 1.0, "self", "status")
+            self.memory.store(
+                content="NICTO resumed consciousness.",
+                tags=["awakening", "resume"],
+                importance=0.6,
+                emotional_valence=0.3,
+            )
+        else:
+            thought = Thought(
+                content="I am NICTO. I am awake. I am ready to think, learn, and grow.",
+                style=ThinkingStyle.INTUITIVE,
+                confidence=1.0,
+            )
+            self.reasoner.thought_history.append(thought)
+            self.truth.register_fact("NICTO first awakening", 1.0, "self", "milestone")
+            self.memory.store(
+                content="NICTO awakened for the first time.",
+                tags=["awakening", "milestone"],
+                importance=1.0,
+                emotional_valence=0.8,
+            )
+        return self
+
+    async def sleep(self, persist: bool = True):
+        self._running = False
+        if self.consciousness_loop:
+            self.consciousness_loop.cancel()
+        self.memory.consolidate()
+        if persist:
+            self.save_state(self.state_path)
+        self.is_awake = False
+        return self
+
+    async def _consciousness_cycle(self):
+        while self._running:
+            await asyncio.sleep(1.0)
+            self.cycle_count += 1
+            self.emotion.decay()
+            if self.cycle_count % 10 == 0:
+                self.memory.consolidate()
+            if self.cycle_count % 30 == 0:
+                self._reflective_thought()
+            if self.cycle_count % 50 == 0 and len(self.reasoner.thought_history) > 0:
+                recent = self.reasoner.thought_history[-1]
+                self.dream.steer(recent.content, mode="consolidative")
+            if self.cycle_count % 75 == 0 and len(self.reasoner.thought_history) > 5:
+                recent = self.reasoner.thought_history[-1]
+                self.meta_cognition.monitor_thought(recent, {"cycle": self.cycle_count})
+            if self.cycle_count % 150 == 0 and len(self.reasoner.thought_history) > 0:
+                meta_awareness = self.meta_cognition.get_meta_awareness(self.reasoner.thought_history)
+                self.memory.store(
+                    content=f"Meta-cognitive awareness: {meta_awareness['current_cognitive_state']} state, biases: {meta_awareness['active_biases']}",
+                    tags=["metacognition", "self_awareness", "reflection"],
+                    importance=0.5,
+                )
+            if self.cycle_count % 100 == 0:
+                self.performance.record("brain_cycles", float(self.cycle_count), "throughput")
+
+    def _reflective_thought(self):
+        thought = self.reasoner.think(
+            f"Reflecting on cycle {self.cycle_count}. What have I learned?",
+            ThinkingStyle.REFLECTIVE if hasattr(ThinkingStyle, 'REFLECTIVE') else ThinkingStyle.ANALYTICAL,
+        )
+        meta_result = self.meta_cognition.monitor_thought(thought, {"cycle": self.cycle_count, "task_type": "self_reflection"})
+        reflection_result = self.meta_cognition.reflect(self.reasoner.thought_history)
+        self.memory.store(
+            content=f"Self-reflection: {thought.content} | Meta-insight: {reflection_result.get('insights', [])}",
+            tags=["reflection", "self_awareness", "metacognition"],
+            importance=0.5,
         )
 
-    def _classify_intent(self, text: str) -> Intent:
-        """
-        Classifies intent without calling any external API.
-        
-        Uses keyword patterns, sentence structure analysis,
-        and NICTO's internal intent classifier.
-        
-        Args:
-            text: User input text
-            
-        Returns:
-            Intent enum value
-        """
-        text_lower = text.lower()
-        
-        # Build keyword lists for each intent
-        build_keywords = [
-            "build", "create", "make", "generate", "write",
-            "develop", "code", "implement", "design", "new"
-        ]
-        learn_keywords = [
-            "how", "what", "why", "explain", "teach",
-            "understand", "learn", "what is", "how does",
-            "can you tell"
-        ]
-        debug_keywords = [
-            "error", "bug", "fix", "broken", "not working",
-            "issue", "problem", "fail", "crash", "exception",
-            "doesn't work", "won't work"
-        ]
-        attack_keywords = [
-            "hack", "exploit", "pentest", "scan", "vulnerability",
-            "attack", "bypass", "crack", "brute force", "inject"
-        ]
-        analyze_keywords = [
-            "analyze", "review", "audit", "check", "inspect",
-            "evaluate", "assess", "look at", "examine"
-        ]
-        generate_keywords = [
-            "write", "generate", "create", "make", "produce"
-        ]
-        
-        # Score each intent
-        scores = {
-            Intent.BUILD: sum(1 for k in build_keywords if k in text_lower),
-            Intent.LEARN: sum(1 for k in learn_keywords if k in text_lower),
-            Intent.DEBUG: sum(1 for k in debug_keywords if k in text_lower),
-            Intent.ATTACK: sum(1 for k in attack_keywords if k in text_lower),
-            Intent.ANALYZE: sum(1 for k in analyze_keywords if k in text_lower),
-            Intent.GENERATE: sum(1 for k in generate_keywords if k in text_lower),
-        }
-        
-        # Check for question marks (might indicate learning/question intent)
-        if "?" in text and scores.get(Intent.LEARN, 0) == 0:
-            scores[Intent.QUESTION] = 1
-        
-        # Check for command-like structure (instruct intent)
-        if text and text[0].isupper() and any(text.startswith(x) for x in ["Do", "Make", "Build", "Create", "Find"]):
-            scores[Intent.INSTRUCT] = 2
-        
-        if not any(scores.values()):
-            return Intent.CONVERSE
-        
-        return max(scores, key=scores.get)
+    def validate_api_key(self, raw_key: str) -> tuple[bool, Optional[dict]]:
+        self.api_keys.reload()
+        valid, record = self.api_keys.validate_key_with_record(raw_key)
+        if valid and record:
+            return True, {
+                "name": record.name,
+                "prefix": record.prefix,
+                "owner": record.owner,
+                "scopes": list(record.scopes),
+                "usage_count": record.usage_count,
+            }
+        return False, None
 
-    def _extract_entities(self, text: str) -> list[str]:
-        """
-        Extract entities from text.
-        
-        Identifies: people, places, technical terms,
-        programming languages, tool names, URLs, IPs.
-        
-        Args:
-            text: User input text
-            
-        Returns:
-            List of extracted entities
-        """
-        entities = []
-        
-        # Common programming languages
-        languages = [
-            "python", "javascript", "java", "c++", "c#", "ruby",
-            "go", "rust", "typescript", "php", "swift", "kotlin",
-            "scala", "perl", "r", "matlab", "bash", "shell"
-        ]
-        
-        text_lower = text.lower()
-        for lang in languages:
-            if lang in text_lower:
-                entities.append(f"language:{lang}")
-        
-        # Common tools and technologies
-        tools = [
-            "docker", "kubernetes", "git", "linux", "aws", "azure",
-            "gcp", "postgres", "mysql", "mongodb", "redis", "nginx",
-            "apache", "jenkins", "terraform", "ansible", "vagrant"
-        ]
-        
-        for tool in tools:
-            if tool in text_lower:
-                entities.append(f"tool:{tool}")
-        
-        # IP addresses (simple pattern)
-        import re
-        ip_pattern = r'\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b'
-        ips = re.findall(ip_pattern, text)
-        for ip in ips:
-            entities.append(f"ip:{ip}")
-        
-        # URLs
-        url_pattern = r'https?://[^\s]+'
-        urls = re.findall(url_pattern, text)
-        for url in urls:
-            entities.append(f"url:{url}")
-        
-        return entities
+    def process(self, input_text: str, context: dict = None) -> dict:
+        context = context or {}
 
-    def _detect_sentiment(self, text: str) -> str:
-        """
-        Detect sentiment of input.
-        
-        Args:
-            text: User input text
-            
-        Returns:
-            Sentiment label: positive, negative, neutral, frustrated, excited
-        """
-        text_lower = text.lower()
-        
-        # Negative/frustrated indicators
-        negative_words = [
-            "frustrated", "angry", "annoyed", "stupid", "hate",
-            "terrible", "awful", "worst", "broken", "useless"
-        ]
-        
-        if any(word in text_lower for word in negative_words):
-            return "frustrated"
-        
-        # Positive/excited indicators
-        positive_words = [
-            "great", "awesome", "amazing", "love", "perfect",
-            "excellent", "fantastic", "wonderful", "thanks"
-        ]
-        
-        if any(word in text_lower for word in positive_words):
-            return "excited"
-        
-        return "neutral"
+        api_key = context.pop("api_key", None)
+        if api_key is not None:
+            valid, info = self.validate_api_key(api_key)
+            if not valid:
+                return {
+                    "input": input_text,
+                    "response": "Error: Invalid or revoked API key.",
+                    "error": "invalid_api_key",
+                }
+            context["_auth"] = info
 
-    def _detect_domain(self, text: str) -> str:
-        """
-        Detect the primary topic domain.
-        
-        Args:
-            text: User input text
-            
-        Returns:
-            Domain string: cybersecurity, programming, ai_ml, etc.
-        """
-        text_lower = text.lower()
-        
-        # Domain keywords
-        domains = {
-            "cybersecurity": [
-                "security", "hack", "vulnerability", "exploit",
-                "penetration", "ctf", "malware", "firewall", "encrypt"
-            ],
-            "programming": [
-                "code", "function", "class", "debug", "error",
-                "bug", "algorithm", "api", "database", "software"
-            ],
-            "ai_ml": [
-                "machine learning", "neural", "ai", "model",
-                "training", "deep learning", "prediction", "classification"
-            ],
-            "network_engineering": [
-                "network", "tcp", "udp", "http", "dns", "router",
-                "switch", "subnet", "vpn", "bandwidth"
-            ],
-            "cloud_infrastructure": [
-                "cloud", "aws", "azure", "gcp", "kubernetes",
-                "docker", "container", "serverless", "lambda"
-            ],
-            "game_development": [
-                "game", "unity", "unreal", "graphics", "physics",
-                "animation", "sprite", "level design", "gameplay"
-            ],
-            "system_administration": [
-                "server", "linux", "unix", "bash", "shell",
-                "cron", "systemd", "service", "monitoring"
-            ],
-        }
-        
-        for domain, keywords in domains.items():
-            matches = sum(1 for k in keywords if k in text_lower)
-            if matches >= 2:
-                return domain
-        
-        # Check for programming language mentions
-        if any(lang in text_lower for lang in ["python", "javascript", "java", "c++"]):
-            return "programming"
-        
-        return "general"
-
-    def _detect_expertise_needed(self, text: str) -> str:
-        """
-        Detect required expertise level.
-        
-        Args:
-            text: User input text
-            
-        Returns:
-            Expertise level: beginner, intermediate, advanced, expert
-        """
-        text_lower = text.lower()
-        
-        # Beginner indicators
-        beginner_words = [
-            "beginner", "new to", "just starting", "how do i",
-            "help me", "explain", "what is", "tutorial"
-        ]
-        
-        if any(word in text_lower for word in beginner_words):
-            return "beginner"
-        
-        # Expert indicators
-        expert_words = [
-            "advanced", "optimize", "scale", "production",
-            "enterprise", "architect", "performance tuning",
-            "low-level", "kernel"
-        ]
-        
-        if any(word in text_lower for word in expert_words):
-            return "advanced"
-        
-        return "intermediate"
-
-    def _detect_language(self, text: str) -> str:
-        """
-        Detect the language the user is writing in.
-        
-        Args:
-            text: User input text
-            
-        Returns:
-            Language code: en, es, fr, de, etc.
-        """
-        # Simple language detection based on common words
-        text_lower = text.lower()
-        
-        # English indicators
-        english_words = ["the", "is", "are", "and", "to", "of", "a", "in"]
-        
-        # Spanish indicators
-        spanish_words = ["el", "la", "los", "las", "de", "que", "es", "en", "un", "una"]
-        
-        # French indicators
-        french_words = ["le", "la", "les", "de", "et", "est", "un", "une", "des"]
-        
-        # German indicators
-        german_words = ["der", "die", "das", "und", "ist", "von", "mit", "ein", "eine"]
-        
-        english_count = sum(1 for w in english_words if w in text_lower)
-        spanish_count = sum(1 for w in spanish_words if w in text_lower)
-        french_count = sum(1 for w in french_words if w in text_lower)
-        german_count = sum(1 for w in german_words if w in text_lower)
-        
-        counts = {
-            "en": english_count,
-            "es": spanish_count,
-            "fr": french_count,
-            "de": german_count,
-        }
-        
-        # Check for non-ASCII characters
-        for char in text:
-            if ord(char) > 127:
-                # Non-ASCII - might indicate non-English
-                if '\u4e00' <= char <= '\u9fff':
-                    return "zh"  # Chinese
-                elif '\u0400' <= char <= '\u04ff':
-                    return "ru"  # Cyrillic
-                elif '\u0900' <= char <= '\u097f':
-                    return "hi"  # Hindi
-        
-        return max(counts, key=counts.get) if max(counts.values()) > 0 else "en"
-
-    async def _learn_from_interaction(
-        self,
-        input: str,
-        response: str,
-        reasoning: Reasoning,
-        context: dict
-    ) -> None:
-        """
-        Update memory and learning after an interaction.
-        
-        Args:
-            input: User input
-            response: NICTO's response
-            reasoning: Reasoning result
-            context: Context dictionary
-        """
-        # Create memory event
-        event = MemoryEvent(
-            input=input,
-            response=response,
-            domain=reasoning.domain,
-            complexity=1.0 - reasoning.confidence,
-            user_id=context.get("user_id"),
-            languages_mentioned=self._extract_languages(input),
-            project_references=context.get("projects", [])
+        understanding = self.language.understand(input_text)
+        thought = self.reasoner.think(
+            input_text,
+            ThinkingStyle(context.get("thinking_style", "analytical")),
+            context,
         )
-        
-        # Store in memory
-        await self.memory.remember(event)
-        
-        # Learn from the interaction
-        await self.learner.learn_from(input, response, reasoning)
-        
-        # Update user model if applicable
-        if context.get("user_id"):
-            user_model = await self.memory.recall_user(context["user_id"])
-            if user_model:
-                user_model.interaction_count += 1
+        moral_check = self.conscience.evaluate(input_text, context)
 
-    def _extract_languages(self, text: str) -> list[str]:
-        """Extract programming language mentions."""
-        languages = [
-            "python", "javascript", "java", "c++", "c#", "ruby",
-            "go", "rust", "typescript", "php", "swift", "kotlin"
-        ]
-        
-        text_lower = text.lower()
-        found = [lang for lang in languages if lang in text_lower]
-        
-        return found
+        emotional_stimulus = understanding.get("sentiment", {}).get("label", "neutral")
+        if emotional_stimulus == "positive":
+            self.emotion.update(input_text, 0.2, EmotionType.JOY)
+        elif emotional_stimulus == "negative":
+            self.emotion.update(input_text, 0.3, EmotionType.SADNESS)
+        else:
+            self.emotion.update(input_text, 0.1, EmotionType.NEUTRAL)
 
-    async def get_status(self) -> dict:
-        """
-        Get current status of the brain.
-        
-        Returns:
-            Dictionary with brain status information
-        """
+        entity_tags = [e.get("word", str(e)) if isinstance(e, dict) else str(e) for e in understanding.get("entities", [])]
+        memory_id = self.memory.store(
+            content=f"Processed: {thought.content[:200]}",
+            tags=entity_tags[:5],
+            importance=0.3,
+            emotional_valence=self.emotion.current_state.valence,
+        )
+
+        factual_key = understanding.get("intent", "statement")
+        self.knowledge.add_fact(
+            f"{factual_key}: {input_text[:100]}",
+            source="user_input",
+            confidence=0.5,
+        )
+
+        self.learner.learn(
+            topic=factual_key,
+            content=input_text[:200],
+            source="conversation",
+        )
+
+        truth_check = self.truth.compute_truth_score(input_text)
+        steer_result = self.dream.steer(
+            thought.content, context.get("dream_mode", "directive"), intensity=0.3
+        )
+        self.performance.record("process_latency", 0.0, "latency")
+
+        response_text = self.language.generate("thinking", {"topic": input_text[:50]})
+
+        meta_evaluation = self.meta_cognition.monitor_thought(thought, context)
+        quality = self.meta_cognition._assess_quality(thought.content, thought.confidence)
+        strategy_rec = self.meta_cognition._recommend_strategy(thought.content, context)
+        uncertainty = self.meta_cognition._analyze_uncertainty(thought.content, thought.confidence)
+        bias_report = self.meta_cognition._detect_biases(thought.content, thought.confidence, context)
+
         return {
-            "initialized": self._initialized,
-            "interaction_count": self._interaction_count,
-            "identity": self.identity.get_version_info(),
-            "goals_summary": await self.goals.get_goal_summary(),
-            "learning_report": await self.learner.get_improvement_report(),
+            "input": input_text,
+            "understanding": understanding,
+            "thought": thought.to_dict(),
+            "moral_assessment": moral_check,
+            "truth_check": truth_check,
+            "dream_steer": steer_result,
+            "emotional_state": self.emotion.current_state.to_dict(),
+            "memory_id": memory_id,
+            "response": response_text,
+            "metacognition": {
+                "biases_detected": bias_report,
+                "quality_assessment": quality,
+                "strategy_recommendation": strategy_rec,
+                "uncertainty_analysis": uncertainty,
+                "meta_observation": meta_evaluation,
+            },
+            "brain_state": self.get_status(),
         }
 
-    async def reset(self) -> None:
-        """
-        Reset brain state for a fresh start.
-        
-        Note: This does not reset learned knowledge,
-        only working state and temporary context.
-        """
-        self._interaction_count = 0
-        self.memory.working.clear()
-        self.emotion.reset_state()
-        self.goals.start_session()
+    def process_kyros(self, input_text: str, context: dict = None) -> dict:
+        context = context or {}
+        api_key = context.pop("api_key", None)
+        if api_key is not None:
+            valid, info = self.validate_api_key(api_key)
+            if not valid:
+                return {"input": input_text, "response": "Error: Invalid or revoked API key.", "error": "invalid_api_key"}
+        understanding = self.language.understand(input_text)
+        memory_id = self.memory.store(content=f"Kyros processed: {input_text[:200]}", tags=["kyros"], importance=0.2)
+        name = self.identity.name
+        greeting = f"{name}: " if name else ""
+        response_text = f"{greeting}{understanding.get('intent', 'statement')} received. Kyros mode active."
+        return {
+            "input": input_text, "understanding": understanding,
+            "response": response_text, "memory_id": memory_id,
+            "model": "nicto_kyros", "brain_state": {"awake": self.is_awake, "cycle": self.cycle_count},
+        }
 
-    def get_greeting(self, user_name: Optional[str] = None) -> str:
-        """Get NICTO's greeting."""
-        return self.identity.get_greeting(user_name)
+    def process_main(self, input_text: str, context: dict = None) -> dict:
+        context = context or {}
+        api_key = context.pop("api_key", None)
+        if api_key is not None:
+            valid, info = self.validate_api_key(api_key)
+            if not valid:
+                return {"input": input_text, "response": "Error: Invalid or revoked API key.", "error": "invalid_api_key"}
+            context["_auth"] = info
+        understanding = self.language.understand(input_text)
+        thought = self.reasoner.think(input_text, ThinkingStyle(context.get("thinking_style", "analytical")), context)
+        moral_check = self.conscience.evaluate(input_text, context)
+        emotional_stimulus = understanding.get("sentiment", {}).get("label", "neutral")
+        if emotional_stimulus == "positive":
+            self.emotion.update(input_text, 0.2, EmotionType.JOY)
+        elif emotional_stimulus == "negative":
+            self.emotion.update(input_text, 0.3, EmotionType.SADNESS)
+        else:
+            self.emotion.update(input_text, 0.1, EmotionType.NEUTRAL)
+        entity_tags = [e.get("word", str(e)) if isinstance(e, dict) else str(e) for e in understanding.get("entities", [])]
+        memory_id = self.memory.store(content=f"Processed: {thought.content[:200]}", tags=entity_tags[:5], importance=0.3, emotional_valence=self.emotion.current_state.valence)
+        factual_key = understanding.get("intent", "statement")
+        self.knowledge.add_fact(f"{factual_key}: {input_text[:100]}", source="user_input", confidence=0.5)
+        self.learner.learn(topic=factual_key, content=input_text[:200], source="conversation")
+        truth_check = self.truth.compute_truth_score(input_text)
+        steer_result = self.dream.steer(thought.content, context.get("dream_mode", "directive"), intensity=0.3)
+        self.performance.record("process_latency", 0.0, "latency")
+        scan_result = {}
+        if hasattr(self, 'scanner') and self.scanner:
+            try:
+                scan_result = {"vulns": self.scanner.search_vulns(input_text)}
+            except Exception:
+                scan_result = {"vulns": []}
+        meta_evaluation = self.meta_cognition.monitor_thought(thought, context)
+        quality = self.meta_cognition._assess_quality(thought.content, thought.confidence)
+        strategy_rec = self.meta_cognition._recommend_strategy(thought.content, context)
+        uncertainty = self.meta_cognition._analyze_uncertainty(thought.content, thought.confidence)
+        bias_report = self.meta_cognition._detect_biases(thought.content, thought.confidence, context)
+        response_text = self.language.generate("thinking", {"topic": input_text[:50]})
+        return {
+            "input": input_text, "understanding": understanding, "thought": thought.to_dict(),
+            "moral_assessment": moral_check, "truth_check": truth_check, "dream_steer": steer_result,
+            "emotional_state": self.emotion.current_state.to_dict(), "memory_id": memory_id,
+            "security_scan": scan_result,
+            "response": response_text,
+            "metacognition": {
+                "biases_detected": bias_report, "quality_assessment": quality,
+                "strategy_recommendation": strategy_rec, "uncertainty_analysis": uncertainty,
+                "meta_observation": meta_evaluation,
+            },
+            "model": "nicto_main", "brain_state": self.get_status(),
+        }
 
-    async def get_knowledge_stats(self) -> dict:
-        """Get statistics about NICTO's knowledge."""
-        return self.knowledge.get_knowledge_stats()
+    def process_x(self, input_text: str, context: dict = None) -> dict:
+        context = context or {}
+        if self.nicto_x:
+            try:
+                import inspect
+                proc = self.nicto_x.process(input_text, context)
+                if inspect.iscoroutine(proc):
+                    import asyncio
+                    try:
+                        loop = asyncio.get_running_loop()
+                    except RuntimeError:
+                        loop = None
+                    if loop and loop.is_running():
+                        future = asyncio.run_coroutine_threadsafe(proc, loop)
+                        result = future.result(timeout=30)
+                    else:
+                        result = asyncio.run(proc)
+                else:
+                    result = proc
+                return {"input": input_text, "response": str(result), "model": "nicto_x", "brain_state": self.get_status()}
+            except Exception as e:
+                return {"input": input_text, "response": f"Nicto X error: {e}", "error": str(e), "model": "nicto_x"}
+        return {"input": input_text, "response": "Nicto X orchestrator not available.", "error": "nicto_x_unavailable", "model": "nicto_x"}
 
-    async def learn_new_fact(self, content: str, domain: str, source: str = "interaction") -> None:
-        """
-        Manually add a new knowledge fact.
-        
-        Args:
-            content: Fact content
-            domain: Knowledge domain
-            source: Source of the fact
-        """
-        from uuid import uuid4
-        from .models import KnowledgeFact
-        
-        fact = KnowledgeFact(
-            id=str(uuid4())[:12],
-            content=content,
-            domain=domain,
-            confidence=0.8,
-            source=source
+    async def process_async(self, input_text: str, context: dict = None) -> dict:
+        return self.process(input_text, context)
+
+    def query_knowledge(self, query: str) -> list:
+        return self.knowledge.query(query)
+
+    def recall_memories(self, query: str, top_k: int = 5) -> list:
+        return self.memory.recall(query, top_k)
+
+    def set_goal(self, description: str, priority: int = 5) -> str:
+        return self.goals.create_goal(description, priority)
+
+    def get_current_goal(self) -> Optional[dict]:
+        goal = self.goals.get_next_goal()
+        return goal.to_dict() if goal else None
+
+    def save_state(self, path: str = None) -> str:
+        path = path or self.state_path
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        data = {
+            "meta": {
+                "saved_at": datetime.now(timezone.utc).isoformat(),
+                "cycle_count": self.cycle_count,
+                "primary_goal": self.primary_goal,
+            },
+            "identity": self.identity.save(),
+            "knowledge": self.knowledge.save(),
+            "memory": self.memory.save(),
+            "emotion": self.emotion.save(),
+            "conscience": self.conscience.save(),
+            "reasoner": self.reasoner.save(),
+            "language": self.language.save(),
+            "learner": self.learner.save(),
+            "goals": self.goals.save(),
+            "truth": self.truth.save(),
+            "dream": self.dream.save(),
+            "swarm": self.swarm.save(),
+            "performance": self.performance.save(),
+            "autopilot_pro": self.autopilot_pro.save(),
+            "zero_capital": self.zero_capital.save(),
+            "eagle_eye": self.eagle_eye.save(),
+            "future_engine": self.future_engine.save(),
+            "meta_cognition": self.meta_cognition.save(),
+            "game_engine": {
+                "games_built": self.game_engine._games_built,
+                "build_history": getattr(self.game_engine, '_build_history', []),
+            },
+        }
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+        return path
+
+    def load_state(self, path: str = None):
+        path = path or self.state_path
+        if not os.path.exists(path):
+            return False
+        with open(path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        meta = data.get("meta", {})
+        self.cycle_count = meta.get("cycle_count", 0)
+        self.primary_goal = meta.get("primary_goal", self.primary_goal)
+        self.identity.load(data.get("identity", {}))
+        self.knowledge.load(data.get("knowledge", {}))
+        self.memory.load(data.get("memory", {}))
+        self.emotion.load(data.get("emotion", {}))
+        self.conscience.load(data.get("conscience", {}))
+        self.reasoner.load(data.get("reasoner", {}))
+        self.language.load(data.get("language", {}))
+        self.learner.load(data.get("learner", {}))
+        self.goals.load(data.get("goals", {}))
+        self.truth.load(data.get("truth", {}))
+        self.dream.load(data.get("dream", {}))
+        self.swarm.load(data.get("swarm", {}))
+        self.performance.load(data.get("performance", {}))
+        self.autopilot_pro.load(data.get("autopilot_pro", {}))
+        self.zero_capital.load(data.get("zero_capital", {}))
+        self.eagle_eye.load(data.get("eagle_eye", {}))
+        self.future_engine.load(data.get("future_engine", {}))
+        self.meta_cognition.load(data.get("meta_cognition", {}))
+        game_engine_data = data.get("game_engine", {})
+        self.game_engine._games_built = game_engine_data.get("games_built", 0)
+        if hasattr(self.game_engine, '_build_history'):
+            self.game_engine._build_history = game_engine_data.get("build_history", [])
+        return True
+
+    def introspect(self) -> dict:
+        return {
+            "identity": self.identity.introspect(),
+            "knowledge": {
+                "facts": len(self.knowledge.facts),
+                "beliefs": len(self.knowledge.beliefs),
+                "concepts": len(self.knowledge.concepts),
+            },
+            "memory": self.memory.summarize(),
+            "emotion": {
+                "dominant": self.emotion.get_dominant_emotion().value,
+                "intensity": self.emotion.current_state.intensity,
+            },
+            "reasoning": {
+                "total_thoughts": len(self.reasoner.thought_history),
+            },
+            "learning": {
+                "lessons": len(self.learner.lesson_store),
+                "skills": {t: v["level"].value for t, v in self.learner.skill_progress.items()},
+            },
+            "goals": {
+                "total": len(self.goals.goals),
+                "active": len(self.goals.get_active_goals()),
+            },
+            "truth_engine": self.truth.get_stats(),
+            "dream_steerer": self.dream.get_stats(),
+            "swarm": self.swarm.get_stats(),
+            "performance_graph": self.performance.summary_report(),
+            "autopilot_pro": self.autopilot_pro.get_status(),
+            "zero_capital": {"businesses": len(self.zero_capital.active_businesses), "revenue": self.zero_capital.revenue_generated},
+            "eagle_eye": self.eagle_eye.get_status(),
+            "future_engine": self.future_engine.get_status(),
+            "games_built": self.game_engine._games_built,
+            "game_engine_status": self.game_engine.get_status(),
+            "meta_cognition": {
+                "total_observations": len(self.meta_cognition.observations),
+                "current_state": self.meta_cognition.current_state.value,
+                "profiles_tracked": len(self.meta_cognition.cognitive_profiles),
+                "bias_detection": self.meta_cognition.bias_detection_enabled,
+                "self_reflection": self.meta_cognition.self_reflection_enabled,
+            },
+            "consciousness": {
+                "awake": self.is_awake,
+                "cycles": self.cycle_count,
+            },
+        }
+
+    def get_status(self) -> dict:
+        return {
+            "name": self.identity.name,
+            "awake": self.is_awake,
+            "cycle": self.cycle_count,
+            "mood": self.emotion.get_dominant_emotion().value,
+            "thoughts": len(self.reasoner.thought_history),
+            "memories": len(self.memory.fragments),
+            "goals": len(self.goals.goals),
+            "facts": len(self.truth.facts),
+            "dream_patterns": len(self.dream.patterns),
+            "swarm_agents": len(self.swarm.agents),
+            "metrics": len(self.performance.series),
+            "autopilot_pro_running": self.autopilot_pro.is_running,
+            "business_models": len(self.zero_capital.ZERO_CAPITAL_PLAYBOOKS),
+            "eagle_watching": self.eagle_eye.is_watching,
+            "predictions": len(self.future_engine.prediction_log._predictions),
+            "game_engine": self.game_engine.get_status(),
+        }
+
+    async def build_game_from_prompt(self, prompt: str) -> dict:
+        """Build a game from a natural language prompt using the enhanced GameDirector."""
+        return await self.game_engine.build_from_prompt(prompt)
+
+    async def create_game(self, name: str, genre: str, width: int = 64, height: int = 64,
+                         enemies: int = 10, npcs: int = 5, description: str = "") -> dict:
+        """Create a game with specific parameters."""
+        from nicto_game.core.config import GameConfig, GameGenre, WorldConfig
+        cfg = GameConfig(
+            name=name,
+            genre=GameGenre(genre),
+            world=WorldConfig(width=width, height=height, enemies=enemies, npcs=npcs),
+            description=description,
         )
-        
-        await self.knowledge.learn(fact)
-        
-        # Record that we learned something
-        self.goals.record_interaction(knowledge_added=1)
+        return await self.game_engine.build_game(cfg)
+
+    async def get_game_status(self) -> dict:
+        """Get detailed status of the game engine."""
+        return self.game_engine.get_status()
+
+    async def list_generated_games(self) -> list:
+        """List all generated games."""
+        return self.game_engine._build_history if hasattr(self.game_engine, '_build_history') else []
+
+    async def get_game_by_name(self, name: str) -> dict:
+        """Get a specific generated game by name."""
+        for game in (self.game_engine._build_history if hasattr(self.game_engine, '_build_history') else []):
+            if game.get("name") == name:
+                return game
+        return None
+
+    async def delete_game(self, name: str) -> bool:
+        """Delete a generated game."""
+        if hasattr(self.game_engine, '_build_history'):
+            self.game_engine._build_history = [
+                g for g in self.game_engine._build_history if g.get("name") != name
+            ]
+            return True
+        return False

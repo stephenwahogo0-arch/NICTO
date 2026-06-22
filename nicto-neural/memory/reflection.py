@@ -1,88 +1,223 @@
-"""Reflection memory — post-task reflections, improvements, scores."""
-
+from .base import MemoryStore, MemoryEntry
+from typing import Any, Dict, List, Optional, Tuple
 import json
-import sqlite3
-from datetime import datetime
-from pathlib import Path
-from typing import Optional
-
-from .base import MemoryEntry, MemoryStore
+import time
+import os
 
 
 class ReflectionMemory(MemoryStore):
-    """Stores post-task reflections and improvement scores."""
+    def __init__(self, store_name: str = "reflection", base_path: Optional[str] = None):
+        super().__init__(store_name, base_path)
 
-    def __init__(self, db_path):
-        path = Path(db_path).expanduser()
-        path.mkdir(parents=True, exist_ok=True)
-        self._db = sqlite3.connect(str(path / "reflection.db"))
-        self._init_schema()
-
-    def _init_schema(self):
-        self._db.execute("""
+    def _init_db(self) -> None:
+        self._conn.execute("""
             CREATE TABLE IF NOT EXISTS reflections (
-                id TEXT PRIMARY KEY,
-                content TEXT,
-                metadata TEXT,
-                timestamp TEXT,
-                importance REAL DEFAULT 0.5
+                reflection_id TEXT PRIMARY KEY,
+                task_id TEXT DEFAULT '',
+                brain TEXT DEFAULT '',
+                domain TEXT DEFAULT '',
+                was_correct INTEGER DEFAULT 1,
+                confidence REAL DEFAULT 0.0,
+                missing_knowledge TEXT DEFAULT '',
+                needed_tool TEXT DEFAULT '',
+                improvement TEXT DEFAULT '',
+                score REAL DEFAULT 0.0,
+                timestamp REAL NOT NULL,
+                metadata TEXT DEFAULT '{}'
             )
         """)
-        self._db.commit()
+        self._conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_ref_brain
+            ON reflections(brain)
+        """)
+        self._conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_ref_domain
+            ON reflections(domain)
+        """)
+        self._conn.execute("""
+            CREATE INDEX IF NOT EXISTS idx_ref_score
+            ON reflections(score)
+        """)
+        self._conn.commit()
 
-    def store(self, entry: MemoryEntry) -> str:
-        self._db.execute(
-            """INSERT OR REPLACE INTO reflections
-            (id, content, metadata, timestamp, importance)
-            VALUES (?, ?, ?, ?, ?)""",
+    def store_reflection(self, record: Dict) -> str:
+        ref_id = record.get("reflection_id", f"ref_{int(time.time() * 1e6)}")
+        self._conn.execute(
+            """
+            INSERT OR REPLACE INTO reflections
+            (reflection_id, task_id, brain, domain, was_correct, confidence, missing_knowledge, needed_tool, improvement, score, timestamp, metadata)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
             (
-                entry.id,
-                json.dumps(entry.content) if entry.content is not None else "null",
-                json.dumps(entry.metadata),
-                entry.timestamp.isoformat(),
-                entry.importance,
+                ref_id,
+                record.get("task_id", ""),
+                record.get("brain", ""),
+                record.get("domain", ""),
+                1 if record.get("was_correct", True) else 0,
+                record.get("confidence", 0.0),
+                record.get("missing_knowledge", ""),
+                record.get("needed_tool", ""),
+                record.get("improvement", ""),
+                record.get("score", 0.0),
+                record.get("timestamp", time.time()),
+                json.dumps(record.get("metadata", {})),
             ),
         )
-        self._db.commit()
-        return entry.id
+        self._conn.commit()
+        return ref_id
 
-    def recall(self, query: str, limit: int = 10) -> list:
-        cursor = self._db.execute(
-            """SELECT id, content, metadata, timestamp, importance
-            FROM reflections ORDER BY timestamp DESC LIMIT ?""",
-            (limit,),
-        )
-        results = []
-        for row in cursor.fetchall():
-            results.append(MemoryEntry(
-                id=row[0],
-                content=json.loads(row[1]),
-                metadata=json.loads(row[2]),
-                timestamp=datetime.fromisoformat(row[3]),
-                importance=row[4],
-            ))
-        return results
+    def store(self, key: str, value: Any, metadata: Optional[Dict] = None) -> str:
+        md = metadata or {}
+        if isinstance(value, dict):
+            record = value
+            record["reflection_id"] = key or record.get("reflection_id")
+            record.update(md)
+        else:
+            record = {"reflection_id": key, "improvement": str(value), **md}
+        return self.store_reflection(record)
 
-    def get(self, id: str) -> Optional[MemoryEntry]:
-        cursor = self._db.execute(
-            "SELECT id, content, metadata, timestamp, importance FROM reflections WHERE id=?",
-            (id,),
-        )
-        row = cursor.fetchone()
-        if not row:
-            return None
-        return MemoryEntry(
-            id=row[0],
-            content=json.loads(row[1]),
-            metadata=json.loads(row[2]),
-            timestamp=datetime.fromisoformat(row[3]),
-            importance=row[4],
-        )
+    def recent_reflections(self, n: int = 10) -> List[Dict]:
+        rows = self._conn.execute(
+            "SELECT reflection_id, task_id, brain, domain, was_correct, confidence, missing_knowledge, needed_tool, improvement, score, timestamp, metadata FROM reflections ORDER BY timestamp DESC LIMIT ?",
+            (n,),
+        ).fetchall()
+        return [
+            {
+                "reflection_id": r[0],
+                "task_id": r[1],
+                "brain": r[2],
+                "domain": r[3],
+                "was_correct": bool(r[4]),
+                "confidence": r[5],
+                "missing_knowledge": r[6],
+                "needed_tool": r[7],
+                "improvement": r[8],
+                "score": r[9],
+                "timestamp": r[10],
+                "metadata": json.loads(r[11]) if r[11] else {},
+            }
+            for r in rows
+        ]
 
-    def delete(self, id: str) -> bool:
-        self._db.execute("DELETE FROM reflections WHERE id=?", (id,))
-        self._db.commit()
-        return True
+    def reflections_by_brain(self, brain: str) -> List[Dict]:
+        rows = self._conn.execute(
+            "SELECT reflection_id, task_id, brain, domain, was_correct, confidence, missing_knowledge, needed_tool, improvement, score, timestamp, metadata FROM reflections WHERE brain = ? ORDER BY timestamp DESC",
+            (brain,),
+        ).fetchall()
+        return [
+            {
+                "reflection_id": r[0],
+                "task_id": r[1],
+                "brain": r[2],
+                "domain": r[3],
+                "was_correct": bool(r[4]),
+                "confidence": r[5],
+                "missing_knowledge": r[6],
+                "needed_tool": r[7],
+                "improvement": r[8],
+                "score": r[9],
+                "timestamp": r[10],
+                "metadata": json.loads(r[11]) if r[11] else {},
+            }
+            for r in rows
+        ]
+
+    def low_score_reflections(self, threshold: float = 0.5) -> List[Dict]:
+        rows = self._conn.execute(
+            "SELECT reflection_id, task_id, brain, domain, was_correct, confidence, missing_knowledge, needed_tool, improvement, score, timestamp, metadata FROM reflections WHERE score < ? ORDER BY score ASC",
+            (threshold,),
+        ).fetchall()
+        return [
+            {
+                "reflection_id": r[0],
+                "task_id": r[1],
+                "brain": r[2],
+                "domain": r[3],
+                "was_correct": bool(r[4]),
+                "confidence": r[5],
+                "missing_knowledge": r[6],
+                "needed_tool": r[7],
+                "improvement": r[8],
+                "score": r[9],
+                "timestamp": r[10],
+                "metadata": json.loads(r[11]) if r[11] else {},
+            }
+            for r in rows
+        ]
+
+    def improvement_suggestions(self, domain: str) -> List[str]:
+        rows = self._conn.execute(
+            "SELECT improvement, missing_knowledge, needed_tool FROM reflections WHERE domain = ? AND score < 0.7 ORDER BY score ASC LIMIT 20",
+            (domain,),
+        ).fetchall()
+        suggestions = []
+        for r in rows:
+            if r[0]:
+                suggestions.append(r[0])
+            if r[1]:
+                suggestions.append(f"Study: {r[1]}")
+            if r[2]:
+                suggestions.append(f"Tool needed: {r[2]}")
+        return suggestions
+
+    def query(self, query_text: str = "", limit: int = 10) -> List[Dict]:
+        if query_text:
+            like = f"%{query_text}%"
+            rows = self._conn.execute(
+                "SELECT reflection_id, task_id, brain, domain, was_correct, confidence, missing_knowledge, needed_tool, improvement, score, timestamp, metadata FROM reflections WHERE domain LIKE ? OR brain LIKE ? OR improvement LIKE ? ORDER BY timestamp DESC LIMIT ?",
+                (like, like, like, limit),
+            ).fetchall()
+        else:
+            return self.recent_reflections(limit)
+        return [
+            {
+                "reflection_id": r[0],
+                "task_id": r[1],
+                "brain": r[2],
+                "domain": r[3],
+                "was_correct": bool(r[4]),
+                "confidence": r[5],
+                "missing_knowledge": r[6],
+                "needed_tool": r[7],
+                "improvement": r[8],
+                "score": r[9],
+                "timestamp": r[10],
+                "metadata": json.loads(r[11]) if r[11] else {},
+            }
+            for r in rows
+        ]
+
+    def recall(self, key: str) -> Optional[Any]:
+        row = self._conn.execute(
+            "SELECT reflection_id, task_id, brain, domain, was_correct, confidence, missing_knowledge, needed_tool, improvement, score, timestamp, metadata FROM reflections WHERE reflection_id = ?",
+            (key,),
+        ).fetchone()
+        if row:
+            return {
+                "reflection_id": row[0],
+                "task_id": row[1],
+                "brain": row[2],
+                "domain": row[3],
+                "was_correct": bool(row[4]),
+                "confidence": row[5],
+                "missing_knowledge": row[6],
+                "needed_tool": row[7],
+                "improvement": row[8],
+                "score": row[9],
+                "timestamp": row[10],
+                "metadata": json.loads(row[11]) if row[11] else {},
+            }
+        return None
+
+    def forget(self, key: str) -> bool:
+        c = self._conn.execute("DELETE FROM reflections WHERE reflection_id = ?", (key,))
+        self._conn.commit()
+        return c.rowcount > 0
 
     def count(self) -> int:
-        return self._db.execute("SELECT COUNT(*) FROM reflections").fetchone()[0]
+        row = self._conn.execute("SELECT COUNT(*) FROM reflections").fetchone()
+        return row[0] if row else 0
+
+    def clear(self) -> None:
+        self._conn.execute("DELETE FROM reflections")
+        self._conn.commit()

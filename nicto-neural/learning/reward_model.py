@@ -1,50 +1,78 @@
-"""Reward model — learned reward function for RL training."""
-
-import torch
-import torch.nn as nn
-import torch.nn.functional as F
+from typing import Any, Dict
 
 
-class RewardModel(nn.Module):
-    """Learned reward model that predicts task quality from features."""
-
-    def __init__(self, config, state_dim: int = 15):
-        super().__init__()
-        self.config = config
-        self.network = nn.Sequential(
-            nn.Linear(state_dim, 64),
-            nn.ReLU(),
-            nn.Linear(64, 32),
-            nn.ReLU(),
-            nn.Linear(32, 1),
-        )
-        self.optimizer = torch.optim.Adam(self.parameters(), lr=1e-3)
-        self._history: list[dict] = []
-
-    def forward(self, features: torch.Tensor) -> torch.Tensor:
-        return self.network(features)
-
-    def predict_reward(self, features: torch.Tensor) -> float:
-        """Predict reward for given task features."""
-        with torch.no_grad():
-            return float(self.forward(features).squeeze())
-
-    def train_step(self, features: torch.Tensor, target_reward: float) -> float:
-        """Single training step on (features, reward) pair."""
-        self.optimizer.zero_grad()
-        predicted = self.forward(features).squeeze()
-        target = torch.tensor(target_reward, dtype=torch.float32)
-        loss = F.mse_loss(predicted, target)
-        loss.backward()
-        self.optimizer.step()
-        self._history.append({"loss": loss.item()})
-        return loss.item()
-
-    def get_training_stats(self) -> dict:
-        if not self._history:
-            return {"steps": 0, "avg_loss": 0.0}
-        recent = self._history[-100:]
-        return {
-            "steps": len(self._history),
-            "avg_loss": sum(h["loss"] for h in recent) / len(recent),
+class RewardModel:
+    def __init__(self):
+        self.weights = {
+            "correctness": 0.4,
+            "elo_gain": 0.2,
+            "novelty": 0.1,
+            "consistency": 0.1,
+            "hacking_penalty": 0.15,
+            "user_feedback": 0.05,
         }
+
+    def compute(self, task: Dict = None, output: Any = None, expected: Any = None,
+                elo_delta: float = 0.0, validation_improvement: float = 0.0,
+                user_feedback: float = 0.0, novelty: float = 0.0,
+                consistency: float = 0.0, hacking_penalty: float = 0.0) -> float:
+        components = self.reward_components(
+            task=task, output=output, expected=expected,
+            elo_delta=elo_delta, val_improvement=validation_improvement,
+            user_feedback=user_feedback, novelty=novelty,
+            consistency=consistency, hacking_penalty=hacking_penalty
+        )
+        total = sum(components.values())
+        return max(0.0, min(1.0, total))
+
+    def reward_components(self, task: Any = None, output: Any = None, expected: Any = None,
+                          elo_delta: float = 0.0, val_improvement: float = 0.0,
+                          user_feedback: float = 0.0, novelty: float = 0.0,
+                          consistency: float = 0.0, hacking_penalty: float = 0.0) -> Dict[str, float]:
+        correctness = 0.0
+        if expected is not None and output is not None:
+            str_out = str(output)
+            str_exp = str(expected)
+            if str_out == str_exp:
+                correctness = 1.0
+            elif str_out and str_exp:
+                common = sum(1 for a, b in zip(str_out, str_exp) if a == b)
+                max_len = max(len(str_out), len(str_exp))
+                correctness = common / max_len if max_len > 0 else 0.0
+        if task is not None:
+            task_score = task.get("score", None) if isinstance(task, dict) else None
+            if task_score is not None and correctness == 0.0:
+                correctness = float(task_score)
+        correctness = max(0.0, min(1.0, correctness))
+
+        elo_gain = max(0.0, min(1.0, (elo_delta + 50) / 100.0))
+        novelty = max(0.0, min(1.0, novelty))
+        consistency = max(0.0, min(1.0, consistency))
+        hacking_penalty = max(0.0, min(1.0, hacking_penalty))
+        user_feedback = max(-1.0, min(1.0, user_feedback))
+
+        w = self.weights
+        total = (w["correctness"] * correctness +
+                 w["elo_gain"] * elo_gain +
+                 w["novelty"] * novelty +
+                 w["consistency"] * consistency -
+                 w["hacking_penalty"] * hacking_penalty +
+                 w["user_feedback"] * user_feedback)
+        total = max(0.0, min(1.0, total))
+
+        return {
+            "correctness": w["correctness"] * correctness,
+            "elo_gain": w["elo_gain"] * elo_gain,
+            "novelty": w["novelty"] * novelty,
+            "consistency": w["consistency"] * consistency,
+            "hacking_penalty": -w["hacking_penalty"] * hacking_penalty,
+            "user_feedback": w["user_feedback"] * user_feedback,
+            "total": total,
+        }
+
+    def set_weight(self, component: str, weight: float) -> None:
+        if component in self.weights:
+            self.weights[component] = max(0.0, min(1.0, weight))
+
+    def get_weights(self) -> Dict[str, float]:
+        return dict(self.weights)

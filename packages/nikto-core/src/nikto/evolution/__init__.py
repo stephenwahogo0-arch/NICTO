@@ -1,11 +1,4 @@
-"""Autonomous Self-Evolution Loop — NIKTO improves itself automatically."""
+"""NIKTO Evolution Module."""
+from nikto.evolution.engine import EvolutionProtocol
 
-from nikto.evolution.engine import (
-    EvolutionEngine, EvolutionConfig, EvolutionResult,
-    SelfHealer, SelfOptimizer, BenchmarkSuite,
-)
-
-__all__ = [
-    "EvolutionEngine", "EvolutionConfig", "EvolutionResult",
-    "SelfHealer", "SelfOptimizer", "BenchmarkSuite",
-]
+__all__ = ["EvolutionProtocol"]

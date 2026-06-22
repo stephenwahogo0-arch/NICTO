@@ -1,15 +1,15 @@
 {
-  "name": "nikto",
+  "name": "kyros",
   "version": "1.0.0",
-  "description": "NIKTO — Artificial Intelligence System",
+  "description": "KYROS — Artificial Intelligence System",
   "scripts": {
     "start": "python install.py && python run_web.py",
     "web": "python run_web.py",
-    "cli": "python -m nikto",
+    "cli": "python -m kyros",
     "headless": "python run_headless.py",
     "test": "python _run_tests.py",
     "logo": "python generate_logo.py"
   },
-  "keywords": ["ai", "nikto", "artificial-intelligence", "system"],
+  "keywords": ["ai", "kyros", "artificial-intelligence", "system"],
   "license": "MIT"
 }

@@ -1,0 +1,334 @@
+{
+  "ethereum": {
+    "content": "Ethereum is a decentralized smart contract platform using a Turing-complete virtual machine (EVM) with gas metering preventing infinite loops. Solidity contracts compile to EVM bytecode executed by validators. The Merge transitioned Ethereum from PoW to PoS consensus with Casper FFG finality, reducing energy consumption by 99.95% and enabling future scalability through Danksharding and Proto-Danksharding (EIP-4844).",
+    "metadata": {
+      "category": "blockchain",
+      "tags": [
+        "ethereum",
+        "smart_contracts",
+        "evm"
+      ]
+    }
+  },
+  "solidity": {
+    "content": "Solidity is the primary smart contract language for Ethereum with static typing, inheritance, libraries, and user-defined types. Key security patterns include checks-effects-interactions for reentrancy protection, pull-over-push for safe payments, and OpenZeppelin's Ownable for access control. Common vulnerabilities are reentrancy, integer overflow/underflow, front-running, oracle manipulation, tx.origin misuse, and insecure randomness.",
+    "metadata": {
+      "category": "blockchain",
+      "tags": [
+        "solidity",
+        "smart_contracts",
+        "evm"
+      ]
+    }
+  },
+  "web3": {
+    "content": "Web3 enables decentralized applications (dApps) that interact with blockchain networks through libraries like ethers.js and web3.js. These libraries communicate with Ethereum nodes via JSON-RPC for transaction and contract interactions. MetaMask provides browser-based wallet connectivity, while WalletConnect enables mobile wallet pairing. Modern web3 development uses viem and wagmi for type-safe, reactive blockchain interactions.",
+    "metadata": {
+      "category": "blockchain",
+      "tags": [
+        "web3",
+        "dapps",
+        "ethers"
+      ]
+    }
+  },
+  "defi": {
+    "content": "DeFi encompasses lending protocols (Aave, Compound), decentralized exchanges (Uniswap, Curve), yield aggregators (Yearn Finance), and synthetic assets (Synthetix). Automated Market Makers (AMMs) use liquidity pools with constant product formulas (x*y=k) for automated trading without order books. Liquidity providers earn trading fees and governance tokens but face impermanent loss risk from asset price divergence.",
+    "metadata": {
+      "category": "blockchain",
+      "tags": [
+        "defi",
+        "amm",
+        "lending",
+        "dex"
+      ]
+    }
+  },
+  "nfts": {
+    "content": "NFTs represent unique digital assets on blockchains, primarily using the ERC-721 standard for non-fungible tokens on Ethereum. NFTs encode ownership and provenance of digital art, collectibles, virtual real estate, and in-game items. ERC-1155 extends this with semi-fungible tokens for efficient batch transfers of multiple asset types. NFT marketplaces like OpenSea, Blur, and LooksRare facilitate peer-to-peer trading with royalty enforcement.",
+    "metadata": {
+      "category": "blockchain",
+      "tags": [
+        "nft",
+        "erc721",
+        "digital_art"
+      ]
+    }
+  },
+  "consensus": {
+    "content": "Proof-of-Stake (PoS) achieves consensus through validators who stake capital as collateral and are penalized (slashed) for misbehavior. Gasper combines Casper FFG for finality with LMD-GHOST for fork choice in Ethereum. Delegated Proof-of-Stake (DPoS) allows token holders to vote for block producers, used by EOS, TRON, and Binance Chain. PBFT provides immediate finality in permissioned settings but requires O(n^2) communication.",
+    "metadata": {
+      "category": "blockchain",
+      "tags": [
+        "consensus",
+        "pos",
+        "finality"
+      ]
+    }
+  },
+  "layer2": {
+    "content": "Layer-2 scaling processes transactions off-chain while inheriting L1 security. Optimistic rollups assume validity with a 7-day challenge period for fraud proof submission—used by Arbitrum and Optimism. ZK-rollups use zero-knowledge proofs (zk-SNARKs/zk-STARKs) for instant finality and faster withdrawals—used by zkSync, StarkNet, and Scroll. Validiums and Volitions offer off-chain data availability for further cost reduction.",
+    "metadata": {
+      "category": "blockchain",
+      "tags": [
+        "layer2",
+        "rollups",
+        "optimistic",
+        "zk"
+      ]
+    }
+  },
+  "bitcoin": {
+    "content": "Bitcoin is a decentralized digital currency using PoW consensus with SHA-256 mining. The UTXO model tracks individual coins rather than account balances, enabling privacy and parallel transaction validation. Bitcoin Script is a stack-based, non-Turing-complete scripting language intentionally limited for security. The Lightning Network enables fast, low-cost payments through bidirectional payment channels with HTLC routing and onion routing for privacy.",
+    "metadata": {
+      "category": "blockchain",
+      "tags": [
+        "bitcoin",
+        "utxo",
+        "lightning"
+      ]
+    }
+  },
+  "cryptography": {
+    "content": "Elliptic curve cryptography (secp256k1 for Bitcoin/Ethereum) provides the mathematical foundation for blockchain digital signatures. ECDSA generates signatures (r, s) from private keys and message hashes. EdDSA (Ed25519) used by Solana, Cardano, and Stellar offers faster verification and simpler, safer implementation. Schnorr signatures (enabled by Bitcoin Taproot) support signature aggregation for multi-signature efficiency and privacy.",
+    "metadata": {
+      "category": "blockchain",
+      "tags": [
+        "cryptography",
+        "ecdsa",
+        "signatures"
+      ]
+    }
+  },
+  "wallets": {
+    "content": "HD wallets derive all keys from a single seed phrase (BIP-39 mnemonic) using BIP-32 hierarchical deterministic key derivation with BIP-44 path (m/44'/coin'/account'/change/address). Hardware wallets (Ledger, Trezor, GridPlus) store private keys in secure elements for cold storage. Smart contract wallets (ERC-4337 account abstraction) enable social recovery, multi-sig, batched transactions, and sponsored gas payments.",
+    "metadata": {
+      "category": "blockchain",
+      "tags": [
+        "wallets",
+        "hd_wallets",
+        "bip39"
+      ]
+    }
+  },
+  "cross_chain": {
+    "content": "Cross-chain bridges enable asset transfer between different blockchain networks. Trusted bridges rely on a centralized custodian or multi-sig. Trustless bridges use light clients, validator networks, or optimistic verification. Bridge security is critical—the Ronin bridge hack ($620M), Wormhole hack ($326M), and Nomad bridge hack ($190M) demonstrate the risks. Liquidity networks offer a safer alternative for cross-chain swaps.",
+    "metadata": {
+      "category": "blockchain",
+      "tags": [
+        "cross_chain",
+        "bridges",
+        "interoperability"
+      ]
+    }
+  },
+  "gas_optimization": {
+    "content": "Ethereum gas optimization reduces transaction costs. Key techniques: pack multiple variables in a single storage slot (cheaper SLOAD/SSTORE), use uint256 (EVM word-aligned) rather than smaller types, prefer calldata over memory for read-only params, avoid unnecessary storage writes (only 20000+ gas each), use unchecked blocks for wrapping arithmetic in Solidity 0.8+, and batch external calls to save overhead.",
+    "metadata": {
+      "category": "blockchain",
+      "tags": [
+        "gas",
+        "optimization",
+        "solidity"
+      ]
+    }
+  },
+  "smart_contract_auditing": {
+    "content": "Smart contract auditing identifies vulnerabilities through manual code review, static analysis (Slither, Mythril), dynamic analysis (Echidna fuzzing), and formal verification (Certora, Halmos). Critical vulnerabilities include reentrancy, access control flaws, oracle manipulation, flash loan attacks, and economic exploits in AMM math. Audit reports include severity-ranked findings (Critical/High/Medium/Low/Informational) with detailed remediation guidance.",
+    "metadata": {
+      "category": "blockchain",
+      "tags": [
+        "auditing",
+        "security",
+        "smart_contracts"
+      ]
+    }
+  },
+  "flash_loans": {
+    "content": "Flash loans allow uncollateralized borrowing within a single atomic transaction. They enable arbitrage between DEX pools, collateral swapping, and liquidation strategies without upfront capital. Aave and dYdX pioneered flash loans with the requirement that the loan is repaid (or reversed) by transaction end. Attackers combine flash loans with price oracle manipulation for economic exploits, draining protocol liquidity in single transactions.",
+    "metadata": {
+      "category": "blockchain",
+      "tags": [
+        "flash_loans",
+        "defi",
+        "arbitrage"
+      ]
+    }
+  },
+  "tokens": {
+    "content": "ERC-20 defines the standard fungible token interface on Ethereum: totalSupply, balanceOf, transfer, approve, transferFrom. Implementation considerations include handling fee-on-transfer tokens (deflationary), rebasing tokens (elastic supply), tokens with blocklists, and missing return values (use SafeERC20 wrapper). ERC-4626 standardizes tokenized vaults with deposit/redeem semantics, enabling composable yield-bearing token integration.",
+    "metadata": {
+      "category": "blockchain",
+      "tags": [
+        "tokens",
+        "erc20",
+        "erc4626"
+      ]
+    }
+  },
+  "dao": {
+    "content": "DAOs encode governance rules in smart contracts for collective decision-making through token-weighted voting. Components include governance tokens, proposal lifecycle (create, discuss, vote, queue, execute), voting mechanisms (simple majority, quadratic voting, conviction voting), timelock controllers for delayed execution, and treasury management with multi-sig protection. The DAO hack (2016, $60M) led to the Ethereum Classic fork.",
+    "metadata": {
+      "category": "blockchain",
+      "tags": [
+        "dao",
+        "governance",
+        "voting"
+      ]
+    }
+  },
+  "mining": {
+    "content": "PoW mining validates transactions and produces blocks by finding nonces whose block hash meets difficulty targets. SHA-256 mining (Bitcoin) is dominated by ASICs (Application-Specific Integrated Circuits) for efficiency. Ethash (pre-merge Ethereum) was ASIC-resistant through memory-hard hashing. RandomX (Monero) optimizes for CPU mining through random code execution. Mining pools combine hash power for consistent rewards, paying via PPS, PPLNS, or FPPS schemes.",
+    "metadata": {
+      "category": "blockchain",
+      "tags": [
+        "mining",
+        "pow",
+        "asics"
+      ]
+    }
+  },
+  "staking": {
+    "content": "Staking locks cryptocurrency as collateral to secure PoS networks, with validators earning rewards for honest participation and facing slashing penalties for misbehavior (double-signing, equivocation, downtime). Ethereum requires 32 ETH per validator with withdrawal credentials for security. Liquid staking derivatives (Lido stETH, Rocket Pool rETH) issue tradable tokens representing staked positions, enabling staked asset liquidity and DeFi composability.",
+    "metadata": {
+      "category": "blockchain",
+      "tags": [
+        "staking",
+        "validator",
+        "liquid_staking"
+      ]
+    }
+  },
+  "mev": {
+    "content": "Maximal Extractable Value (MEV) is profit extracted from transaction ordering within blocks. Strategies include DEX arbitrage (atomic buy-sell across pools), sandwich attacks (front-run buy, back-run sell around large trades), and liquidations. MEV-boost relays enable validator-outsourced block building. PBS (Proposer-Builder Separation) separates block production from proposal, democratizing MEV through competitive block building markets.",
+    "metadata": {
+      "category": "blockchain",
+      "tags": [
+        "mev",
+        "arbitrage",
+        "sandwich"
+      ]
+    }
+  },
+  "zero_knowledge": {
+    "content": "ZK proofs allow a prover to convince a verifier of a statement's truth without revealing information beyond validity. zk-SNARKs produce small proofs (~200 bytes) with constant verification time but require trusted setup ceremonies (toxic waste). zk-STARKs eliminate trusted setup using hash-based cryptography but produce larger proofs (~100KB). Applications include ZK-rollups, privacy-preserving tokens (Zcash), and identity verification.",
+    "metadata": {
+      "category": "blockchain",
+      "tags": [
+        "zero_knowledge",
+        "zksnarks",
+        "zkstarks"
+      ]
+    }
+  },
+  "oracles": {
+    "content": "Blockchain oracles bridge external data onto blockchains since consensus protocols cannot fetch external data. Chainlink uses a distributed network of node operators with reputation contracts, aggregating data through median reporting for manipulation resistance. Oracle manipulation attacks trick oracles into reporting incorrect prices for MEV extraction. Mitigations include using multiple oracle sources, TWAP (time-weighted average price), and fallback oracles.",
+    "metadata": {
+      "category": "blockchain",
+      "tags": [
+        "oracles",
+        "chainlink",
+        "price_feeds"
+      ]
+    }
+  },
+  "account_abstraction": {
+    "content": "ERC-4337 enables smart contract wallets with arbitrary validation logic through UserOperation objects submitted to a mempool and executed by an EntryPoint contract. Benefits include multi-sig, social recovery (guardians can restore access), sponsored transactions (gasless for users), batched operations (one click for approvals+trades), session keys (limited permissions for apps), and passkey authentication for UX improvements.",
+    "metadata": {
+      "category": "blockchain",
+      "tags": [
+        "account_abstraction",
+        "erc4337",
+        "smart_wallets"
+      ]
+    }
+  },
+  "regulatory": {
+    "content": "Cryptocurrency regulation varies significantly globally. The US SEC classifies many tokens as securities via the Howey Test, while CFTC classifies Bitcoin and Ethereum as commodities. MiCA (Markets in Crypto-Assets) provides a comprehensive EU regulatory framework for stablecoins, utility tokens, and asset-referenced tokens. FATF Travel Rule requires VASPs to share customer information for transactions above thresholds. The EU's Transfer of Funds Regulation extends AML requirements to all crypto transfers.",
+    "metadata": {
+      "category": "blockchain",
+      "tags": [
+        "regulation",
+        "compliance",
+        "aml"
+      ]
+    }
+  },
+  "ipfs": {
+    "content": "IPFS is a peer-to-peer content-addressed file system where files are identified by their cryptographic hash (CID). This enables deduplication (identical files share one CID), verifiable retrieval (hashes verify content integrity), and offline access (cached content available locally). Pinata, Filebase, and web3.storage provide IPFS pinning services for persistence. IPFS is widely used for NFT metadata, dApp frontends, and decentralized data storage.",
+    "metadata": {
+      "category": "blockchain",
+      "tags": [
+        "ipfs",
+        "storage",
+        "content_addressing"
+      ]
+    }
+  },
+  "solana": {
+    "content": "Solana achieves high throughput (up to 65K TPS) through parallel transaction execution using Sealevel runtime and Tower BFT consensus. Proof-of-History (PoH) provides a verifiable clock using sequential SHA-256 hashing for ordering without waiting for consensus. Solana's stateless programming model separates program code from account data for parallel execution. The single global state machine enables composability across all applications.",
+    "metadata": {
+      "category": "blockchain",
+      "tags": [
+        "solana",
+        "high_throughput",
+        "poh"
+      ]
+    }
+  },
+  "polkadot": {
+    "content": "Polkadot enables blockchain interoperability through a relay chain that secures connected parachains. Parachains connect via slots (leased through auction) and communicate through XCM (Cross-Consensus Message) format. Substrate provides a framework for building parachains with customizable consensus, WASM-based runtime upgrades, and on-chain governance with referenda. Validators secure the relay chain, verify parachain blocks, and participate in GRANDPA finality.",
+    "metadata": {
+      "category": "blockchain",
+      "tags": [
+        "polkadot",
+        "parachains",
+        "substrate"
+      ]
+    }
+  },
+  "cosmos": {
+    "content": "Cosmos is an interoperable blockchain ecosystem using Tendermint consensus and IBC for cross-chain communication. Application-specific blockchains built with Cosmos SDK have full sovereignty over governance and parameters. IBC enables trustless token and data transfer between connected chains through light client verification. CosmWasm provides WASM-based smart contracts. ATOM is the staking and governance token for the Cosmos Hub.",
+    "metadata": {
+      "category": "blockchain",
+      "tags": [
+        "cosmos",
+        "ibc",
+        "tendermint"
+      ]
+    }
+  },
+  "defi_risks": {
+    "content": "DeFi risks include smart contract bugs, oracle manipulation (flash loan attacks), liquidation cascades (forced sell-offs), impermanent loss (LPs lose value vs hodling), and governance attacks (proposal hijacking, vote buying). Protocol composability creates systemic risk. Insurance protocols like Nexus Mutual, Sherlock, and InsurAce provide coverage against smart contract failures. Risk management includes position monitoring, stop-loss, and portfolio diversification.",
+    "metadata": {
+      "category": "blockchain",
+      "tags": [
+        "defi_risks",
+        "insurance",
+        "risk_management"
+      ]
+    }
+  },
+  "tokenomics": {
+    "content": "Tokenomics designs token distribution, utility, and incentives. Key variables: total supply (fixed BTC 21M vs inflationary ETH), allocation splits (team/ investors/community/treasury), vesting schedules (cliff + linear), token burn mechanisms (EIP-1559 fee burn), and utility design (staking, governance, fee payment, collateral). Sustainable tokenomics align incentives between protocol, users, and token holders without creating unsustainable ponzinomics from inflation.",
+    "metadata": {
+      "category": "blockchain",
+      "tags": [
+        "tokenomics",
+        "token_design",
+        "incentives"
+      ]
+    }
+  },
+  "blockchain_scalability": {
+    "content": "Blockchain scalability addresses the trilemma of decentralization, security, and scalability. Sharding divides blockchain state into partitions processed in parallel by different validator subsets. Layer-2 solutions process transactions off-chain with on-chain settlement guarantees. Modular architecture separates execution, consensus, data availability, and settlement into specialized layers—Celestia provides data availability, EigenLayer provides restaking security, and rollups provide execution.",
+    "metadata": {
+      "category": "blockchain",
+      "tags": [
+        "scalability",
+        "sharding",
+        "modular"
+      ]
+    }
+  }
+}

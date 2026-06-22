@@ -1,4 +1,4 @@
-"""NIKTO Core Engine — Rust ECS + wgpu GPU renderer.
+"""KYROS Core Engine — Rust ECS + wgpu GPU renderer.
 
 Three integrated layers:
   1. ECS: cache-line-aligned entity storage with parallel systems
@@ -6,7 +6,7 @@ Three integrated layers:
   3. Scene + Renderer: octree scene graph + wgpu GPU pipeline
 
 Usage:
-    from nikto_core_engine import NiktoEngine
+    from kyros_core_engine import kyros ngine
 
     engine = NiktoEngine()
 
@@ -15,13 +15,13 @@ Usage:
     engine.apply_wave(time=1.0, amplitude=2.0)
 
     # GPU rendering window
-    engine.start_window(1280, 720, "NIKTO Engine")
+    engine.start_window(1280, 720, "KYROS Engine")
     engine.demo_cubes(count=8, spacing=2.5)
     engine.set_camera(15, 10, 15, 0, 0, 0)
 """
 
 try:
-    import nikto_core_engine as _native
+    import kyros_core_engine as _native
     HAS_NATIVE = True
 except ImportError:
     HAS_NATIVE = False
@@ -32,9 +32,9 @@ class NiktoEngine:
         if not HAS_NATIVE:
             raise RuntimeError(
                 "Native module not found. Build:\n"
-                "  cd packages/nikto-core-engine\n"
+                "  cd packages/kyros-core-engine\n"
                 "  cargo build --release\n"
-                "  cp target/release/nikto_core_engine.pyd nikto_core_engine/"
+                "  cp target/release/kyros_core_engine.pyd kyros_core_engine/"
             )
         self._engine = _native.NiktoEngine(chunk_size=chunk_size, generate_mesh=generate_mesh)
 
@@ -83,7 +83,7 @@ class NiktoEngine:
 
     # ── GPU Rendering ──────────────────────────────────────────────
 
-    def start_window(self, width: int = 1280, height: int = 720, title: str = "NIKTO Engine"):
+    def start_window(self, width: int = 1280, height: int = 720, title: str = "KYROS Engine"):
         self._engine.start_window(width, height, title)
 
     def close_window(self):

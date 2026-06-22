@@ -1,13 +1,13 @@
-"""Start NIKTO web server and test endpoints."""
+"""Start KYROS web server and test endpoints."""
 import sys, subprocess, time, urllib.request, json
 
-sys.path.insert(0, "packages/nikto-core/src")
+sys.path.insert(0, "packages/kyros-core/src")
 
 # Start server
 proc = subprocess.Popen(
     [sys.executable, "-m", "uvicorn", "nikto.api.routes:app",
      "--host", "127.0.0.1", "--port", "8765", "--log-level", "warning"],
-    cwd="packages/nikto-core/src"
+    cwd="packages/kyros-core/src"
 )
 
 time.sleep(4)

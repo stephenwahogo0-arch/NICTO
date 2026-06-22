@@ -1,285 +1,253 @@
-import asyncio
-import enum
+"""NIKTO Orchestrator Engine — coordinates brain subsystems into coherent workflows."""
+
 import json
-import logging
-import time
+import hashlib
 import uuid
-from dataclasses import dataclass, field
+import time
 from datetime import datetime, timezone
-from pathlib import Path
-from typing import Any, Optional
-
-logger = logging.getLogger(__name__)
+from typing import Optional
 
 
-class TicketStatus(enum.Enum):
-    PENDING = "pending"
-    ASSIGNED = "assigned"
-    IN_PROGRESS = "in_progress"
-    REVIEW = "review"
-    DONE = "done"
-    FAILED = "failed"
-    BLOCKED = "blocked"
-
-
-class Priority(enum.Enum):
-    CRITICAL = 0
-    HIGH = 1
-    MEDIUM = 2
-    LOW = 3
-
-
-@dataclass
-class Ticket:
-    id: str = field(default_factory=lambda: f"TICK-{uuid.uuid4().hex[:8].upper()}")
-    title: str = ""
-    description: str = ""
-    status: TicketStatus = TicketStatus.PENDING
-    priority: Priority = Priority.MEDIUM
-    assignee: str = ""
-    parent_id: Optional[str] = None
-    subtasks: list = field(default_factory=list)
-    budget: float = 0.0
-    cost: float = 0.0
-    created_at: float = field(default_factory=time.time)
-    updated_at: float = field(default_factory=time.time)
-    metadata: dict = field(default_factory=dict)
+class WorkflowStep:
+    def __init__(self, name: str, target: str, params: dict = None,
+                 depends_on: list = None, priority: int = 5,
+                 timeout: float = 30.0):
+        self.id = hashlib.sha256(uuid.uuid4().bytes).hexdigest()[:16]
+        self.name = name
+        self.target = target
+        self.params = params or {}
+        self.depends_on = depends_on or []
+        self.priority = max(1, min(10, priority))
+        self.timeout = timeout
+        self.status = "pending"
+        self.result = None
+        self.error = None
+        self.started_at = None
+        self.completed_at = None
 
     def to_dict(self) -> dict:
-        return {
-            "id": self.id, "title": self.title, "description": self.description,
-            "status": self.status.value, "priority": self.priority.name,
-            "assignee": self.assignee, "parent_id": self.parent_id,
-            "subtasks": self.subtasks, "budget": self.budget, "cost": self.cost,
-            "created_at": self.created_at, "updated_at": self.updated_at,
-        }
+        return {k: v for k, v in self.__dict__.items()}
 
 
-@dataclass
-class AgentNode:
-    name: str
-    role: str = "worker"
-    skills: list = field(default_factory=list)
-    status: str = "idle"
-    current_ticket: Optional[str] = None
-    completed: int = 0
-    failed: int = 0
-    total_cost: float = 0.0
-    last_heartbeat: Optional[float] = None
+class Workflow:
+    def __init__(self, name: str, description: str = "",
+                 metadata: dict = None):
+        self.id = hashlib.sha256(uuid.uuid4().bytes).hexdigest()[:16]
+        self.name = name
+        self.description = description
+        self.steps = []
+        self.status = "idle"
+        self.created = datetime.now(timezone.utc).isoformat()
+        self.completed_at = None
+        self.metadata = metadata or {}
+
+    def add_step(self, name: str, target: str, params: dict = None,
+                 depends_on: list = None, priority: int = 5) -> str:
+        step = WorkflowStep(name, target, params, depends_on, priority)
+        self.steps.append(step)
+        return step.id
 
     def to_dict(self) -> dict:
-        return {
-            "name": self.name, "role": self.role,
-            "skills": self.skills, "status": self.status,
-            "current_ticket": self.current_ticket,
-            "completed": self.completed, "failed": self.failed,
-            "total_cost": self.total_cost,
-        }
+        return {k: v for k, v in self.__dict__.items()}
 
 
-@dataclass
-class Heartbeat:
-    agent_name: str
-    timestamp: float = field(default_factory=time.time)
-    status: str = "alive"
-    cpu: float = 0.0
-    memory: float = 0.0
-    message: str = ""
+class NiktoOrchestrator:
+    """
+    Orchestrator Engine.
+    Coordinates brain subsystems into workflows.
+    Manages workflow lifecycle, step execution, and error recovery.
+    """
 
+    SUBSYSTEMS = {
+        "reasoner": "Analytical and multi-style reasoning",
+        "knowledge": "Fact and concept storage and retrieval",
+        "memory": "Long-term memory with consolidation and recall",
+        "emotion": "Emotional state tracking and regulation",
+        "conscience": "Ethical and moral evaluation",
+        "truth_engine": "Fact-checking and anti-hallucination",
+        "dream_steerer": "Latent-space thought augmentation",
+        "swarm": "Multi-agent coordination and task distribution",
+        "performance_graph": "Metric tracking and trend analysis",
+        "learner": "Skill acquisition and mastery tracking",
+        "goals": "Hierarchical goal management",
+        "language": "Natural language understanding and generation",
+    }
 
-@dataclass
-class Budget:
-    total: float = 1000.0
-    spent: float = 0.0
-    currency: str = "USD"
-    reset_period: str = "monthly"
+    def __init__(self):
+        self.workflows = {}
+        self.max_workflows = 100
+        self.routing_tables = {}  # intent -> subsystem
 
-    def remaining(self) -> float:
-        return self.total - self.spent
+    # ── Workflow Management ───────────────────────────────────────────
 
-    def can_spend(self, amount: float) -> bool:
-        return self.spent + amount <= self.total
+    def create_workflow(self, name: str, description: str = "",
+                        metadata: dict = None) -> str:
+        wf = Workflow(name, description, metadata)
+        self.workflows[wf.id] = wf
+        if len(self.workflows) > self.max_workflows:
+            oldest = min(self.workflows.keys(),
+                        key=lambda k: self.workflows[k].created)
+            del self.workflows[oldest]
+        return wf.id
 
+    def add_step(self, workflow_id: str, step_name: str, target: str,
+                 params: dict = None, depends_on: list = None,
+                 priority: int = 5) -> Optional[str]:
+        wf = self.workflows.get(workflow_id)
+        if not wf:
+            return None
+        return wf.add_step(step_name, target, params, depends_on, priority)
 
-@dataclass
-class OrchestratorConfig:
-    name: str = "nikto-orchestrator"
-    max_concurrent: int = 5
-    heartbeat_interval: float = 30.0
-    ticket_timeout: float = 3600.0
-    budget: Budget = field(default_factory=Budget)
-    org_chart_file: str = str(Path.home() / ".nikto" / "org_chart.json")
+    def get_workflow(self, workflow_id: str) -> Optional[dict]:
+        wf = self.workflows.get(workflow_id)
+        return wf.to_dict() if wf else None
 
+    def list_workflows(self, status: str = None) -> list:
+        wfs = self.workflows.values()
+        if status:
+            wfs = [w for w in wfs if w.status == status]
+        return [w.to_dict() for w in wfs]
 
-class Orchestrator:
-    def __init__(self, config: Optional[OrchestratorConfig] = None):
-        self.config = config or OrchestratorConfig()
-        self.agents: dict[str, AgentNode] = {}
-        self.tickets: dict[str, Ticket] = {}
-        self._running = False
-        self._task: Optional[asyncio.Task] = None
+    # ── Execution ─────────────────────────────────────────────────────
 
-    def add_agent(self, name: str, role: str = "worker", skills: list = None) -> AgentNode:
-        agent = AgentNode(name=name, role=role, skills=skills or [])
-        self.agents[name] = agent
-        self._save_org_chart()
-        return agent
+    def execute_workflow(self, workflow_id: str,
+                         subsystem_providers: dict = None) -> dict:
+        wf = self.workflows.get(workflow_id)
+        if not wf:
+            return {"success": False, "error": "Workflow not found"}
+        wf.status = "running"
+        wf.started_at = datetime.now(timezone.utc).isoformat()
+        completed = {}
+        step_results = []
 
-    def remove_agent(self, name: str) -> bool:
-        if name in self.agents:
-            del self.agents[name]
-            self._save_org_chart()
-            return True
-        return False
+        # Topological sort by dependency
+        sorted_steps = self._topological_sort(wf.steps)
+        for step in sorted_steps:
+            deps_met = all(d in completed for d in step.depends_on)
+            if not deps_met:
+                step.status = "blocked"
+                step.error = "Unmet dependencies"
+                continue
+            step.status = "in_progress"
+            step.started_at = datetime.now(timezone.utc).isoformat()
+            try:
+                provider = subsystem_providers or {}
+                result = self._execute_step(step, provider)
+                step.status = "completed"
+                step.result = result
+                completed[step.id] = result
+            except Exception as e:
+                step.status = "failed"
+                step.error = str(e)
+            step.completed_at = datetime.now(timezone.utc).isoformat()
+            step_results.append(step.to_dict())
 
-    def create_ticket(self, title: str, description: str = "", priority: Priority = Priority.MEDIUM,
-                      parent_id: str = "", budget: float = 0.0) -> Ticket:
-        ticket = Ticket(
-            title=title, description=description, priority=priority,
-            parent_id=parent_id or None, budget=budget,
-        )
-        self.tickets[ticket.id] = ticket
-        return ticket
-
-    def assign_ticket(self, ticket_id: str, agent_name: str) -> bool:
-        ticket = self.tickets.get(ticket_id)
-        agent = self.agents.get(agent_name)
-        if not ticket or not agent:
-            return False
-        ticket.status = TicketStatus.ASSIGNED
-        ticket.assignee = agent_name
-        ticket.updated_at = time.time()
-        agent.current_ticket = ticket_id
-        agent.status = "busy"
-        return True
-
-    async def run(self):
-        self._running = True
-        self._task = asyncio.create_task(self._heartbeat_loop())
-        logger.info(f"Orchestrator '{self.config.name}' started")
-        return {"status": "started", "agents": len(self.agents)}
-
-    async def stop(self):
-        self._running = False
-        if self._task:
-            self._task.cancel()
-            self._task = None
-
-    async def _heartbeat_loop(self):
-        while self._running:
-            for agent in self.agents.values():
-                if agent.last_heartbeat and time.time() - agent.last_heartbeat > self.config.heartbeat_interval * 3:
-                    agent.status = "unreachable"
-                    logger.warning(f"Agent '{agent.name}' missed heartbeat")
-            await asyncio.sleep(self.config.heartbeat_interval)
-
-    def report_ticket(self, ticket_id: str, status: TicketStatus, cost: float = 0.0) -> bool:
-        ticket = self.tickets.get(ticket_id)
-        if not ticket:
-            return False
-        ticket.status = status
-        ticket.cost = cost
-        ticket.updated_at = time.time()
-        self.config.budget.spent += cost
-        if ticket.assignee and status == TicketStatus.DONE:
-            agent = self.agents.get(ticket.assignee)
-            if agent:
-                agent.completed += 1
-                agent.status = "idle"
-                agent.current_ticket = None
-                agent.total_cost += cost
-        return True
-
-    def status(self) -> dict:
-        return {
-            "name": self.config.name,
-            "running": self._running,
-            "agents": len(self.agents),
-            "tickets": len(self.tickets),
-            "active_tickets": sum(1 for t in self.tickets.values() if t.status in (TicketStatus.ASSIGNED, TicketStatus.IN_PROGRESS)),
-            "budget_remaining": self.config.budget.remaining(),
-            "budget_spent": self.config.budget.spent,
-        }
-
-    def _save_org_chart(self):
-        data = [a.to_dict() for a in self.agents.values()]
-        Path(self.config.org_chart_file).write_text(json.dumps(data, indent=2))
-
-    # ── Auto-routing: detect task type → select variant ──
-
-    _BUILD_KEYWORDS = frozenset([
-        "build", "create", "generate", "scaffold", "make", "develop",
-        "set up", "bootstrap", "init", "new project", "starter", "boilerplate",
-        "app", "application", "website", "api", "service", "bot",
-    ])
-    _ML_KEYWORDS = frozenset([
-        "train", "learn", "model", "neural", "ai", "machine learning",
-        "deep learning", "predict", "classify", "regression", "dataset",
-        "optimize", "hyperparameter", "epoch", "gradient", "loss",
-    ])
-    _SECURITY_KEYWORDS = frozenset([
-        "security", "hack", "vulnerability", "exploit", "penetration",
-        "pentest", "audit", "owasp", "injection", "xss", "csrf",
-        "reentrancy", "cve", "threat", "malware", "forensic",
-    ])
-    _PERF_KEYWORDS = frozenset([
-        "performance", "slow", "optimize", "bottleneck", "profil",
-        "latency", "throughput", "benchmark", "cache", "index",
-        "memory leak", "cpu", "fast",
-    ])
-
-    def detect_task_type(self, user_message: str) -> str:
-        """Detect task category from user message keywords.
-
-        Returns one of: "build_app", "ml_optimization", "security_audit",
-        "optimization", "general".
-        """
-        msg_lower = user_message.lower()
-
-        scores = {
-            "build_app": sum(1 for kw in self._BUILD_KEYWORDS if kw in msg_lower),
-            "ml_optimization": sum(1 for kw in self._ML_KEYWORDS if kw in msg_lower),
-            "security_audit": sum(1 for kw in self._SECURITY_KEYWORDS if kw in msg_lower),
-            "optimization": sum(1 for kw in self._PERF_KEYWORDS if kw in msg_lower),
-        }
-
-        best_type = max(scores, key=scores.get)
-        if scores[best_type] == 0:
-            return "general"
-        return best_type
-
-    def select_variant(self, task_type: str) -> str:
-        """Route task type to the correct NICTO variant.
-
-        Returns variant name: "nikto-nikto", "nikto-denu", or "nikto-plus".
-        """
-        variant_map = {
-            "build_app": "nikto-nikto",       # heavyweight — full-stack builder
-            "ml_optimization": "nikto-denu",   # sonnet — AI specialist
-            "security_audit": "nikto-plus",    # mythos — security specialist
-            "optimization": "nikto-nikto",     # heavyweight — system designer
-            "general": "nikto-nikto",          # heavyweight — default
-        }
-        return variant_map.get(task_type, "nikto-nikto")
-
-    def auto_route(self, user_message: str) -> dict:
-        """Detect task type and select variant automatically.
-
-        Returns dict with task_type, variant, and explanation.
-        """
-        task_type = self.detect_task_type(user_message)
-        variant = self.select_variant(task_type)
-
-        explanations = {
-            "build_app": "Routing to heavyweight (nikto-nikto) — full-stack builder with complete language mastery",
-            "ml_optimization": "Routing to sonnet (nikto-denu) — AI and algorithm specialist",
-            "security_audit": "Routing to mythos (nikto-plus) — security and exploit specialist",
-            "optimization": "Routing to heavyweight (nikto-nikto) — system designer and performance optimizer",
-            "general": "Routing to heavyweight (nikto-nikto) — default general-purpose variant",
-        }
+        has_failures = any(s.status == "failed" for s in wf.steps)
+        wf.status = "completed_with_errors" if has_failures else "completed"
+        wf.completed_at = datetime.now(timezone.utc).isoformat()
 
         return {
-            "task_type": task_type,
-            "variant": variant,
-            "explanation": explanations.get(task_type, "Default routing"),
+            "workflow_id": workflow_id,
+            "workflow_name": wf.name,
+            "status": wf.status,
+            "total_steps": len(wf.steps),
+            "completed_steps": sum(1 for s in wf.steps if s.status == "completed"),
+            "failed_steps": sum(1 for s in wf.steps if s.status == "failed"),
+            "blocked_steps": sum(1 for s in wf.steps if s.status == "blocked"),
+            "steps": step_results,
         }
+
+    def _execute_step(self, step: WorkflowStep,
+                      providers: dict) -> any:
+        target = step.target
+        params = step.params
+        if target in providers:
+            provider = providers[target]
+            action = params.get("action", "process")
+            method = getattr(provider, action, None)
+            if method:
+                args = params.get("args", [])
+                kwargs = params.get("kwargs", {})
+                return method(*args, **kwargs)
+        return {
+            "target": target,
+            "params": params,
+            "note": "Simulated execution (no provider registered)",
+        }
+
+    def _topological_sort(self, steps: list) -> list:
+        step_ids = {s.id: s for s in steps}
+        visited = set()
+        result = []
+        def dfs(sid):
+            if sid in visited:
+                return
+            visited.add(sid)
+            step = step_ids[sid]
+            for dep_id in step.depends_on:
+                if dep_id in step_ids:
+                    dfs(dep_id)
+            result.append(step)
+        for s in steps:
+            dfs(s.id)
+        return result
+
+    # ── Routing ───────────────────────────────────────────────────────
+
+    def route_intent(self, intent: str, subsystem: str):
+        self.routing_tables[intent] = subsystem
+
+    def resolve_intent(self, intent: str) -> Optional[str]:
+        return self.routing_tables.get(intent)
+
+    def suggest_routing(self, input_text: str) -> str:
+        text = input_text.lower()
+        if any(w in text for w in ["think", "reason", "analyze", "solve"]):
+            return "reasoner"
+        if any(w in text for w in ["remember", "recall", "memory", "forget"]):
+            return "memory"
+        if any(w in text for w in ["learn", "teach", "skill", "practice"]):
+            return "learner"
+        if any(w in text for w in ["emotion", "feel", "mood", "happy", "sad"]):
+            return "emotion"
+        if any(w in text for w in ["goal", "plan", "objective", "mission"]):
+            return "goals"
+        if any(w in text for w in ["truth", "fact", "verify", "check", "correct"]):
+            return "truth_engine"
+        if any(w in text for w in ["dream", "steer", "augment", "creative"]):
+            return "dream_steerer"
+        if any(w in text for w in ["swarm", "agent", "multi", "distribute"]):
+            return "swarm"
+        if any(w in text for w in ["knowledge", "fact", "concept", "what is"]):
+            return "knowledge"
+        return "reasoner"
+
+    # ── Health ────────────────────────────────────────────────────────
+
+    def health_check(self) -> dict:
+        return {
+            "subsystem_count": len(self.SUBSYSTEMS),
+            "active_workflows": len(self.list_workflows("running")),
+            "total_workflows": len(self.workflows),
+            "routing_entries": len(self.routing_tables),
+            "subsystems": {k: v for k, v in self.SUBSYSTEMS.items()},
+        }
+
+    def save(self) -> dict:
+        return {
+            "workflows": {wid: wf.to_dict() for wid, wf in self.workflows.items()},
+            "routing_tables": self.routing_tables,
+        }
+
+    def load(self, data: dict):
+        self.workflows = {}
+        for wid, wd in data.get("workflows", {}).items():
+            wf = Workflow(wd.get("name", wid), wd.get("description", ""))
+            wf.__dict__.update(wd)
+            wf.steps = []
+            for sd in wd.get("steps", []):
+                step = WorkflowStep(sd["name"], sd["target"])
+                step.__dict__.update(sd)
+                wf.steps.append(step)
+            self.workflows[wid] = wf
+        self.routing_tables = data.get("routing_tables", {})

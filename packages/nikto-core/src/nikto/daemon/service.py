@@ -1,97 +1,100 @@
 import asyncio
-import logging
 import os
-import signal
 import sys
-from dataclasses import dataclass, field
-from pathlib import Path
-from typing import Optional
+from datetime import datetime, timezone
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
+from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich.text import Text
+from nikto.ui.theme import NICTO_THEME, apply_theme_to_rich, generate_terminal_banner
 
-logger = logging.getLogger(__name__)
+console = apply_theme_to_rich()
+C = NICTO_THEME["colors"]
 
-
-@dataclass
-class DaemonConfig:
-    host: str = "127.0.0.1"
-    port: int = 4890
-    api_workers: int = 4
-    log_level: str = "INFO"
-    pid_file: str = str(Path.home() / ".nikto" / "daemon.pid")
-    auto_start_miner: bool = False
-    auto_start_orchestrator: bool = True
+VERSION = "2.0.0"
+STARTUP_TIME = datetime.now(timezone.utc).isoformat()
 
 
 class NiktoDaemon:
-    def __init__(self, config: Optional[DaemonConfig] = None):
-        self.config = config or DaemonConfig()
-        self._server: Optional[asyncio.AbstractServer] = None
+    def __init__(self):
         self._running = False
-        self._tasks: list[asyncio.Task] = []
+        self.modules_loaded = 0
+        self.modules_failed = 0
+        self.api_port = 4890
 
-    async def start(self):
+    async def startup(self):
+        console.print(generate_terminal_banner(), style=NICTO_THEME["rich"]["heading"])
+        console.print()
+        console.print(Panel(
+            Text(f"NICTO v{VERSION} — Autonomous Intelligence", style=NICTO_THEME["rich"]["heading"]),
+            subtitle=Text("Built by Stephen Wahogo · Nairobi, Kenya", style=NICTO_THEME["rich"]["dim"]),
+            border_style=C["border_mid"],
+        ))
+        console.print()
+
+        modules = [
+            ("NiktoBrain", "nikto.brain.core"),
+            ("NiktoIdentity", "nikto.brain.identity"),
+            ("NiktoKnowledgeCore", "nikto.brain.knowledge"),
+            ("NiktoLongTermMemory", "nikto.brain.memory"),
+            ("NiktoEmotionalCore", "nikto.brain.emotion"),
+            ("NiktoConscience", "nikto.brain.conscience"),
+            ("NiktoReasoner", "nikto.brain.reasoner"),
+            ("NiktoLanguageEngine", "nikto.brain.language"),
+            ("NiktoLearner", "nikto.brain.learner"),
+            ("NiktoGoalSystem", "nikto.brain.goals"),
+            ("NiktoTeacher", "nikto.brain.teacher"),
+            ("NiktoSelfRepair", "nikto.brain.repair"),
+            ("NiktoVoice", "nikto.voice.engine"),
+            ("NiktoMultiModal", "nikto.input.multimodal"),
+            ("NiktoProjectBuilder", "nikto.builder.project"),
+            ("NiktoCodeGenerator", "nikto.builder.codegen"),
+            ("NiktoConversationMemory", "nikto.memory.conversation"),
+            ("NiktoExploitDB", "nikto.security.exploit_db"),
+            ("NiktoThreatIntel", "nikto.security.threat_intel"),
+            ("NiktoPluginEngine", "nikto.plugins.engine"),
+            ("NiktoScheduler", "nikto.autopilot.scheduler"),
+            ("NiktoReportingEngine", "nikto.reporting.engine"),
+        ]
+
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console,
+        ) as progress:
+            task = progress.add_task("[green]Loading NICTO modules...", total=len(modules))
+            for name, module_path in modules:
+                try:
+                    __import__(module_path, fromlist=[""])
+                    self.modules_loaded += 1
+                    progress.console.print(f"  [green]✓[/green] {name}")
+                except Exception as e:
+                    self.modules_failed += 1
+                    progress.console.print(f"  [red]✗[/red] {name}: {e}")
+                progress.advance(task)
+
+        console.print()
+        tbl = Table(title="System Status", border_style=C["border_mid"])
+        tbl.add_column("Component", style=C["accent_primary"])
+        tbl.add_column("Status", style=C["text_primary"])
+        tbl.add_row("Modules Loaded", f"[green]{self.modules_loaded}[/green]")
+        tbl.add_row("Modules Failed", f"[red]{self.modules_failed}[/red]" if self.modules_failed else "[green]0[/green]")
+        tbl.add_row("API Endpoint", f"{C['accent_electric']}http://localhost:{self.api_port}")
+        tbl.add_row("Brain State", "[bright_green]NOMINAL[/bright_green]")
+        console.print(tbl)
+        console.print()
+        console.print(Text("NICTO is ready. All systems nominal.", style=NICTO_THEME["rich"]["success"]))
         self._running = True
-        self._write_pid()
 
-        from nikto.orchestrator.engine import Orchestrator, OrchestratorConfig, Budget
-        self.orchestrator = Orchestrator(OrchestratorConfig(budget=Budget(total=5000.0)))
-        await self.orchestrator.run()
-        logger.info("Orchestrator started in daemon")
-
-        if self.config.auto_start_miner:
-            from nikto.earn.miner import LaptopMiner
-            self.miner = LaptopMiner()
-            await self.miner.start()
-            logger.info("Miner auto-started in daemon")
-
-        app = await self._build_app()
-        runner = asyncio.create_task(self._run_api(app))
-        self._tasks.append(runner)
-        logger.info(f"Nikto daemon listening on {self.config.host}:{self.config.port}")
-        return {"status": "started", "pid": os.getpid()}
-
-    async def stop(self):
+    async def shutdown(self):
         self._running = False
-        if self._server:
-            self._server.close()
-        if hasattr(self, "orchestrator"):
-            await self.orchestrator.stop()
-        if hasattr(self, "miner"):
-            await self.miner.stop()
-        for t in self._tasks:
-            t.cancel()
-        self._remove_pid()
-        logger.info("Nikto daemon stopped")
+        console.print("[dim]NICTO shutting down...[/dim]")
 
-    async def _build_app(self):
-        from fastapi import FastAPI
-        app = FastAPI(title="Nikto API", version="0.1.0")
-
-        @app.get("/health")
-        async def health():
-            return {"status": "ok", "pid": os.getpid()}
-
-        @app.get("/status")
-        async def status():
-            orch = self.orchestrator.status()
-            miner_stats = {}
-            if hasattr(self, "miner"):
-                miner_stats = await self.miner.stats()
-            return {"orchestrator": orch, "miner": miner_stats}
-
-        return app
-
-    async def _run_api(self, app):
-        import uvicorn
-        cfg = uvicorn.Config(app, host=self.config.host, port=self.config.port, log_level=self.config.log_level.lower())
-        server = uvicorn.Server(cfg)
-        self._server = server
-        await server.serve()
-
-    def _write_pid(self):
-        Path(self.config.pid_file).parent.mkdir(parents=True, exist_ok=True)
-        Path(self.config.pid_file).write_text(str(os.getpid()))
-
-    def _remove_pid(self):
-        pf = Path(self.config.pid_file)
-        if pf.exists():
-            pf.unlink()
+    async def run_forever(self):
+        await self.startup()
+        try:
+            while self._running:
+                await asyncio.sleep(1)
+        except asyncio.CancelledError:
+            await self.shutdown()

@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nicto-x
+  labels:
+    app: nicto-x
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nicto-x
+  template:
+    metadata:
+      labels:
+        app: nicto-x
+    spec:
+      containers:
+      - name: nicto-x
+        image: nicto-x:latest
+        ports:
+        - containerPort: 8000
+        env:
+        - name: LOG_LEVEL
+          value: "INFO"
+        - name: AUTH_ENABLED
+          value: "true"
+        volumeMounts:
+        - name: data
+          mountPath: /root/.nicto-x
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: nicto-x-data
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nicto-x
+spec:
+  selector:
+    app: nicto-x
+  ports:
+  - port: 8000
+    targetPort: 8000
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nicto-x-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi

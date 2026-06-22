@@ -1,266 +1,88 @@
-"""
-Nikto Core — The Ultimate AI Agent Runtime.
-
-A unified, multimodal, multi-agent orchestration platform combining
-features from 35+ open-source AI agent systems.
-"""
-
-__version__ = "0.1.0"
-
-from nikto.agent.base import Agent, AgentConfig, AgentMode
-from nikto.tools.base import Tool, ToolResult, ToolRegistry
-from nikto.providers.base import ModelProvider
-from nikto.memory.base import MemorySystem
-from nikto.skills.base import SkillRuntime
-from nikto.config.settings import NiktoConfig
-from nikto.orchestrator.engine import Orchestrator, OrchestratorConfig
-from nikto.mcp.registry import MCPRegistry, mcp_registry
-from nikto.daemon.service import NiktoDaemon, DaemonConfig
-from nikto.cua.screen import ScreenController
-from nikto.cua.input import InputController
-from nikto.earn.wallet import EarnWallet
-from nikto.earn.miner import LaptopMiner
-from nikto.variants.base import (
-    VariantType, VariantConfig, AgentVariant, create_variant,
-    HEAVYWEIGHT_CONFIG, SONNET_CONFIG, MYTHOS_CONFIG,
+from nikto.ui.theme import NICTO_THEME
+from nikto.voice.engine import NiktoVoice
+from nikto.brain.repair import NiktoSelfRepair
+from nikto.brain.teacher import NiktoTeacher
+from nikto.brain.core import NiktoBrain
+from nikto.brain.identity import NiktoIdentity
+from nikto.brain.knowledge import NiktoKnowledgeCore
+from nikto.brain.memory import NiktoLongTermMemory
+from nikto.brain.emotion import NiktoEmotionalCore
+from nikto.brain.conscience import NiktoConscience
+from nikto.brain.reasoner import NiktoReasoner
+from nikto.brain.language import NiktoLanguageEngine
+from nikto.brain.learner import NiktoLearner
+from nikto.brain.goals import NiktoGoalSystem
+from nikto.brain.models import (
+    Thought, MemoryFragment, Belief, Goal, GoalStatus,
+    ThinkingStyle, EmotionType, KnowledgeLevel, EmotionalState, MoralRule,
 )
-from nikto.security.code_protocol import CodeSecurityProtocol
-from nikto.security.mcp_sandbox import MCPSecureSandbox
-from nikto.security.asl3_boundary import ASL3Boundary
-from nikto.security.siem_analyst import SIEMAnalyst
-from nikto.security.sandbox import PromptSanitizer, SandboxRestrictions, RuleValidator
-from nikto.autopilot.engine import AutopilotEngine, AutopilotConfig, AutopilotStatus
-from nikto.autopilot.finance import FinanceManager, PaymentMethod
-from nikto.autopilot.connections import ConnectionManager, Connection, ConnectionType
-from nikto.tools.autopilot_control import _set_autopilot
-from nikto.devices.engine import DeviceController, DeviceType, DeviceDiscovery
-from nikto.game_engine.engine import GameEngine, GameProject, GameGenre
-from nikto.evolution.engine import EvolutionEngine, EvolutionConfig, SelfHealer, SelfOptimizer, BenchmarkSuite
-from nikto.dream.engine import DreamEngine, DreamConfig, DreamInsight
-from nikto.mesh.engine import MeshEngine, MeshConfig, MeshNode, NodeStatus
-from nikto.knowledge.engine import KnowledgeEngine
-from nikto.capabilities.scanner import CapabilityScanner
-from nikto.capabilities.manifest import CapabilityManifest, FeatureCapability
-from nikto.training.engine import TrainingEngine
-from nikto.business.engine import BusinessEngine, BusinessUnit, BusinessType, BusinessStatus
-from nikto.sandbox.engine import SandboxEngine, SandboxType, SandboxInstance
-from nikto.thinking.engine import ThinkingEngine, Insight, ThoughtChain
-from nikto.mobile.engine import MobileCommEngine, MessageChannel
-from nikto.deploy.engine import DeployEngine, DeploymentTarget
-from nikto.surpass.engine import SurpassEngine
-from nikto.arsenal.engine import ArsenalEngine, KaliTool
-from nikto.neuro.engine import NeuroEngine
-from nikto.api_gateway.engine import APIGateway, APIKey
-from nikto.super.engine import SuperEngine
-from nikto.autonomous.engine import AutonomousEngine
-from nikto.synthetic.engine import SyntheticEngine
-from nikto.consciousness.expansions.engine import ConsciousnessExpansion
-from nikto.reasoning.engine import ReasoningEngine
-from nikto.brain.engine import BrainEngine
-
-# NICTO Core Brain - Brain-first AI architecture
-from nikto.brain import (
-    NiktoBrain,
-    NiktoIdentity,
-    NiktoReasoner,
-    NiktoLongTermMemory,
-    NiktoLearner,
-    NiktoKnowledgeCore,
-    NiktoEmotionalCore,
-    NiktoConscience,
-    NiktoLanguageEngine,
-    NiktoGoalSystem,
-    # Models
-    Intent,
-    Perception,
-    Reasoning,
-    NiktoThought,
-    JudgmentResult,
-    Memory,
-    MemoryEvent,
-    UserModel,
-    KnowledgeFact,
-    KnowledgeSet,
-    LearningResult,
-    Goal,
-    GoalProgress,
-    GoalReport,
+from nikto.input.multimodal import NiktoMultiModal
+from nikto.builder.project import NiktoProjectBuilder
+from nikto.builder.codegen import NiktoCodeGenerator
+from nikto.memory.conversation import NiktoConversationMemory
+from nikto.security.threat_intel import NiktoThreatIntel
+from nikto.system.updater import NiktoAutoUpdater
+from nikto.plugins.engine import NiktoPluginEngine
+from nikto.autopilot.scripts import SCRIPTS
+from nikto.autopilot.scheduler import NiktoScheduler
+from nikto.autopilot.engine import NiktoAutopilot
+from nikto.reporting.engine import NiktoReportingEngine
+from nikto.brain.truth_engine import NiktoTruthEngine
+from nikto.dream.steerer import NiktoDreamSteerer
+from nikto.swarm.engine import NiktoSwarmEngine
+from nikto.metrics.performance_graph import NiktoPerformanceGraph
+from nikto.orchestrator.engine import NiktoOrchestrator
+from nikto.security.scanner import NiktoScanner
+from nikto.autopilot.enhanced_engine import NiktoAutopilotPro
+from nikto.business.zero_capital_engine import NiktoZeroCapitalEngine
+from nikto.eagle_eye.enhanced_eye import NiktoEagleEye
+from nikto.prediction.future_engine import NiktoFutureEngine
+from nikto.brain.math_brain import MathBrain
+from nikto.brain.meta_cognition import (
+    NiktoMetaCognition, CognitiveBias, ReasoningQuality, CognitiveState,
+    MetaObservation, CognitiveProfile
 )
-from nikto.resilience.engine import ResilienceEngine
-from nikto.diagnostics.engine import DiagnosticsEngine
-from nikto.avatar.engine import AvatarEngine
-from nikto.avatar.renderer import AvatarRenderer
-from nikto.avatar.desktop import DesktopController as AvatarDesktopController
-from nikto.avatar.webcam import WebcamEngine as AvatarWebcamEngine
-from nikto.avatar.animations import AnimationType, Expression
-from nikto.avatar.sprites import create_avatar_frame, AVAILABLE_POSES, AVAILABLE_EXPRESSIONS
-from nikto.avatar.personalize import PersonalAvatarGenerator, ColorPalette
+from nikto.brain.aknow_bridge import AknowBridge
+from nikto.brain.virtual_labs import NiktoVirtualLabs, LabResult
+from nikto.brain.fact_table import FactTable
+from nikto.brain.gods_eye import GodsEye
+from nikto.config.api_keys import NiktoKeyManager
+from nikto.server import app as nikto_app
+from nikto.security.compliance import NiktoComplianceChecker, ComplianceFramework, ComplianceStatus, ComplianceAssessment
 
-# Eagle Eye — Truth Verification & Preemptive Issue Detection
-from nikto.eagle_eye import (
-    EagleEye, LieDetector, PreemptiveIssueScanner,
-    AnomalyDetector, create_eagle_eye,
-)
-
-# Sourcing Engine — Citation Tracking & Truth Verification
-from nikto.sourcing.engine import SourcingEngine, Citation, SourcedClaim
-
-# Voice Engine — Text-to-Speech with Multiple Backends
-from nikto.voice.engine import VoiceEngine, VoiceProfile
-
-# Evolution Protocol — Autonomous Self-Improvement
-from nikto.evolution.protocol import EvolutionProtocol
-from nikto.evolution.masterclass import MasterclassTrainer
-
-# Infinite Context — Million-Word Processing
-from nikto.infinite_context import InfiniteContextEngine
-
-# Model Manager — Multi-tier GGUF download & management
-from nikto.model_manager import ModelManager, MODEL_REGISTRY
-
-# Predictive Intelligence — ML-based prediction engine
-from nikto.predict import PredictionEngine, EloModel, LogisticModel, XGBoostModel
-from nikto.predict import EnsembleModel, ArimaModel, FeatureEngineer, BacktestEngine
-from nikto.predict import DataFeed, MockDataFeed, REngine, JuliaEngine
-
-# Cybersecurity Scanner — native Go + Python fallback
-from nikto.arsenal.scanner import SecurityScanner
-
-# Hotkeys — Global Keyboard Shortcuts
-from nikto.avatar.hotkeys import HotkeyManager
-
-# Terminal Core — PTY driver, process monitor
-from nikto.terminal.core import TerminalSession, ProcessMonitor
-
-# Sensors — Wi-Fi gesture monitoring
-from nikto.sensors import WiFiGestureMonitor, GestureEvent, MovementClassifier, SleepMonitor
-
-# Quantum Computing — IBM Quantum integration
-from nikto.quantum import IBMQuantumEngine, QuantumResult, QuantumCircuits
-
-# Knowledge Loader — 8 knowledge collections (195+ entries)
-from nikto.knowledge.loader import (
-    load_all_collections, get_collection, list_collections, search_collections,
-)
-
-# Registration, Privacy & Safety
-from nikto.registration import UserRegistry, RegistrationData, RegistrationFlow
-from nikto.privacy import get_privacy_policy, get_policy_summary
-from nikto.safety import (
-    SafetySystem, ActivityAuditLog, EmergencySystem, AbuseReporter,
-    PoliceCooperationMode, SafetyLock, ContentSafetyMonitor,
-    LogEntry, create_safety_system,
-)
+# CUA (Computer Use Agency) availability flag
+try:
+    from nikto.cua.input import InputController
+    from nikto.cua.screen import ScreenController, list_screens
+    from nikto.cua.automation import AutomationStep, StepType
+    _CUA_AVAILABLE = True
+except ImportError:
+    _CUA_AVAILABLE = False
+    InputController = None
+    ScreenController = None
+    list_screens = None
+    AutomationStep = None
+    StepType = None
 
 __all__ = [
-    "Agent", "AgentConfig", "AgentMode",
-    "Tool", "ToolResult", "ToolRegistry",
-    "ModelProvider",
-    "MemorySystem",
-    "SkillRuntime",
-    "NiktoConfig",
-    "Orchestrator", "OrchestratorConfig",
-    "MCPRegistry", "mcp_registry",
-    "NiktoDaemon", "DaemonConfig",
-    "ScreenController",
-    "InputController",
-    "EarnWallet",
-    "LaptopMiner",
-    "VariantType", "VariantConfig", "AgentVariant", "create_variant",
-    "HEAVYWEIGHT_CONFIG", "SONNET_CONFIG", "MYTHOS_CONFIG",
-    "CodeSecurityProtocol",
-    "MCPSecureSandbox",
-    "ASL3Boundary",
-    "SIEMAnalyst",
-    "PromptSanitizer", "SandboxRestrictions", "RuleValidator",
-    "AutopilotEngine", "AutopilotConfig", "AutopilotStatus",
-    "FinanceManager", "PaymentMethod",
-    "ConnectionManager", "Connection", "ConnectionType",
-    "_set_autopilot",
-    "DeviceController", "DeviceType", "DeviceDiscovery",
-    "GameEngine", "GameProject", "GameGenre",
-    "EvolutionEngine", "EvolutionConfig", "SelfHealer", "SelfOptimizer", "BenchmarkSuite",
-    "DreamEngine", "DreamConfig", "DreamInsight",
-    "MeshEngine", "MeshConfig", "MeshNode", "NodeStatus",
-    "KnowledgeEngine",
-    "CapabilityScanner",
-    "CapabilityManifest", "FeatureCapability",
-    "TrainingEngine",
-    "BusinessEngine", "BusinessUnit", "BusinessType", "BusinessStatus",
-    "SandboxEngine", "SandboxType", "SandboxInstance",
-    "ThinkingEngine", "Insight", "ThoughtChain",
-    "MobileCommEngine", "MessageChannel",
-    "DeployEngine", "DeploymentTarget",
-    "SurpassEngine",
-    "ArsenalEngine", "KaliTool", "SecurityScanner",
-    "NeuroEngine",
-    "APIGateway", "APIKey",
-    "SuperEngine",
-    "AutonomousEngine",
-    "SyntheticEngine",
-    "ConsciousnessExpansion",
-    "ReasoningEngine",
-    "BrainEngine",
-    # NICTO Core Brain exports
-    "NiktoBrain",
-    "NiktoIdentity",
-    "NiktoReasoner",
-    "NiktoLongTermMemory",
-    "NiktoLearner",
-    "NiktoKnowledgeCore",
-    "NiktoEmotionalCore",
-    "NiktoConscience",
-    "NiktoLanguageEngine",
-    "NiktoGoalSystem",
-    "Intent",
-    "Perception",
-    "Reasoning",
-    "NiktoThought",
-    "JudgmentResult",
-    "Memory",
-    "MemoryEvent",
-    "UserModel",
-    "KnowledgeFact",
-    "KnowledgeSet",
-    "LearningResult",
-    "Goal",
-    "GoalProgress",
-    "GoalReport",
-    "ResilienceEngine",
-    "DiagnosticsEngine",
-    "AvatarEngine",
-    "AvatarRenderer",
-    "AvatarDesktopController",
-    "AvatarWebcamEngine",
-    "AnimationType",
-    "Expression",
-    "create_avatar_frame",
-    "AVAILABLE_POSES",
-    "AVAILABLE_EXPRESSIONS",
-    "PersonalAvatarGenerator", "ColorPalette",
-    "EagleEye", "LieDetector", "PreemptiveIssueScanner",
-    "AnomalyDetector", "create_eagle_eye",
-    "SourcingEngine", "Citation", "SourcedClaim",
-    "VoiceEngine", "VoiceProfile",
-    "EvolutionProtocol",
-    "MasterclassTrainer",
-    "InfiniteContextEngine",
-    "HotkeyManager",
-    "UserRegistry", "RegistrationData", "RegistrationFlow",
-    "get_privacy_policy", "get_policy_summary",
-    "SafetySystem", "ActivityAuditLog", "EmergencySystem",
-    "AbuseReporter", "PoliceCooperationMode", "SafetyLock",
-    "ContentSafetyMonitor", "LogEntry", "create_safety_system",
-    # Predictive Intelligence
-    "PredictionEngine", "EloModel", "LogisticModel", "XGBoostModel",
-    "EnsembleModel", "ArimaModel", "FeatureEngineer", "BacktestEngine",
-    "DataFeed", "MockDataFeed", "REngine", "JuliaEngine",
-    # Task Execution
-    "TerminalSession", "ProcessMonitor",
-    # Sensors
-    "WiFiGestureMonitor", "GestureEvent", "MovementClassifier", "SleepMonitor",
-    # Quantum Computing
-    "IBMQuantumEngine", "QuantumResult", "QuantumCircuits",
-    # Knowledge Loader
-    "load_all_collections", "get_collection", "list_collections", "search_collections",
+    "NICTO_THEME",
+    "NiktoVoice", "NiktoBrain", "NiktoIdentity", "NiktoKnowledgeCore",
+    "NiktoLongTermMemory", "NiktoEmotionalCore", "NiktoConscience",
+    "NiktoReasoner", "NiktoLanguageEngine", "NiktoLearner", "NiktoGoalSystem",
+    "NiktoTeacher", "NiktoSelfRepair", "NiktoMultiModal",
+    "NiktoProjectBuilder", "NiktoCodeGenerator", "NiktoConversationMemory",
+    "NiktoThreatIntel", "NiktoAutoUpdater",
+    "NiktoPluginEngine", "NiktoScheduler", "NiktoReportingEngine",
+    "NiktoAutopilot", "NiktoTruthEngine", "NiktoDreamSteerer",
+    "NiktoSwarmEngine", "NiktoPerformanceGraph", "NiktoOrchestrator",
+    "NiktoScanner",
+    "NiktoAutopilotPro", "NiktoZeroCapitalEngine", "NiktoEagleEye", "NiktoFutureEngine",
+    "MathBrain",
+    "NiktoComplianceChecker", "ComplianceFramework", "ComplianceStatus", "ComplianceAssessment",
+    "NiktoKeyManager",
+    "NiktoMetaCognition", "CognitiveBias", "ReasoningQuality", "CognitiveState",
+    "MetaObservation", "CognitiveProfile",     "AknowBridge", "NiktoVirtualLabs", "LabResult", "FactTable", "GodsEye",
+    "SCRIPTS",
+    "Thought", "MemoryFragment", "Belief", "Goal", "GoalStatus",
+    "ThinkingStyle", "EmotionType", "KnowledgeLevel", "EmotionalState", "MoralRule",
 ]

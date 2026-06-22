@@ -1,34 +1,13 @@
-"""
-NICTO Neural Core V1
-Version: 1.0.0
-Architecture: 17B Dense Transformer + 6-Brain System + PPO RL
-NICTO is an AI, not an AI agent. It thinks autonomously with its own brain.
-Creator: Stephen Wahogo — Nairobi, Kenya
-"""
+from .config import NeuralConfig
+from .memory import MemoryManager
+from .elo import ELOEstimator
+from .brain_router import BrainRouter
+from .evaluator import Evaluator
+from .reflection import ReflectionEngine
+from .exploration import ExplorationEngine
+from .consistency import ConsistencyTracker
 
-from .neural_core import NeuralCore
-from .neural.config import NeuralConfig
-from .brain.consciousness import NeuralConsciousness
-from .memory.manager import MemoryManager
-from .neural.elo_system import EloSystem
-from .learning.rl_agent import PPOAgent
-from .learning.curriculum import CurriculumScheduler
-from .reasoning.brainboost import BrainBoost
-from .reasoning.consistency import ConsistencyTracker
-from .learning.reward_shaper import RewardShaper
-from .safety.reward_hacking import RewardHackingDetector
-from .perception.feature_engine import TaskFeatureEngine
-from .perception.normalizer import FeatureNormalizer
-from .neural.model_selector import ModelSelector
-from .neural.exploration import ExplorationManager
-from .evolution.validation import ValidationEngine
-
-__version__ = "1.0.0"
 __all__ = [
-    "NeuralCore", "NeuralConfig", "NeuralConsciousness",
-    "MemoryManager", "EloSystem", "PPOAgent",
-    "CurriculumScheduler", "BrainBoost", "ConsistencyTracker",
-    "RewardShaper", "RewardHackingDetector",
-    "TaskFeatureEngine", "FeatureNormalizer",
-    "ModelSelector", "ExplorationManager", "ValidationEngine",
+    "NeuralConfig", "MemoryManager", "ELOEstimator", "BrainRouter",
+    "Evaluator", "ReflectionEngine", "ExplorationEngine", "ConsistencyTracker",
 ]

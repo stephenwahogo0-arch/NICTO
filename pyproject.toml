@@ -1,11 +1,15 @@
 [project]
-name = "nikto"
-version = "0.1.0"
-description = "The Ultimate AI Agent Platform"
+name = "kyros"
+version = "0.2.0"
+description = "Modular AI Agent Framework for Cybersecurity and Autonomous Tasks"
 requires-python = ">=3.12"
 dependencies = [
+    # Core
     "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
     "httpx>=0.27.0",
+    "httpx[http2]>=0.27.0",
+    "httpcore>=1.0.0",
     "sqlalchemy>=2.0.0",
     "chromadb>=0.6.0",
     "rich>=13.0.0",
@@ -24,10 +28,179 @@ dependencies = [
     "fastapi>=0.115.0",
     "uvicorn>=0.30.0",
     "sse-starlette>=2.0.0",
+    "anyio>=4.4.0",
+    "orjson>=3.10.0",
+    "msgspec>=0.18.0",
+
+    # LLM Providers
+    "anthropic>=0.30.0",
+    "openai>=1.0.0",
+    "google-generativeai>=0.7.0",
+    "tiktoken>=0.7.0",
+    "litellm>=1.40.0",
+    "ollama>=0.2.0",
+
+    # MCP
+    "mcp>=1.0.0",
+
+    # Cybersecurity
+    "python-nmap>=0.7.1",
+    "scapy>=2.5.0",
+    "paramiko>=3.4.0",
+    "dnspython>=2.6.0",
+    "impacket>=0.12.0",
+    "shodan>=1.31.0",
+    "pyshark>=0.6.0",
+    "python-whois>=0.9.0",
+    "netaddr>=1.2.0",
+    "ldap3>=2.9.0",
+    "pycryptodome>=3.20.0",
+    "python-masscan>=0.1.6",
+    "bandit>=1.7.9",
+    "safety>=3.2.0",
+    "semgrep>=1.70.0",
+    "cyclonedx-python-lib>=7.0.0",
+
+    # Voice / TTS / Audio
+    "pyttsx3>=2.90",
+    "speechrecognition>=3.10.0",
+    "pyaudio>=0.2.14",
+    "elevenlabs>=1.0.0",
+
+    # Task Queue / Distributed
+    "celery>=5.4.0",
+    "redis>=5.0.0",
+    "ray>=2.20.0",
+    "pyzmq>=26.0.0",
+    "msgpack>=1.0.8",
+    "grpcio>=1.64.0",
+    "protobuf>=5.0.0",
+
+    # System Monitoring
+    "psutil>=6.0.0",
+    "schedule>=1.2.0",
+    "apscheduler>=3.10.0",
+    "pyperclip>=1.8.0",
+    "docker>=7.0.0",
+    "loguru>=0.7.0",
+    "structlog>=24.0.0",
+    "sentry-sdk>=2.0.0",
+    "prometheus-client>=0.20.0",
+    "opentelemetry-api>=1.24.0",
+    "opentelemetry-sdk>=1.24.0",
+
+    # Cryptocurrency
+    "web3>=6.0.0",
+    "python-bitcoinlib>=0.12.0",
+    "cryptography>=42.0.0",
+    "eth-account>=0.11.0",
+    "mnemonic>=0.21",
+    "bit>=0.7.3",
+
+    # Image / Video
+    "imageio>=2.35.0",
+    "numpy>=1.26.0",
+
+    # Screen / CUA
+    "opencv-python>=4.9.0",
+    "pytesseract>=0.3.10",
+    "pygetwindow>=0.0.9",
+    "python-xlib>=0.33",
+    "pynput>=1.7.6",
+
+    # Local AI / ML
+    "transformers>=4.40.0",
+    "sentence-transformers>=3.0.0",
+    "scikit-learn>=1.4.0",
+    "accelerate>=0.30.0",
+    "tokenizers>=0.19.0",
+    "diffusers>=0.27.0",
+
+    # Device Control
+    "pyserial>=3.5",
+    "paho-mqtt>=2.0.0",
+    "adb-shell>=0.4.0",
+    "bleak>=0.21.0",
+
+    # Game Engine
+    "pygame>=2.5.0",
+    "pyglet>=2.0.0",
+    "pyopengl>=3.1.7",
+    "pymunk>=6.8.0",
+    "noise>=1.2.2",
+
+    # Code Analysis
+    "radon>=6.0.0",
+    "pylint>=3.2.0",
+    "rope>=1.13.0",
+    "astroid>=3.2.0",
+
+    # File Processing
+    "python-magic>=0.4.27",
+    "chardet>=5.2.0",
+    "pypdf>=4.0.0",
+    "python-docx>=1.1.0",
+    "openpyxl>=3.1.0",
+
+    # Real-time Communication
+    "python-socketio>=5.11.0",
+    "websocket-client>=1.8.0",
+    "asyncssh>=2.14.0",
+    "aiosmtplib>=3.0.0",
+
+    # Database
+    "asyncpg>=0.29.0",
+    "pymongo>=4.7.0",
+    "motor>=3.4.0",
+    "alembic>=1.13.0",
+
+    # Networking / Scraping
+    "aiohttp>=3.9.0",
+    "requests>=2.31.0",
+    "beautifulsoup4>=4.12.0",
+    "lxml>=5.0.0",
+    "selenium>=4.21.0",
+    "fake-useragent>=1.5.0",
+
+    # Data Processing
+    "pandas>=2.2.0",
+    "scipy>=1.13.0",
+
+    # API Security / Auth
+    "python-jose[cryptography]>=3.3.0",
+    "python-multipart>=0.0.9",
+    "itsdangerous>=2.2.0",
+    "email-validator>=2.1.0",
+    "pyOpenSSL>=24.0.0",
+    "certifi>=2024.0.0",
+    "passlib>=1.7.4",
+    "bcrypt>=4.1.0",
+
+    # Agent Orchestration
+    "langgraph>=0.2.0",
+
+    # Messaging
+    "python-telegram-bot>=21.0.0",
+    "slack-sdk>=3.27.0",
+
+    # Utilities
+    "tenacity>=8.3.0",
+    "cachetools>=5.3.0",
+    "tqdm>=4.66.0",
+    "arrow>=1.3.0",
+    "humanize>=4.9.0",
+    "tabulate>=0.9.0",
+    "colorama>=0.4.6",
+]
+
+[project.optional-dependencies]
+ml = [
+    "torch>=2.3.0",
 ]
 
 [project.scripts]
-nikto = "nikto_cli.main:cli"
+kyros = "kyros_cli.main:cli"
+nicto = "nicto.cli.main:main"
 
 [tool.uv]
 dev-dependencies = [
@@ -36,7 +209,11 @@ dev-dependencies = [
     "mypy>=1.10.0",
     "ruff>=0.6.0",
 ]
-package = false
+package = true
 
 [tool.hatch.build.targets.wheel]
-packages = ["packages/nikto-core/src/nikto", "packages/nikto-cli/src/nikto_cli"]
+packages = [
+    "packages/kyros-core/src/kyros",
+    "packages/kyros-cli/src/kyros_cli",
+    "src/nicto"
+]

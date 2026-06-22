@@ -1,4 +1,4 @@
-"""NIKTO Super Kernel — Main runner: boot, train, serve."""
+"""KYROS Super Kernel — Main runner: boot, train, serve."""
 
 import sys
 import time
@@ -8,7 +8,7 @@ from python.brain_core import SuperKernel, HAS_NATIVE
 
 def banner():
     print("=" * 60)
-    print("  NIKTO Super Kernel v1.0")
+    print("  KYROS Super Kernel v1.0")
     print("  8 sectors — 10 languages — One unified runtime")
     print("=" * 60)
 
@@ -36,7 +36,7 @@ def main():
     print(f"  Health: {kernel.boot_health()}")
 
     # ── Sector 2: Neural ──
-    kernel.neural_ingest("architecture", "NIKTO uses 8 sectors in a unified kernel")
+    kernel.neural_ingest("architecture", "KYROS uses 8 sectors in a unified kernel")
     kernel.neural_ingest("performance", "Native Rust cdylib with zero-copy C-ABI")
     print(f"  Neural: {kernel.neural_count()} records ingested")
     results = kernel.neural_recall("kernel design", top_k=2)
@@ -70,7 +70,7 @@ def main():
     )
     kernel.webforge_add_site(
         "mysite", "example.com", "landing", "./output",
-        {"title": "NIKTO", "message": "Super Kernel ready"}
+        {"title": "KYROS", "message": "Super Kernel ready"}
     )
     html = kernel.webforge_render("mysite")
     print(f"  WebForge: rendered {len(html)} bytes")
@@ -79,7 +79,7 @@ def main():
     print()
     print(f"  {kernel.status()}")
     print()
-    print("NIKTO Super Kernel operational.")
+    print("KYROS Super Kernel operational.")
 
 
 if __name__ == "__main__":
