@@ -8,45 +8,29 @@ from .super_config import SuperConfig
 REASONING_STYLES = [
     "deductive", "inductive", "abductive", "analogical",
     "critical", "creative", "systematic", "intuitive",
+    "counterfactual", "procedural", "meta", "causal", "ethical",
 ]
 
 
 class ReasoningPath(nn.Module):
-    def __init__(self, config: SuperConfig, style: str):
+    def __init__(self, config: SuperConfig, style_name: str):
         super().__init__()
-        self.style = style
+        self.style = style_name
         self.d_model = config.d_model
-        self.path_dim = config.reasoning_dim
+        self.hidden_dim = config.d_ff
 
-        self.input_proj = nn.Linear(config.d_model, self.path_dim, bias=False)
-        self.norm = nn.LayerNorm(self.path_dim, eps=config.eps)
-
-        self.self_attn = nn.MultiheadAttention(
-            self.path_dim, num_heads=max(4, config.n_heads // 4),
-            dropout=config.dropout, bias=False, batch_first=True,
-        )
-
-        self.ffn = nn.Sequential(
-            nn.Linear(self.path_dim, self.path_dim * 2, bias=True),
-            nn.GELU(),
-            nn.Dropout(config.dropout),
-            nn.Linear(self.path_dim * 2, self.path_dim, bias=True),
-        )
-        self.norm2 = nn.LayerNorm(self.path_dim, eps=config.eps)
-
-        self.confidence_proj = nn.Linear(self.path_dim, 1, bias=False)
-        self.coherence_proj = nn.Linear(self.path_dim, 1, bias=False)
-        self.output_proj = nn.Linear(self.path_dim, config.d_model, bias=False)
-
-        self.style_bias = nn.Parameter(torch.randn(1, 1, self.path_dim) * 0.02)
-
-        style_scale = {
-            "deductive": 0.3, "inductive": 0.5, "abductive": 0.6,
-            "analogical": 0.7, "critical": 0.4, "creative": 0.9,
-            "systematic": 0.3, "intuitive": 0.6,
-        }
-        self.temperature = nn.Parameter(torch.tensor(style_scale.get(style, 0.5)))
-
+        self.path_norm = nn.LayerNorm(self.d_model, eps=config.eps)
+        self.path_proj = nn.Linear(self.d_model, self.hidden_dim, bias=True)
+        if style_name in ("creative",):
+            self.path_act = nn.GELU()
+        elif style_name in ("critical", "intuitive"):
+            self.path_act = nn.ReLU()
+        else:
+            self.path_act = nn.SiLU()
+        self.path_gate = nn.Linear(self.d_model, self.hidden_dim, bias=True)
+        self.path_out = nn.Linear(self.hidden_dim, self.d_model, bias=False)
+        self.style_bias = nn.Parameter(torch.zeros(1, 1, self.d_model))
+        self.dropout = nn.Dropout(config.dropout)
         self._init_weights()
 
     def _init_weights(self):
@@ -59,136 +43,244 @@ class ReasoningPath(nn.Module):
                 nn.init.ones_(m.weight)
                 nn.init.zeros_(m.bias)
 
-    def forward(
-        self, x: torch.Tensor, context: Optional[torch.Tensor] = None
-    ) -> Dict[str, torch.Tensor]:
-        B, T, D = x.shape
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        residual = x
+        h = self.path_norm(x)
+        h = self.path_proj(h)
+        gate = self.path_gate(x)
+        h = self.path_act(h) * F.sigmoid(gate)
+        h = self.dropout(h)
+        h = self.path_out(h)
+        h = h + residual + self.style_bias
+        return h
 
-        h = self.input_proj(x) + self.style_bias
-        h = self.norm(h)
 
-        attn_out, _ = self.self_attn(h, h, h)
-        h = h + attn_out
+class CounterfactualPath(ReasoningPath):
+    def __init__(self, config: SuperConfig, style_name: str = "counterfactual"):
+        super().__init__(config, style_name)
+        self.what_if_proj = nn.Linear(self.d_model, self.d_model, bias=True)
+        self.intervention_noise = nn.Parameter(torch.randn(1, 1, self.d_model) * 0.3)
+        self.intervention_gate = nn.Linear(self.d_model, 1, bias=False)
 
-        residual = h
-        h = self.ffn(h)
-        h = self.norm2(h + residual)
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        residual = x
+        h = self.path_norm(x)
+        intervention = self.what_if_proj(x)
+        gate = torch.sigmoid(self.intervention_gate(x))
+        intervention = intervention + self.intervention_noise * gate
+        h = h + intervention
+        h = self.path_proj(h)
+        gate = self.path_gate(x)
+        h = self.path_act(h) * F.sigmoid(gate + intervention.mean(dim=-1, keepdim=True))
+        h = self.dropout(h)
+        h = self.path_out(h)
+        h = h + residual + self.style_bias
+        return h
 
-        confidence = torch.sigmoid(self.confidence_proj(h))
-        coherence = torch.sigmoid(self.coherence_proj(h))
-        out = self.output_proj(h)
 
-        return {
-            "output": out,
-            "confidence": confidence.squeeze(-1),
-            "coherence": coherence.squeeze(-1),
-            "style": self.style,
-            "temperature": torch.clamp(self.temperature, 0.1, 1.0),
-        }
+class ProceduralPath(ReasoningPath):
+    def __init__(self, config: SuperConfig, style_name: str = "procedural"):
+        super().__init__(config, style_name)
+        self.step_embed = nn.Parameter(torch.randn(1, 8, self.d_model) * 0.02)
+        self.step_attn = nn.MultiheadAttention(self.d_model, 4, batch_first=True, dropout=config.dropout)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        residual = x
+        h = self.path_norm(x)
+        steps = self.step_embed.expand(x.shape[0], -1, -1)
+        h_step, _ = self.step_attn(h, steps, steps)
+        h = h + h_step * 0.1
+        h = self.path_proj(h)
+        gate = self.path_gate(x)
+        h = self.path_act(h) * F.sigmoid(gate)
+        h = self.dropout(h)
+        h = self.path_out(h)
+        h = h + residual + self.style_bias
+        return h
+
+
+class MetaPath(ReasoningPath):
+    def __init__(self, config: SuperConfig, style_name: str = "meta"):
+        super().__init__(config, style_name)
+        self.meta_proj = nn.Linear(self.d_model, self.d_model, bias=True)
+        self.meta_score = nn.Linear(self.d_model, 1, bias=False)
+
+    def forward(self, x: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+        residual = x
+        h = self.path_norm(x)
+        meta_h = self.meta_proj(h)
+        scores = torch.sigmoid(self.meta_score(h))
+        h = h + meta_h * scores
+        h = self.path_proj(h)
+        gate = self.path_gate(x)
+        h = self.path_act(h) * F.sigmoid(gate)
+        h = self.dropout(h)
+        h = self.path_out(h)
+        h = h + residual + self.style_bias
+        return h, scores.squeeze(-1)
+
+
+class CausalPath(ReasoningPath):
+    def __init__(self, config: SuperConfig, style_name: str = "causal"):
+        super().__init__(config, style_name)
+        self.cause_proj = nn.Linear(self.d_model, self.d_model // 2, bias=True)
+        self.effect_proj = nn.Linear(self.d_model, self.d_model // 2, bias=True)
+        self.interv_proj = nn.Linear(self.d_model // 2, self.d_model, bias=True)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        residual = x
+        h = self.path_norm(x)
+        cause_h = self.cause_proj(h)
+        effect_h = self.effect_proj(h)
+        cause_effect = torch.bmm(cause_h, effect_h.transpose(-2, -1)) / math.sqrt(self.d_model // 2)
+        cause_effect = F.softmax(cause_effect, dim=-1)
+        intervention = self.interv_proj(torch.bmm(cause_effect, effect_h))
+        h = h + intervention * 0.1
+        h = self.path_proj(h)
+        gate = self.path_gate(x)
+        h = self.path_act(h) * F.sigmoid(gate)
+        h = self.dropout(h)
+        h = self.path_out(h)
+        h = h + residual + self.style_bias
+        return h
+
+
+class EthicalPath(ReasoningPath):
+    def __init__(self, config: SuperConfig, style_name: str = "ethical"):
+        super().__init__(config, style_name)
+        self.value_embed = nn.Parameter(torch.randn(5, self.d_model) * 0.02)
+        self.value_proj = nn.Linear(self.d_model, 5, bias=False)
+        self.value_gate = nn.Linear(self.d_model, 1, bias=False)
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        residual = x
+        h = self.path_norm(x)
+        value_logits = self.value_proj(h.mean(dim=1, keepdim=True))
+        value_weights = F.softmax(value_logits, dim=-1)
+        value_context = torch.matmul(value_weights, self.value_embed.unsqueeze(0))
+        gate = torch.sigmoid(self.value_gate(h))
+        h = h + value_context * gate
+        h = self.path_proj(h)
+        gate = self.path_gate(x)
+        h = self.path_act(h) * F.sigmoid(gate)
+        h = self.dropout(h)
+        h = self.path_out(h)
+        h = h + residual + self.style_bias
+        return h
+
+
+PATH_CLASSES = {
+    "deductive": ReasoningPath,
+    "inductive": ReasoningPath,
+    "abductive": ReasoningPath,
+    "analogical": ReasoningPath,
+    "critical": ReasoningPath,
+    "creative": ReasoningPath,
+    "systematic": ReasoningPath,
+    "intuitive": ReasoningPath,
+    "counterfactual": CounterfactualPath,
+    "procedural": ProceduralPath,
+    "meta": MetaPath,
+    "causal": CausalPath,
+    "ethical": EthicalPath,
+}
 
 
 class ReasoningFusionGate(nn.Module):
     def __init__(self, config: SuperConfig):
         super().__init__()
+        self.d_model = config.d_model
         self.n_styles = len(REASONING_STYLES)
-        self.fusion_ffn = nn.Sequential(
-            nn.Linear(config.d_model * 2, config.d_model, bias=True),
-            nn.GELU(),
-            nn.Dropout(config.dropout),
-            nn.Linear(config.d_model, self.n_styles, bias=True),
-        )
-        self.fusion_norm = nn.LayerNorm(config.d_model, eps=config.eps)
 
-    def forward(
-        self, backbone_hidden: torch.Tensor, path_outputs: Dict[str, Dict]
-    ) -> Dict[str, torch.Tensor]:
-        B, T, D = backbone_hidden.shape
+        self.path_scorer = nn.Linear(config.d_model, 1, bias=False)
 
-        active = [s for s in REASONING_STYLES if s in path_outputs]
-        n_active = len(active)
+    def forward(self, styles: List[torch.Tensor]) -> Dict[str, torch.Tensor]:
+        stacked = torch.stack(styles, dim=0)
+        S, B, T, D = stacked.shape
 
-        style_outputs = torch.stack(
-            [path_outputs[s]["output"] for s in active], dim=2
-        )
-        style_confs_t = torch.stack(
-            [path_outputs[s]["confidence"] for s in active], dim=-1
-        )
-
-        gate_input = torch.cat([backbone_hidden, style_outputs.mean(dim=2)], dim=-1)
-        fusion_weights = F.softmax(self.fusion_ffn(gate_input), dim=-1)
-
-        weighted_sum = torch.zeros_like(backbone_hidden)
-        for idx, s in enumerate(active):
-            w = fusion_weights[:, :, idx:idx+1] * style_confs_t[:, :, idx:idx+1]
-            weighted_sum = weighted_sum + path_outputs[s]["output"] * w
-
-        fused = self.fusion_norm(weighted_sum)
-        overall_confidence = style_confs_t.mean(dim=-1)
-
+        path_scores = self.path_scorer(stacked.mean(dim=2).mean(dim=1))
+        gate_weights = F.softmax(path_scores.squeeze(-1), dim=0)
+        gate_weights = gate_weights.view(S, 1, 1, 1)
+        fused = (stacked * gate_weights).sum(dim=0)
         return {
-            "fused_output": fused,
-            "fusion_weights": fusion_weights,
-            "overall_confidence": overall_confidence,
-            "n_active_paths": n_active,
+            "fused": fused,
+            "gate_weights": gate_weights.view(S, -1),
+            "style_states": stacked,
         }
+
+
+class MetaEvaluator(nn.Module):
+    def __init__(self, config: SuperConfig):
+        super().__init__()
+        self.d_model = config.d_model
+        self.evaluator = nn.Sequential(
+            nn.Linear(config.d_model, config.d_model // 2, bias=True),
+            nn.ReLU(),
+            nn.Dropout(config.dropout),
+            nn.Linear(config.d_model // 2, 1, bias=True),
+        )
+
+    def forward(self, fused: torch.Tensor) -> torch.Tensor:
+        score = self.evaluator(fused.mean(dim=1))
+        return torch.sigmoid(score)
 
 
 class MultiHeadedReasoning(nn.Module):
     def __init__(self, config: SuperConfig):
         super().__init__()
         self.config = config
+        self.d_model = config.d_model
         self.n_styles = len(REASONING_STYLES)
 
-        self.paths = nn.ModuleDict({
-            style: ReasoningPath(config, style) for style in REASONING_STYLES
-        })
+        self.paths = nn.ModuleDict()
+        for style in REASONING_STYLES:
+            cls = PATH_CLASSES.get(style, ReasoningPath)
+            path = cls(config, style)
+            self.paths[style] = path
+
         self.fusion_gate = ReasoningFusionGate(config)
-        self.meta_evaluator = nn.Linear(config.d_model, 1, bias=False)
+        self.fusion_norm = nn.LayerNorm(config.d_model, eps=config.eps)
+        self.fusion_output = nn.Sequential(
+            nn.Linear(config.d_model, config.d_model, bias=True),
+            nn.Dropout(config.dropout),
+            nn.LayerNorm(config.d_model, eps=config.eps),
+        )
+        self.meta_evaluator = MetaEvaluator(config)
 
     def forward(
-        self,
-        backbone_hidden: torch.Tensor,
+        self, x: torch.Tensor,
         active_styles: Optional[List[str]] = None,
-        return_all: bool = False,
-    ) -> Dict[str, torch.Tensor]:
-        styles = active_styles or REASONING_STYLES
+        return_meta: bool = True,
+    ) -> Dict:
+        styles_to_use = active_styles or REASONING_STYLES
 
         path_outputs = {}
-        for style in styles:
-            if style in self.paths:
-                path_outputs[style] = self.paths[style](backbone_hidden)
+        path_tensors = []
+        for style in styles_to_use:
+            if style not in self.paths:
+                continue
+            out = self.paths[style](x)
+            if isinstance(out, tuple):
+                path_tensors.append(out[0])
+                path_outputs[style] = out[0], out[1]
+            else:
+                path_tensors.append(out)
+                path_outputs[style] = out
 
-        fusion_result = self.fusion_gate(backbone_hidden, path_outputs)
+        fusion_result = self.fusion_gate(path_tensors)
 
-        meta_score = torch.sigmoid(self.meta_evaluator(fusion_result["fused_output"]))
+        fused = fusion_result["fused"]
+        fused = self.fusion_norm(x + fused)
+        fused = self.fusion_output(fused)
 
-        result = {
-            "fused_output": fusion_result["fused_output"],
-            "fusion_weights": fusion_result["fusion_weights"],
-            "overall_confidence": fusion_result["overall_confidence"],
-            "meta_score": meta_score.squeeze(-1),
-            "active_styles": styles,
-            "n_active_paths": fusion_result["n_active_paths"],
+        meta_score = None
+        if return_meta:
+            meta_score = self.meta_evaluator(fused)
+
+        return {
+            "fused": fused,
+            "paths": path_outputs,
+            "gate_weights": fusion_result["gate_weights"],
+            "meta_score": meta_score,
+            "active_styles": styles_to_use,
         }
-
-        if return_all:
-            result["path_outputs"] = {
-                s: {
-                    "confidence": path_outputs[s]["confidence"],
-                    "coherence": path_outputs[s]["coherence"],
-                    "temperature": path_outputs[s]["temperature"],
-                }
-                for s in styles if s in path_outputs
-            }
-
-        return result
-
-    def select_best_styles(
-        self, backbone_hidden: torch.Tensor, n_select: int = 3
-    ) -> List[str]:
-        scores = {}
-        for style in REASONING_STYLES:
-            out = self.paths[style](backbone_hidden)
-            scores[style] = out["confidence"].mean().item()
-        sorted_styles = sorted(scores.items(), key=lambda x: x[1], reverse=True)
-        return [s for s, _ in sorted_styles[:n_select]]

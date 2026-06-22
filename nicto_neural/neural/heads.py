@@ -8,6 +8,7 @@ from .super_config import SuperConfig
 BRAIN_HEAD_NAMES = [
     "primary", "analytical", "creative", "strategic",
     "knowledge", "intuitive", "ethical", "linguistic", "temporal",
+    "retrieval", "emotional", "executive",
 ]
 
 
@@ -33,15 +34,12 @@ class CrossAttentionHead(nn.Module):
     def forward(self, x: torch.Tensor, context: torch.Tensor) -> torch.Tensor:
         B, T, D = x.shape
         _, S, _ = context.shape
-
         q = self.q_proj(x).view(B, T, self.n_heads, self.per_head_dim).transpose(1, 2)
         k = self.k_proj(context).view(B, S, self.n_heads, self.per_head_dim).transpose(1, 2)
         v = self.v_proj(context).view(B, S, self.n_heads, self.per_head_dim).transpose(1, 2)
-
         attn = (q @ k.transpose(-2, -1)) * self.scale
         attn = F.softmax(attn, dim=-1)
         attn = self.attn_dropout(attn)
-
         out = (attn @ v).transpose(1, 2).contiguous().view(B, T, -1)
         out = self.o_proj(out)
         return out
@@ -77,7 +75,6 @@ class SuperHead(nn.Module):
             nn.Sigmoid(),
         )
         self.specialization_bias = nn.Parameter(torch.zeros(1, 1, self.head_dim))
-
         self._init_weights()
 
     def _init_weights(self):
@@ -95,14 +92,11 @@ class SuperHead(nn.Module):
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         h = self.cross_attn(backbone_hidden, backbone_hidden)
         h = self.input_norm(h + self.specialization_bias)
-
         if task_embedding is not None:
             h = h + task_embedding
-
         residual = h
         h = self.task_ffn(h)
         h = self.ffn_norm(h + residual)
-
         confidence = self.confidence_proj(h)
         out = self.output_proj(h)
         return out, confidence.squeeze(-1)
@@ -222,6 +216,84 @@ class StrategicHead(SuperHead):
         return out, confidence.squeeze(-1)
 
 
+class RetrievalAugmentedHead(SuperHead):
+    def __init__(self, config: SuperConfig, head_name: str = "retrieval"):
+        super().__init__(config, head_name)
+        self.query_proj = nn.Linear(self.head_dim, self.head_dim, bias=False)
+        self.key_proj = nn.Linear(self.head_dim, self.head_dim, bias=False)
+        self.memory_bank = nn.Parameter(torch.randn(64, self.head_dim) * 0.02)
+        self.retrieval_gate = nn.Linear(self.head_dim * 2, 1, bias=False)
+
+    def forward(self, backbone_hidden: torch.Tensor, task_embedding: Optional[torch.Tensor] = None) -> Tuple[torch.Tensor, torch.Tensor]:
+        h = self.cross_attn(backbone_hidden, backbone_hidden)
+        h = self.input_norm(h + self.specialization_bias)
+        if task_embedding is not None:
+            h = h + task_embedding
+        query = self.query_proj(h)
+        keys = self.key_proj(self.memory_bank.unsqueeze(0))
+        scores = torch.matmul(query, keys.transpose(-2, -1)) / math.sqrt(self.head_dim)
+        attn_weights = F.softmax(scores, dim=-1)
+        retrieved = attn_weights @ self.memory_bank.unsqueeze(0)
+        gate = torch.sigmoid(self.retrieval_gate(torch.cat([h, retrieved], dim=-1)))
+        h = h + retrieved * gate
+        residual = h
+        h = self.task_ffn(h)
+        h = self.ffn_norm(h + residual)
+        confidence = self.confidence_proj(h)
+        out = self.output_proj(h)
+        return out, confidence.squeeze(-1)
+
+
+class EmotionalHead(SuperHead):
+    def __init__(self, config: SuperConfig, head_name: str = "emotional"):
+        super().__init__(config, head_name)
+        self.emotion_embed = nn.Parameter(torch.randn(6, self.head_dim) * 0.02)
+        self.emotion_classifier = nn.Linear(self.head_dim, 6, bias=False)
+        self.emotion_gate = nn.Linear(self.head_dim, 1, bias=False)
+
+    def forward(self, backbone_hidden: torch.Tensor, task_embedding: Optional[torch.Tensor] = None) -> Tuple[torch.Tensor, torch.Tensor]:
+        h = self.cross_attn(backbone_hidden, backbone_hidden)
+        h = self.input_norm(h + self.specialization_bias)
+        if task_embedding is not None:
+            h = h + task_embedding
+        emotion_logits = self.emotion_classifier(h.mean(dim=1))
+        emotion_weights = F.softmax(emotion_logits, dim=-1)
+        emotion_context = (emotion_weights.unsqueeze(-1) * self.emotion_embed.unsqueeze(0)).sum(dim=1, keepdim=True)
+        gate = torch.sigmoid(self.emotion_gate(h))
+        h = h + emotion_context * gate
+        residual = h
+        h = self.task_ffn(h)
+        h = self.ffn_norm(h + residual)
+        confidence = self.confidence_proj(h)
+        out = self.output_proj(h)
+        return out, confidence.squeeze(-1)
+
+
+class ExecutiveHead(SuperHead):
+    def __init__(self, config: SuperConfig, head_name: str = "executive"):
+        super().__init__(config, head_name)
+        self.plan_embed = nn.Parameter(torch.randn(1, 8, self.head_dim) * 0.02)
+        self.priority_head = nn.Linear(self.head_dim, 1, bias=False)
+
+    def forward(self, backbone_hidden: torch.Tensor, task_embedding: Optional[torch.Tensor] = None) -> Tuple[torch.Tensor, torch.Tensor]:
+        h = self.cross_attn(backbone_hidden, backbone_hidden)
+        h = self.input_norm(h + self.specialization_bias)
+        if task_embedding is not None:
+            h = h + task_embedding
+        plans = self.plan_embed.expand(h.shape[0], -1, -1)
+        plan_attn = torch.matmul(h, plans.transpose(-2, -1)) / math.sqrt(self.head_dim)
+        plan_weights = F.softmax(plan_attn, dim=-1)
+        plan_context = plan_weights @ plans
+        h = h + plan_context * 0.1
+        residual = h
+        h = self.task_ffn(h)
+        h = self.ffn_norm(h + residual)
+        priority = torch.sigmoid(self.priority_head(h))
+        confidence = self.confidence_proj(h)
+        out = self.output_proj(h) * priority
+        return out, confidence.squeeze(-1)
+
+
 HEAD_CLASSES = {
     "primary": SuperHead,
     "analytical": AnalyticalHead,
@@ -232,6 +304,9 @@ HEAD_CLASSES = {
     "ethical": SuperHead,
     "linguistic": SuperHead,
     "temporal": SuperHead,
+    "retrieval": RetrievalAugmentedHead,
+    "emotional": EmotionalHead,
+    "executive": ExecutiveHead,
 }
 
 
@@ -258,13 +333,11 @@ class SuperHeadEnsemble(nn.Module):
         self.task_embedder = nn.Linear(32, config.brain_head_dim, bias=False)
 
     def forward(
-        self,
-        backbone_hidden: torch.Tensor,
+        self, backbone_hidden: torch.Tensor,
         active_heads: Optional[List[str]] = None,
         task_encoding: Optional[torch.Tensor] = None,
     ) -> Dict[str, torch.Tensor]:
         B, T, D = backbone_hidden.shape
-
         BPE = backbone_hidden.mean(dim=1)
         routing_logits = self.router(BPE)
         routing_weights = F.softmax(routing_logits, dim=-1)
@@ -294,21 +367,20 @@ class SuperHeadEnsemble(nn.Module):
         }
 
     def _fuse_outputs(
-        self,
-        outputs: Dict[str, torch.Tensor],
+        self, outputs: Dict[str, torch.Tensor],
         confidences: Dict[str, torch.Tensor],
         routing_weights: torch.Tensor,
     ) -> torch.Tensor:
         B, T, D = next(iter(outputs.values())).shape
-        weighted_sum = torch.zeros(B, T, D, device=next(iter(outputs.values())).device)
-        weight_sum = torch.zeros(B, T, 1, device=next(iter(outputs.values())).device)
-
+        device = next(iter(outputs.values())).device
+        weighted_sum = torch.zeros(B, T, D, device=device)
+        weight_sum = torch.zeros(B, T, 1, device=device)
+        n_route = routing_weights.shape[-1]
         for i, name in enumerate(BRAIN_HEAD_NAMES):
-            if name in outputs:
+            if name in outputs and i < n_route:
                 w = routing_weights[:, None, i:i+1] * confidences[name].unsqueeze(-1)
                 weighted_sum = weighted_sum + outputs[name] * w
                 weight_sum = weight_sum + w
-
         fused = weighted_sum / (weight_sum + 1e-8)
         fused = self.fusion_proj(fused)
         fused = self.fusion_norm(fused)
