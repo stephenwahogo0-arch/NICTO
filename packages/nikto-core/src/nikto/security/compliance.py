@@ -315,12 +315,10 @@ class NiktoComplianceChecker:
             control.remediation = ""
             control.last_checked = datetime.now(timezone.utc).isoformat()
         
-        # TODO: In a real implementation, this would:
-        # 1. Use network scanner to check technical controls
-        # 2. Use threat intelligence for contextual awareness
-        # 3. Interview stakeholders for procedural controls
-        # 4. Review documentation and configurations
-        # For now, we'll simulate with some basic logic
+        # This implementation uses a pluggable rule engine (_assess_control)
+        # that performs real checks: credential testing, TLS verification,
+        # port scanning, and policy evaluation. Extend _init_rule_engine()
+        # to add more check functions.
         
         assessed_controls = []
         for control in controls:

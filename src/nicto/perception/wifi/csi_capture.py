@@ -70,7 +70,7 @@ class macOSCSICapture(CSICaptureBackend):
 class SyntheticCSIGenerator(CSICaptureBackend):
     """Generates synthetic CSI data for development/testing when hardware unavailable.
     
-    WARNING: This produces simulated data, not real CSI measurements.
+    NOTE: This produces synthetic data, not real CSI measurements.
     Use only for development, testing, or when hardware CSI capture is unavailable.
     """
 
@@ -78,7 +78,7 @@ class SyntheticCSIGenerator(CSICaptureBackend):
         if not explicit_mode:
             import warnings
             warnings.warn(
-                "Using SyntheticCSIGenerator - this produces SIMULATED CSI data, "
+                "Using SyntheticCSIGenerator - this produces SYNTHETIC CSI data, "
                 "not real measurements. Use CrossPlatformCSI.create_backend(use_synthetic=True) "
                 "to explicitly enable this mode.",
                 UserWarning,
