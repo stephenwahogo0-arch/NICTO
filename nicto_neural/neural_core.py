@@ -85,7 +85,7 @@ from .api.evolution_api import EvolutionAPI
 from .api.elo_api import ELOAPI
 
 
-VERSION = "3.0.0"
+VERSION = "3.1.0"
 CODENAME = "SUPER_NEURAL"
 
 
@@ -255,13 +255,11 @@ class NeuralCore:
         head_output = self.super_heads(hidden, active_heads=active_heads)
         reasoning_output = self.super_reasoning(hidden)
 
-        fused = self.super_heads._fuse_outputs(
-            head_output["outputs"],
-            head_output["confidences"],
-            head_output["routing_weights"],
-        )
+        combined = head_output["fused"] + reasoning_output["fused"]
 
-        combined = fused + reasoning_output["fused_output"]
+        meta_score_flat = None
+        if reasoning_output["meta_score"] is not None:
+            meta_score_flat = reasoning_output["meta_score"].mean()
 
         return {
             "logits": logits,
@@ -269,10 +267,9 @@ class NeuralCore:
             "head_outputs": head_output["outputs"],
             "head_confidences": head_output["confidences"],
             "routing_weights": head_output["routing_weights"],
-            "reasoning_fused": reasoning_output["fused_output"],
-            "reasoning_confidence": reasoning_output["overall_confidence"],
-            "reasoning_meta_score": reasoning_output["meta_score"],
-            "fusion_weights": reasoning_output["fusion_weights"],
+            "reasoning_fused": reasoning_output["fused"],
+            "reasoning_meta_score": meta_score_flat,
+            "fusion_weights": reasoning_output["gate_weights"],
             "combined_output": combined,
             "active_heads": head_output["active_heads"],
             "active_reasoning_styles": reasoning_output["active_styles"],
@@ -300,15 +297,16 @@ class NeuralCore:
             device = self.super_config.device
             dummy_ids = torch.randint(0, self.super_config.vocab_size, (1, 64), device=device)
             super_out = self._super_forward(dummy_ids)
+            reasoning_confidence = float(super_out["reasoning_meta_score"].item()) if super_out["reasoning_meta_score"] is not None else 0.5
             result["super_core"] = {
                 "active_heads": super_out["active_heads"],
                 "head_confidences": {
                     k: float(v.mean().item()) for k, v in super_out["head_confidences"].items()
                 },
-                "reasoning_confidence": float(super_out["reasoning_confidence"].mean().item()),
-                "reasoning_meta_score": float(super_out["reasoning_meta_score"].mean().item()),
+                "reasoning_confidence": reasoning_confidence,
+                "reasoning_meta_score": reasoning_confidence,
                 "n_active_heads": len(super_out["active_heads"]),
-                "n_reasoning_paths": super_out["active_reasoning_styles"],
+                "n_reasoning_paths": len(super_out["active_reasoning_styles"]),
                 "combined_output_norm": float(super_out["combined_output"].norm().item()),
                 "hidden_state_norm": float(super_out["hidden_states"].norm().item()),
             }
@@ -322,15 +320,12 @@ class NeuralCore:
                 device = self.super_config.device
                 dummy_ids = torch.randint(0, self.super_config.vocab_size, (1, 32), device=device)
                 backbone_out = self.super_core(dummy_ids, return_hidden_states=True)
-                reasoning_out = self.super_reasoning(
-                    backbone_out["hidden_states"],
-                    return_all=True,
-                )
+                reasoning_out = self.super_reasoning(backbone_out["hidden_states"])
+                meta_val = float(reasoning_out["meta_score"].mean().item()) if reasoning_out["meta_score"] is not None else 0.5
                 result["super_reasoning"] = {
-                    "overall_confidence": float(reasoning_out["overall_confidence"].mean().item()),
-                    "meta_score": float(reasoning_out["meta_score"].mean().item()),
+                    "meta_score": meta_val,
                     "active_styles": reasoning_out["active_styles"],
-                    "n_paths": reasoning_out["n_active_paths"],
+                    "n_paths": len(reasoning_out["active_styles"]),
                 }
             except Exception as e:
                 result["super_reasoning"] = {"status": "error", "detail": str(e)[:200]}

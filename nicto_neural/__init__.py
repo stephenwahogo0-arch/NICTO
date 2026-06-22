@@ -4,12 +4,16 @@ from .neural.super_config import (
     SuperConfig, SMALL_CONFIG as SUPER_SMALL, MEDIUM_CONFIG as SUPER_MEDIUM,
     LARGE_CONFIG as SUPER_LARGE, HUGE_CONFIG, ULTRA_CONFIG, CONFIG_MAP,
 )
-from .neural.super_core import SuperNeuralCore, SuperTransformerBlock, GroupedQueryAttention, MoELayer, RMSNorm
+from .neural.super_core import SuperNeuralCore, SuperTransformerBlock, MoELayer, RMSNorm, FlashAttention2, ExpertChoiceMoE, HierarchicalMoE, SSM, DraftModel, QATLinear
 from .neural.heads import (
     SuperHeadEnsemble, SuperHead, AnalyticalHead, CreativeHead,
-    KnowledgeHead, StrategicHead, BRAIN_HEAD_NAMES, HEAD_CLASSES,
+    KnowledgeHead, StrategicHead, RetrievalAugmentedHead, EmotionalHead, ExecutiveHead,
+    BRAIN_HEAD_NAMES, HEAD_CLASSES,
 )
-from .neural.reasoning import MultiHeadedReasoning, ReasoningPath, ReasoningFusionGate, REASONING_STYLES
+from .neural.reasoning import (
+    MultiHeadedReasoning, ReasoningPath, ReasoningFusionGate, REASONING_STYLES,
+    CounterfactualPath, ProceduralPath, MetaPath, CausalPath, EthicalPath,
+)
 from .neural.training import (
     SuperTrainer, TrainingBatch, SFTTrainer, PPOTrainer, GRPOTrainer, CurriculumTrainer,
 )
@@ -75,8 +79,9 @@ try:
 except ImportError:
     nicto_master = None
 
-__version__ = "3.0.0"
+__version__ = "3.1.0"
 __codename__ = "SUPER_NEURAL"
+__codename_full__ = "SUPER_NEURAL_v3.1"
 
 __all__ = [
     "NeuralCore",
@@ -97,9 +102,14 @@ __all__ = [
     # SuperNeuralCore
     "SuperNeuralCore",
     "SuperTransformerBlock",
-    "GroupedQueryAttention",
     "MoELayer",
     "RMSNorm",
+    "FlashAttention2",
+    "ExpertChoiceMoE",
+    "HierarchicalMoE",
+    "SSM",
+    "DraftModel",
+    "QATLinear",
     # Super Heads
     "SuperHeadEnsemble",
     "SuperHead",
@@ -107,6 +117,9 @@ __all__ = [
     "CreativeHead",
     "KnowledgeHead",
     "StrategicHead",
+    "RetrievalAugmentedHead",
+    "EmotionalHead",
+    "ExecutiveHead",
     "BRAIN_HEAD_NAMES",
     "HEAD_CLASSES",
     # Reasoning
@@ -114,6 +127,11 @@ __all__ = [
     "ReasoningPath",
     "ReasoningFusionGate",
     "REASONING_STYLES",
+    "CounterfactualPath",
+    "ProceduralPath",
+    "MetaPath",
+    "CausalPath",
+    "EthicalPath",
     # Training
     "SuperTrainer",
     "TrainingBatch",
