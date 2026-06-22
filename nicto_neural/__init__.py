@@ -1,5 +1,19 @@
-from .neural_core import NeuralCore
-from .neural.config import NeuralConfig
+from .neural_core import NeuralCore, VERSION, CODENAME
+from .neural.config import NeuralConfig, BASE_CONFIG, SMALL_CONFIG, LARGE_CONFIG
+from .neural.super_config import (
+    SuperConfig, SMALL_CONFIG as SUPER_SMALL, MEDIUM_CONFIG as SUPER_MEDIUM,
+    LARGE_CONFIG as SUPER_LARGE, HUGE_CONFIG, ULTRA_CONFIG, CONFIG_MAP,
+)
+from .neural.super_core import SuperNeuralCore, SuperTransformerBlock, GroupedQueryAttention, MoELayer, RMSNorm
+from .neural.heads import (
+    SuperHeadEnsemble, SuperHead, AnalyticalHead, CreativeHead,
+    KnowledgeHead, StrategicHead, BRAIN_HEAD_NAMES, HEAD_CLASSES,
+)
+from .neural.reasoning import MultiHeadedReasoning, ReasoningPath, ReasoningFusionGate, REASONING_STYLES
+from .neural.training import (
+    SuperTrainer, TrainingBatch, SFTTrainer, PPOTrainer, GRPOTrainer, CurriculumTrainer,
+)
+from .neural.continual import ContinualLearning, ReplayBuffer, Experience, KnowledgeDistillation, EWC
 from .neural.elo_system import ELOEstimator
 from .neural.exploration import ExplorationEngine
 from .neural.domain_profiler import DomainProfiler
@@ -20,22 +34,100 @@ from .learning.meta_learner import MetaLearner
 from .learning.reward_model import RewardModel
 from .metrics.super_benchmark import SuperBenchmark
 
-# Real AI Module Imports
-from .run_nicto import NICTOInference
-from .nicto_image_gen import NICTOImageGen
-from .nicto_video_gen import NICTOVideoGen
-from .nicto_game_builder import NICTOGameBuilder
-from .setup_real_ai import run as setup_real_ai
-from .train_nicto import main as train_nicto
-from .build_training_data import main as build_training_data
-from .nicto_master import main as nicto_master
+# HyperBridge Imports (optional, may not be available)
+try:
+    from .aknow_hyperbridge import AknowHyperBridge, HyperBridgeConfig
+except ImportError:
+    AknowHyperBridge = None
+    HyperBridgeConfig = None
 
-__version__ = "2.1.0"
-__codename__ = "REAL_AI"
+# Real AI Module Imports (optional, some may be missing)
+try:
+    from .run_nicto import NICTOInference
+except ImportError:
+    NICTOInference = None
+try:
+    from .nicto_image_gen import NICTOImageGen
+except ImportError:
+    NICTOImageGen = None
+try:
+    from .nicto_video_gen import NICTOVideoGen
+except ImportError:
+    NICTOVideoGen = None
+try:
+    from .nicto_game_builder import NICTOGameBuilder
+except ImportError:
+    NICTOGameBuilder = None
+try:
+    from .setup_real_ai import run as setup_real_ai
+except ImportError:
+    setup_real_ai = None
+try:
+    from .train_nicto import main as train_nicto
+except ImportError:
+    train_nicto = None
+try:
+    from .build_training_data import main as build_training_data
+except ImportError:
+    build_training_data = None
+try:
+    from .nicto_master import main as nicto_master
+except ImportError:
+    nicto_master = None
+
+__version__ = "3.0.0"
+__codename__ = "SUPER_NEURAL"
 
 __all__ = [
     "NeuralCore",
+    "VERSION",
+    "CODENAME",
+    # Configs
     "NeuralConfig",
+    "BASE_CONFIG",
+    "SMALL_CONFIG",
+    "LARGE_CONFIG",
+    "SuperConfig",
+    "SUPER_SMALL",
+    "SUPER_MEDIUM",
+    "SUPER_LARGE",
+    "HUGE_CONFIG",
+    "ULTRA_CONFIG",
+    "CONFIG_MAP",
+    # SuperNeuralCore
+    "SuperNeuralCore",
+    "SuperTransformerBlock",
+    "GroupedQueryAttention",
+    "MoELayer",
+    "RMSNorm",
+    # Super Heads
+    "SuperHeadEnsemble",
+    "SuperHead",
+    "AnalyticalHead",
+    "CreativeHead",
+    "KnowledgeHead",
+    "StrategicHead",
+    "BRAIN_HEAD_NAMES",
+    "HEAD_CLASSES",
+    # Reasoning
+    "MultiHeadedReasoning",
+    "ReasoningPath",
+    "ReasoningFusionGate",
+    "REASONING_STYLES",
+    # Training
+    "SuperTrainer",
+    "TrainingBatch",
+    "SFTTrainer",
+    "PPOTrainer",
+    "GRPOTrainer",
+    "CurriculumTrainer",
+    # Continual Learning
+    "ContinualLearning",
+    "ReplayBuffer",
+    "Experience",
+    "KnowledgeDistillation",
+    "EWC",
+    # Legacy
     "ELOEstimator",
     "ExplorationEngine",
     "DomainProfiler",
@@ -59,6 +151,9 @@ __all__ = [
     "MetaLearner",
     "RewardModel",
     "SuperBenchmark",
+    # HyperBridge
+    "AknowHyperBridge",
+    "HyperBridgeConfig",
     # Real AI Modules
     "NICTOInference",
     "NICTOImageGen",
