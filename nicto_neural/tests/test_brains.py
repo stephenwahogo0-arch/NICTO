@@ -14,6 +14,9 @@ def test_primary():
     x = torch.randn(1, 8, 64)
     output, confidence = brain(x)
     assert output.shape == (1, 8, 64)
+    assert confidence.shape == (1, 8, 1)
+    assert confidence.min() >= 0.0
+    assert confidence.max() <= 1.0
 
 
 def test_analytical():
@@ -22,6 +25,8 @@ def test_analytical():
     x = torch.randn(1, 8, 64)
     output, confidence = brain(x)
     assert output.shape == (1, 8, 64)
+    assert confidence.shape == (1, 8, 1)
+    assert confidence.min() >= 0.0
 
 
 def test_creative():
@@ -31,31 +36,7 @@ def test_creative():
     output, confidence = brain(x, temperature=0.8)
     assert output.shape == (1, 8, 64)
     assert confidence.shape == (1, 8, 1)
-
-
-def test_analytical():
-    config = NeuralConfig(d_model=64)
-    brain = AnalyticalBrain(config)
-    x = torch.randn(1, 8, 64)
-    output, confidence = brain(x)
-    assert output.shape[-1] == 64
-
-
-def test_creative():
-    config = NeuralConfig(d_model=64)
-    brain = CreativeBrain(config)
-    x = torch.randn(1, 8, 64)
-    output, confidence = brain(x, temperature=0.8)
-    assert output.shape[-1] == 64
-    assert confidence is not None
-
-
-def test_creative():
-    config = NeuralConfig(d_model=64)
-    brain = CreativeBrain(config)
-    x = torch.randn(1, 8, 64)
-    output, confidence = brain(x, temperature=0.8)
-    assert output.shape[-1] == 64
+    assert confidence.min() >= 0.0 and confidence.max() <= 1.0
 
 
 def test_strategic():
@@ -63,7 +44,8 @@ def test_strategic():
     brain = StrategicBrain(config)
     x = torch.randn(1, 8, 64)
     output, confidence = brain(x)
-    assert output is not None
+    assert output.shape == (1, 8, 64)
+    assert confidence.shape == (1, 8, 1)
 
 
 def test_intuitive():
@@ -72,3 +54,20 @@ def test_intuitive():
     x = torch.randn(1, 8, 64)
     output, confidence = brain(x)
     assert output.shape == (1, 8, 64)
+    assert confidence.shape == (1, 8, 1)
+
+
+def test_brains_produce_different_outputs():
+    config = NeuralConfig(d_model=64)
+    x = torch.randn(1, 8, 64)
+    out1, _ = PrimaryBrain(config)(x)
+    out2, _ = AnalyticalBrain(config)(x)
+    out3, _ = CreativeBrain(config)(x)
+    out4, _ = StrategicBrain(config)(x)
+    out5, _ = IntuitiveBrain(config)(x)
+    outputs = [out1, out2, out3, out4, out5]
+    for i, oi in enumerate(outputs):
+        for j, oj in enumerate(outputs):
+            if i < j:
+                diff = (oi - oj).abs().mean().item()
+                assert diff > 0.0, f"Brains {i} and {j} produce identical output"

@@ -1,3 +1,10 @@
+import os as _os
+import warnings as _warnings
+if not _os.environ.get("NIKTO_ENABLE_EXPERIMENTAL", "").lower() in ("1", "true", "yes"):
+    _warnings.warn(
+        "nicto_neural.NeuralCore is EXPERIMENTAL. Set NIKTO_ENABLE_EXPERIMENTAL=1 or pass --enable-experimental.",
+        UserWarning, stacklevel=2,
+    )
 from .neural_core import NeuralCore, VERSION, CODENAME
 from .neural.config import NeuralConfig, BASE_CONFIG, SMALL_CONFIG, LARGE_CONFIG
 from .neural.super_config import (

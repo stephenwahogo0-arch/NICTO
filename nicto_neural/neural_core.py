@@ -1,6 +1,7 @@
 import os
 import hashlib
 import math
+import warnings
 from typing import Any, Dict, List, Optional, Union
 import torch
 import torch.nn as nn
@@ -8,6 +9,14 @@ import torch.nn.functional as F
 import asyncio
 import json
 import time
+
+_EXPERIMENTAL_ENABLED = os.environ.get("NIKTO_ENABLE_EXPERIMENTAL", "").lower() in ("1", "true", "yes")
+if not _EXPERIMENTAL_ENABLED:
+    warnings.warn(
+        "NeuralCore is EXPERIMENTAL. Set NIKTO_ENABLE_EXPERIMENTAL=1 or pass --enable-experimental to use it.",
+        UserWarning,
+        stacklevel=2,
+    )
 
 from .neural.config import NeuralConfig, BASE_CONFIG
 from .neural.super_config import SuperConfig, CONFIG_MAP
@@ -274,6 +283,35 @@ class NeuralCore:
             "active_heads": head_output["active_heads"],
             "active_reasoning_styles": reasoning_output["active_styles"],
         }
+
+    def save(self, path: Optional[str] = None) -> str:
+        state_dir = path or os.path.join(os.path.expanduser("~"), ".nicto", "neural", "state.json")
+        os.makedirs(os.path.dirname(state_dir), exist_ok=True)
+        state = {
+            "version": VERSION,
+            "codename": CODENAME,
+            "interaction_count": self._interaction_count,
+            "elo_ratings": self.elo.ratings if hasattr(self.elo, "ratings") else {},
+            "timestamp": time.time(),
+        }
+        with open(state_dir, "w") as f:
+            json.dump(state, f, indent=2)
+        return state_dir
+
+    @classmethod
+    def load(cls, path: Optional[str] = None, config: Optional[Union[NeuralConfig, SuperConfig, str]] = None) -> "NeuralCore":
+        state_dir = path or os.path.join(os.path.expanduser("~"), ".nicto", "neural", "state.json")
+        core = cls(config=config)
+        if os.path.exists(state_dir):
+            try:
+                with open(state_dir) as f:
+                    state = json.load(f)
+                core._interaction_count = state.get("interaction_count", 0)
+                if hasattr(core.elo, "ratings") and "elo_ratings" in state:
+                    core.elo.ratings.update(state["elo_ratings"])
+            except Exception as e:
+                warnings.warn(f"Failed to load state: {e}")
+        return core
 
     def process(self, task: Dict) -> Dict:
         allowed, reason = self.policies.enforce("brain:think", task)

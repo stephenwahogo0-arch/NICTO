@@ -3,7 +3,7 @@ import hashlib
 import uuid
 from datetime import datetime, timezone
 from typing import Optional
-from kyros.brain.models import Belief, KnowledgeLevel
+from nikto.brain.models import Belief, KnowledgeLevel
 
 
 class NiktoKnowledgeCore:

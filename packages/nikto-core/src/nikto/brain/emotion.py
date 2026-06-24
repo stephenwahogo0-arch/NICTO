@@ -2,7 +2,7 @@ import json
 import math
 from datetime import datetime, timezone
 from typing import Optional
-from kyros.brain.models import EmotionType, EmotionalState
+from nikto.brain.models import EmotionType, EmotionalState
 
 
 class NiktoEmotionalCore:

@@ -213,7 +213,21 @@ package = true
 
 [tool.hatch.build.targets.wheel]
 packages = [
+    "packages/nikto-core/src/nikto",
     "packages/kyros-core/src/kyros",
     "packages/kyros-cli/src/kyros_cli",
-    "src/nicto"
+    "packages/nicto-x/src/nicto_x",
+    "packages/nicto-game/src/nicto_game",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = [
+    "nicto_neural/tests",
+    "tests",
+]
+markers = [
+    "gpu: requires GPU",
+    "slow: slow tests",
+    "experimental: tests for experimental modules",
 ]

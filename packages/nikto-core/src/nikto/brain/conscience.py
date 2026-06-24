@@ -3,7 +3,7 @@ import hashlib
 import uuid
 from datetime import datetime, timezone
 from typing import Optional
-from kyros.brain.models import MoralRule
+from nikto.brain.models import MoralRule
 
 
 class NiktoConscience:

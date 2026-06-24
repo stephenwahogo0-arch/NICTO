@@ -1,0 +1,16 @@
+{
+  "title": "NICTO Super Training Data",
+  "subtitle": "361K ChatML entries across 57 domains for fine-tuning NICTO AI models",
+  "description": "Multi-domain training data with model-specific subsets (Kyros, Omega, Main, X)",
+  "total_entries": 361800,
+  "domains": 57,
+  "subsets": [
+    "kyros",
+    "omega",
+    "main",
+    "x",
+    "universal"
+  ],
+  "format": "ChatML JSONL",
+  "version": "2.0"
+}

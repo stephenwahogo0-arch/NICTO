@@ -1,0 +1,203 @@
+{
+  "total": 361800,
+  "domains": {
+    "aerospace": {
+      "single_turn": 5000
+    },
+    "agriculture": {
+      "single_turn": 5000
+    },
+    "ai_ml": {
+      "single_turn": 12500
+    },
+    "anthropology": {
+      "single_turn": 5000
+    },
+    "archaeology": {
+      "single_turn": 4000
+    },
+    "architecture": {
+      "single_turn": 5000
+    },
+    "architecture_history": {
+      "single_turn": 3000
+    },
+    "art": {
+      "single_turn": 6000
+    },
+    "astronomy": {
+      "single_turn": 6000
+    },
+    "biology": {
+      "single_turn": 10000
+    },
+    "biotechnology": {
+      "single_turn": 6000
+    },
+    "blockchain": {
+      "single_turn": 7500
+    },
+    "botany": {
+      "single_turn": 4000
+    },
+    "chemistry": {
+      "single_turn": 9000
+    },
+    "communication": {
+      "single_turn": 5000
+    },
+    "computing": {
+      "single_turn": 10000
+    },
+    "cybersecurity": {
+      "single_turn": 10000
+    },
+    "dance": {
+      "single_turn": 3000
+    },
+    "data_science": {
+      "single_turn": 7500
+    },
+    "demography": {
+      "single_turn": 3000
+    },
+    "earth_science": {
+      "single_turn": 6000
+    },
+    "ecology": {
+      "single_turn": 5000
+    },
+    "economics": {
+      "single_turn": 9000
+    },
+    "education": {
+      "single_turn": 6000
+    },
+    "energy": {
+      "single_turn": 6000
+    },
+    "engineering": {
+      "single_turn": 9000
+    },
+    "fashion": {
+      "single_turn": 4000
+    },
+    "film": {
+      "single_turn": 5000
+    },
+    "gastronomy": {
+      "single_turn": 4000
+    },
+    "genetics": {
+      "single_turn": 6000
+    },
+    "geography": {
+      "single_turn": 4000
+    },
+    "history": {
+      "single_turn": 9000
+    },
+    "information_theory": {
+      "single_turn": 4000
+    },
+    "law": {
+      "single_turn": 7500
+    },
+    "linguistics": {
+      "single_turn": 6000
+    },
+    "literature": {
+      "single_turn": 7500
+    },
+    "logic": {
+      "single_turn": 5000
+    },
+    "materials_science": {
+      "single_turn": 6000
+    },
+    "mathematics": {
+      "single_turn": 10000
+    },
+    "medicine": {
+      "single_turn": 9000
+    },
+    "microbiology": {
+      "single_turn": 5000
+    },
+    "military_science": {
+      "single_turn": 4000
+    },
+    "music": {
+      "single_turn": 6000
+    },
+    "nanotechnology": {
+      "single_turn": 5000
+    },
+    "neuroscience": {
+      "single_turn": 7500
+    },
+    "philosophy": {
+      "single_turn": 7500
+    },
+    "physics": {
+      "single_turn": 10000
+    },
+    "political_science": {
+      "single_turn": 6000
+    },
+    "programming": {
+      "single_turn": 12500
+    },
+    "psychology": {
+      "single_turn": 7500
+    },
+    "quantum_computing": {
+      "single_turn": 5000
+    },
+    "robotics": {
+      "single_turn": 7500
+    },
+    "self_improvement": {
+      "single_turn": 2500
+    },
+    "sociology": {
+      "single_turn": 6000
+    },
+    "theater": {
+      "single_turn": 4000
+    },
+    "urban_studies": {
+      "single_turn": 4000
+    },
+    "zoology": {
+      "single_turn": 4000
+    }
+  },
+  "types": {
+    "single_turn": 358500,
+    "code": 1000,
+    "chain_of_thought": 1000,
+    "multi_turn": 500,
+    "cross_domain": 300,
+    "adversarial": 500
+  },
+  "difficulties": {
+    "medium": 126898,
+    "easy": 89748,
+    "hard": 91200,
+    "expert": 53954
+  },
+  "families": {
+    "Natural Sciences": 81500,
+    "Humanities": 65000,
+    "Social Sciences": 71000,
+    "Applied Sciences": 54500,
+    "Formal Sciences": 85000,
+    "Meta": 2500,
+    "General": 2000,
+    "Cross-Domain": 300
+  },
+  "generation_time": 9.02442717552185,
+  "domains_covered": 57,
+  "generated_at": 1781429116.9660158
+}

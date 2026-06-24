@@ -1,21 +1,27 @@
 # NICTO — Autonomous AI Platform
 
-**NICTO is not an AI agent. NICTO is an AI system.**
+**NICTO — neural architecture research platform for multi-brain MoE+MLA systems.**
 
-A unified, self-improving artificial intelligence platform with its own cognitive architecture (NICTO Hyperbrain v2.0), a 4-model inference pipeline (Kyros/Omega/Main/X), a 7-agent frontier system (NICTO X), a professional game engine, and a complete Colab-based training pipeline for fine-tuning foundation models.
+A research codebase exploring a 7-brain mixture-of-experts architecture with MultiHeadLatentAttention, 70 specialist subnetworks, speed reader, advanced neural layers, and self-contained training infrastructure.
 
 ---
 
 ## Project Status
 
-| Component | Status | Tests |
+| Component | Status | Notes |
 |-----------|--------|-------|
-| 4-Model Pipeline (Kyros/Omega/Main/X) | ✅ Verified | 100% pass |
-| NICTO X (7 agents, neural core, reasoning) | ✅ Verified | 66/66 pass |
-| Game Engine (18+ genres, procedural) | ✅ Verified | 17/18 pass |
-| Colab Training Pipeline | ✅ Ready | — |
-| GGUF Integration | ✅ Ready | — |
-| Desktop App (React/Tauri) | ✅ Builds | — |
+| 7-Brain MoE+MLA Architecture (70 subnetworks) | 🏗️ Building | 19 heads, forward-pass tested |
+| Advanced Neural Layers (MLA, EnhancedMoE, 10 blocks) | 🏗️ Building | Importable and forward-pass tested |
+| Speed Reader (SSM + multi-stream) | 🏗️ Building | DeepUnderstandingEngine at 5 levels |
+| Domain/Coding Specialists | 🏗️ Building | 100 domain + 20 coding networks |
+| Transformer Training Loop | 🏗️ Building | Cross-entropy LM training |
+| NiktoBrain Cognitive Subsystems | 🏗️ Building | 12 subsystems, template reasoning |
+| NICTO X TreeOfThought | 🏗️ Building | Replaced templates with Anthropic API |
+| Training Data Generation | 🏗️ Building | Needs aknow_nicto_bridge to generate |
+| Game Engine (18+ genres) | 🏗️ Building | Procedural generation |
+| Colab/Kaggle Training Pipeline | 🏗️ Building | Notebooks prepared |
+| GGUF Integration | 🏗️ Building | Integration scripts |
+| Desktop App (React/Tauri) | 🏗️ Building | Frontend scaffolding |
 
 ---
 
@@ -145,7 +151,7 @@ NICTO/
 | **Vision** | Image analysis | Color histograms, edge detection, OCR |
 | **Security** | Vulnerability detection | SQLi/XSS patterns, 17 port signatures, CVE lookup |
 
-**Neural Core**: MoE transformer (8 experts, top-2 routing, 8-head attention, 131K token context, numpy-accelerated 70ms inference)
+**Neural Core**: Experimental MoE transformer (8 experts, top-2 routing, 8-head attention, 131K token context, numpy-accelerated). Quarantined behind `NIKTO_ENABLE_EXPERIMENTAL=1` until verified.
 
 ---
 
@@ -207,28 +213,16 @@ python scripts/train_and_verify_all_models.py
 3. Outputs GGUF files to Google Drive
 4. Integrate with `python scripts/integrate_gguf.py`
 
-**Training data**: 361,800 ChatML entries across 57 domains (super_v3)
-
 ---
 
-## Model Performance Comparison
 
-| Model | Avg Latency | Response Depth | Success | Tier |
-|-------|-------------|----------------|:-------:|------|
-| Kyros | 0.6ms | 44 chars | 100% | ⚡ Fast |
-| Omega | 2.9ms | 71 chars | 100% | ⚖️ Balanced |
-| Main | 3.0ms | 71 chars | 100% | 🔧 Full |
-| X | 2.4s | 9,806 chars | 100% | 🚀 Frontier |
-
----
 
 ## Version History
-
 | Version | Date | Highlights |
 |---------|------|------------|
-| **v2.1.0** | 2026-06 | 4-model pipeline, unified server, Colab training, GGUF integration, docs overhaul |
-| **v2.0.0** | 2026-05 | NICTO Hyperbrain v2.0 — 12 architectural advances, MoE neural core, 7-agent system |
-| **v1.0.0** | 2026-04 | Initial autonomous brain with 10 subsystems, game engine, CLI |
+| **v4.0.0** | 2026-06 | 7-brain MoE+MLA architecture (70 subnetworks, 19 heads), speed reader, advanced layers, domain/coding specialists, learning paradigms |
+| **v3.1.0** | 2026-06 | SuperNeuralCore, SuperHeadEnsemble, MultiHeadedReasoning, 12 architectural advances |
+| **v0.1.0** | 2026-04 | Initial neural architecture experiments |
 
 ---
 

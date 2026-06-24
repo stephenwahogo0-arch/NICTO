@@ -133,7 +133,7 @@ class NictoXOrchestrator:
 
         neural_result = self.neural_core.process(input_text, max_tokens=2048)
 
-        thought = self.tree_of_thought.explore(problem=input_text, context=combined)
+        thought = await self.tree_of_thought.explore(problem=input_text, context=combined)
         reflection_result = self.reflection.evaluate(input_text, thought.get("best_path", combined))
         confidence = self.confidence.estimate(thought.get("best_path", combined), reflection_result)
 
@@ -141,7 +141,7 @@ class NictoXOrchestrator:
 
         confidence_score = confidence.get("score", 0.5)
         if confidence.get("should_retry", False) and confidence_score < 0.25:
-            thought2 = self.tree_of_thought.explore(problem=f"Re-analyze carefully: {input_text}", context=combined + "\n[Previous analysis was low confidence]")
+            thought2 = await self.tree_of_thought.explore(problem=f"Re-analyze carefully: {input_text}", context=combined + "\n[Previous analysis was low confidence]")
             confidence2 = self.confidence.estimate(thought2.get("best_path", ""), reflection_result)
             if confidence2.get("score", 0) > confidence_score:
                 thought = thought2

@@ -1,0 +1,60 @@
+{
+  "ebola_discovery": {
+    "time_s": 26.0,
+    "candidates": 34,
+    "top_candidate": "ivermectin_aglycone",
+    "best_binding_nM": 96.5,
+    "admet_score": 0.703,
+    "africa_suitability": 0.707,
+    "overall_score": 0.824,
+    "vaccines": 3
+  },
+  "game_engine": {
+    "time_s": 0.8,
+    "size_kb": 581.2,
+    "resolution": "4K",
+    "engine": "OpenGL 4.6 + GLSL 4.60 PBR",
+    "features": [
+      "4K UHD (3840x2160) rendering",
+      "PBR physically-based shading",
+      "GLSL 4.60 vertex/fragment shaders",
+      "Procedural PBR textures (brick, marble, wood, metal, stone, grass)",
+      "Dynamic skybox with sun glow + horizon scattering",
+      "Cascaded shadow maps",
+      "HDR bloom post-processing",
+      "Terrain with heightmap variation",
+      "FPS controls (WASD + mouse look)",
+      "Physics engine (gravity, collision)",
+      "Multi-light setup (sun + fill)",
+      "Anti-aliasing + MSAA",
+      "60 FPS target"
+    ],
+    "path": "C:\\Users\\BYU\\Desktop\\NIKTO\\packages\\nikto-core\\src\\nikto\\nicto_outputs\\games_3d\\NIKTO_3D_World.py"
+  },
+  "virtual_labs": {
+    "categories": [
+      "disease_modeling",
+      "drug_discovery",
+      "game_engine",
+      "genetics",
+      "optimization"
+    ],
+    "total_labs": 13,
+    "lab_names": [
+      "sir",
+      "seir",
+      "sird",
+      "pandemic",
+      "immune_sim",
+      "climate_disease",
+      "drug_sim",
+      "clinical_trial",
+      "drug_discovery_lab",
+      "game_engine_3d",
+      "mutation_sim",
+      "optimize",
+      "search_solutions"
+    ]
+  },
+  "brain_integration": "OK"
+}

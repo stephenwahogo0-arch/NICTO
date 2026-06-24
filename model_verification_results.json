@@ -1,0 +1,241 @@
+{
+  "timestamp": "2026-06-14 12:43:14",
+  "total_time_seconds": 53.57,
+  "training": {
+    "nicto_kyros": {
+      "init_time": 0.0,
+      "init_response": "NICTO: statement received. Kyros mode active."
+    },
+    "nicto_omega": {
+      "train_time": 5.51,
+      "thought_count": 4
+    },
+    "nicto_main": {
+      "train_time": 6.61,
+      "scan_result": {
+        "vulns": []
+      }
+    },
+    "nicto_x": {
+      "orchestrator_started": true,
+      "response": "{'response': \"Path 4 conclusion: After 5 reasoning steps (abductive, analogical, critical, creative,",
+      "agent_count": 7,
+      "train_time": 4075.32
+    }
+  },
+  "benchmarks": {
+    "nicto_kyros": {
+      "reasoning": {
+        "latency_ms": 0.87,
+        "response_length": 44,
+        "has_error": false,
+        "response_preview": "NICTO: question received. Kyros mode active."
+      },
+      "knowledge": {
+        "latency_ms": 1.15,
+        "response_length": 45,
+        "has_error": false,
+        "response_preview": "NICTO: statement received. Kyros mode active."
+      },
+      "coding": {
+        "latency_ms": 0.32,
+        "response_length": 45,
+        "has_error": false,
+        "response_preview": "NICTO: statement received. Kyros mode active."
+      },
+      "ethics": {
+        "latency_ms": 0.0,
+        "response_length": 44,
+        "has_error": false,
+        "response_preview": "NICTO: question received. Kyros mode active."
+      },
+      "creative": {
+        "latency_ms": 0.0,
+        "response_length": 45,
+        "has_error": false,
+        "response_preview": "NICTO: statement received. Kyros mode active."
+      },
+      "security": {
+        "latency_ms": 0.0,
+        "response_length": 44,
+        "has_error": false,
+        "response_preview": "NICTO: question received. Kyros mode active."
+      },
+      "memory": {
+        "latency_ms": 2.01,
+        "response_length": 44,
+        "has_error": false,
+        "response_preview": "NICTO: question received. Kyros mode active."
+      }
+    },
+    "nicto_omega": {
+      "reasoning": {
+        "latency_ms": 3.61,
+        "response_length": 71,
+        "has_error": false,
+        "response_preview": "I am thinking about If a train leaves station A at 60 mph and another ."
+      },
+      "knowledge": {
+        "latency_ms": 4.03,
+        "response_length": 71,
+        "has_error": false,
+        "response_preview": "I am thinking about Explain the significance of the transformer archit."
+      },
+      "coding": {
+        "latency_ms": 2.01,
+        "response_length": 71,
+        "has_error": false,
+        "response_preview": "I am thinking about Write a Python function to find the longest palind."
+      },
+      "ethics": {
+        "latency_ms": 4.86,
+        "response_length": 71,
+        "has_error": false,
+        "response_preview": "I am thinking about Is it ethical to deploy AI systems that can make a."
+      },
+      "creative": {
+        "latency_ms": 2.01,
+        "response_length": 71,
+        "has_error": false,
+        "response_preview": "I am thinking about Write a short poem about artificial intelligence a."
+      },
+      "security": {
+        "latency_ms": 2.0,
+        "response_length": 71,
+        "has_error": false,
+        "response_preview": "I am thinking about What are the most common web application vulnerabi."
+      },
+      "memory": {
+        "latency_ms": 2.0,
+        "response_length": 71,
+        "has_error": false,
+        "response_preview": "I am thinking about What did I just ask you? Can you recall the previo."
+      }
+    },
+    "nicto_main": {
+      "reasoning": {
+        "latency_ms": 2.52,
+        "response_length": 71,
+        "has_error": false,
+        "response_preview": "I am thinking about If a train leaves station A at 60 mph and another ."
+      },
+      "knowledge": {
+        "latency_ms": 8.55,
+        "response_length": 71,
+        "has_error": false,
+        "response_preview": "I am thinking about Explain the significance of the transformer archit."
+      },
+      "coding": {
+        "latency_ms": 3.03,
+        "response_length": 71,
+        "has_error": false,
+        "response_preview": "I am thinking about Write a Python function to find the longest palind."
+      },
+      "ethics": {
+        "latency_ms": 2.0,
+        "response_length": 71,
+        "has_error": false,
+        "response_preview": "I am thinking about Is it ethical to deploy AI systems that can make a."
+      },
+      "creative": {
+        "latency_ms": 2.0,
+        "response_length": 71,
+        "has_error": false,
+        "response_preview": "I am thinking about Write a short poem about artificial intelligence a."
+      },
+      "security": {
+        "latency_ms": 2.01,
+        "response_length": 71,
+        "has_error": false,
+        "response_preview": "I am thinking about What are the most common web application vulnerabi."
+      },
+      "memory": {
+        "latency_ms": 1.0,
+        "response_length": 71,
+        "has_error": false,
+        "response_preview": "I am thinking about What did I just ask you? Can you recall the previo."
+      }
+    },
+    "nicto_x": {
+      "reasoning": {
+        "latency_ms": 4026.03,
+        "response_length": 10965,
+        "has_error": false,
+        "response_preview": "{'response': \"Path 4 conclusion: After 5 reasoning steps (abductive, analogical,"
+      },
+      "knowledge": {
+        "latency_ms": 3339.65,
+        "response_length": 9808,
+        "has_error": false,
+        "response_preview": "{'response': \"Path 4 conclusion: After 5 reasoning steps (abductive, analogical,"
+      },
+      "coding": {
+        "latency_ms": 3488.92,
+        "response_length": 10704,
+        "has_error": false,
+        "response_preview": "{'response': \"Path 4 conclusion: After 5 reasoning steps (abductive, analogical,"
+      },
+      "ethics": {
+        "latency_ms": 3761.75,
+        "response_length": 10107,
+        "has_error": false,
+        "response_preview": "{'response': \"Path 4 conclusion: After 5 reasoning steps (abductive, analogical,"
+      },
+      "creative": {
+        "latency_ms": 488.89,
+        "response_length": 9137,
+        "has_error": false,
+        "response_preview": "{'response': \"Path 4 conclusion: After 5 reasoning steps (abductive, analogical,"
+      },
+      "security": {
+        "latency_ms": 650.05,
+        "response_length": 9268,
+        "has_error": false,
+        "response_preview": "{'response': \"Path 4 conclusion: After 5 reasoning steps (abductive, analogical,"
+      },
+      "memory": {
+        "latency_ms": 798.07,
+        "response_length": 8652,
+        "has_error": false,
+        "response_preview": "{'response': \"Path 4 conclusion: After 5 reasoning steps (abductive, analogical,"
+      }
+    }
+  },
+  "scores": {
+    "nicto_kyros": {
+      "avg_latency_ms": 0.62,
+      "total_response_chars": 311,
+      "success_rate": 100.0,
+      "errors": 0,
+      "tests_run": 7,
+      "training_init_time_ms": 0
+    },
+    "nicto_omega": {
+      "avg_latency_ms": 2.93,
+      "total_response_chars": 497,
+      "success_rate": 100.0,
+      "errors": 0,
+      "tests_run": 7,
+      "training_init_time_ms": 5.51
+    },
+    "nicto_main": {
+      "avg_latency_ms": 3.02,
+      "total_response_chars": 497,
+      "success_rate": 100.0,
+      "errors": 0,
+      "tests_run": 7,
+      "training_init_time_ms": 6.61
+    },
+    "nicto_x": {
+      "avg_latency_ms": 2364.77,
+      "total_response_chars": 68641,
+      "success_rate": 100.0,
+      "errors": 0,
+      "tests_run": 7,
+      "training_init_time_ms": 4075.32
+    }
+  },
+  "external_tests": {
+    "nicto_x_tests": "loaded"
+  }
+}

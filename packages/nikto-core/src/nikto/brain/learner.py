@@ -4,7 +4,7 @@ import uuid
 import random
 from datetime import datetime, timezone
 from typing import Optional, Any
-from kyros.brain.models import KnowledgeLevel
+from nikto.brain.models import KnowledgeLevel
 
 
 class NiktoLearner:

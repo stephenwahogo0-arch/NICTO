@@ -1,0 +1,11 @@
+{
+  "base_model": "microsoft/Phi-3-mini-4k-instruct",
+  "model_display": "Phi-3-mini 3.8B (4-bit CPU)",
+  "model_params": "3.8B",
+  "vram_gb": 0.0,
+  "ram_gb": 0.5,
+  "disk_gb": 41.4,
+  "gpu_name": "",
+  "unsloth_installed": false,
+  "mode": "cpu"
+}

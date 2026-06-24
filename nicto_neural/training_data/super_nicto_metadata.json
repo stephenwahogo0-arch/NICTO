@@ -1,0 +1,19 @@
+{
+  "total_examples": 17200,
+  "domains_covered": 32,
+  "type_breakdown": {
+    "single_turn": 16000,
+    "code": 300,
+    "chain_of_thought": 500,
+    "cross_domain": 200,
+    "multi_turn": 200
+  },
+  "difficulty_breakdown": {
+    "medium": 6500,
+    "easy": 4250,
+    "expert": 2500,
+    "hard": 3950
+  },
+  "generation_time_seconds": 0.9613828659057617,
+  "generated_at": 1781387011.8379803
+}

@@ -61,6 +61,11 @@ WORKSPACE_DEEP_ANALYSIS.md
 *.exe
 *.dll
 
+# Windows reserved names
+nul
+NUL
+Nul
+
 # Electron
 packages/nikto-desktop/electron/
 packages/nikto-desktop/node_modules/
