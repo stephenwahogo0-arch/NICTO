@@ -49,6 +49,46 @@ class SuperConfig:
     nas_population: int = 10
     nas_generations: int = 20
 
+    # MLA (Multi-head Latent Attention)
+    use_mla: bool = False
+    mla_compression_ratio: float = 0.25
+    mla_separate_q: bool = True
+
+    # Enhanced MoE
+    use_enhanced_moe: bool = True
+
+    # Advanced layers
+    use_retention: bool = False
+    use_gated_fusion: bool = False
+    use_adaptive_inference: bool = False
+    use_hierarchical_merge: bool = False
+    use_ntm: bool = False
+    use_xnet: bool = False
+    use_hyper_connection: bool = False
+    use_progressive_agg: bool = False
+    use_sparse_moa: bool = False
+    adaptive_max_steps: int = 5
+    ntm_memory_size: int = 128
+    ntm_memory_dim: int = 64
+
+    # Domain specialists
+    use_domain_specialists: bool = False
+    n_domain_specialists: int = 100
+    domain_specialist_dim: int = 256
+
+    # Coding specialists
+    use_coding_specialists: bool = False
+    n_coding_specialists: int = 20
+    coding_specialist_dim: int = 256
+
+    # Speed reader
+    use_speed_reader: bool = False
+    speed_reader_chunk_size: int = 512
+    speed_reader_streams: int = 4
+
+    # Learning paradigms
+    learning_paradigm: str = "auto"  # auto, supervised, unsupervised, semi_supervised, reinforcement, self_supervised
+
     def __post_init__(self):
         if not self.device:
             self.device = "cuda" if torch.cuda.is_available() else "cpu"

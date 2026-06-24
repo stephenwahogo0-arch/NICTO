@@ -8,7 +8,7 @@ from .super_config import SuperConfig
 BRAIN_HEAD_NAMES = [
     "primary", "analytical", "creative", "strategic",
     "knowledge", "intuitive", "ethical", "linguistic", "temporal",
-    "retrieval", "emotional", "executive",
+    "retrieval", "emotional", "executive", "mathematical",
 ]
 
 
@@ -294,19 +294,95 @@ class ExecutiveHead(SuperHead):
         return out, confidence.squeeze(-1)
 
 
+class SubNetworkHead(SuperHead):
+    """Generic head that routes through MoE+MLA sub-networks for a specialized brain."""
+    def __init__(self, config: SuperConfig, head_name: str, network_dict):
+        super().__init__(config, head_name)
+        self.sub_networks = nn.ModuleDict()
+        for name, cls in network_dict.items():
+            self.sub_networks[name] = cls(config)
+        self.to_d_model = nn.Linear(self.head_dim, config.d_model, bias=False)
+        self.from_d_model = nn.Linear(config.d_model, self.head_dim, bias=False)
+        self.sub_router = nn.Sequential(
+            nn.Linear(config.d_model, config.d_model // 2), nn.GELU(),
+            nn.Linear(config.d_model // 2, len(network_dict)),
+        )
+
+    def forward(self, backbone_hidden: torch.Tensor, task_embedding: Optional[torch.Tensor] = None) -> Tuple[torch.Tensor, torch.Tensor]:
+        h = self.cross_attn(backbone_hidden, backbone_hidden)
+        h = self.input_norm(h + self.specialization_bias)
+        if task_embedding is not None: h = h + task_embedding
+        h_dm = self.to_d_model(h)
+        routing = F.softmax(self.sub_router(h_dm.mean(dim=1)), dim=-1)
+        sub_outs, sub_confs = [], []
+        for i, name in enumerate(self.sub_networks):
+            so, sc = self.sub_networks[name](h_dm)
+            sub_outs.append(so * routing[:, i:i+1, None])
+            sub_confs.append(sc * routing[:, i:i+1])
+        merged = self.from_d_model(sum(sub_outs))
+        avg_conf = torch.stack(sub_confs, dim=-1).sum(dim=-1, keepdim=True)
+        residual = h; h = self.task_ffn(merged); h = self.ffn_norm(h + residual)
+        confidence = self.confidence_proj(h) * avg_conf
+        out = self.output_proj(h)
+        return out, confidence.squeeze(-1)
+
+
+class MathHead(SubNetworkHead):
+    def __init__(self, config: SuperConfig, head_name: str = "mathematical"):
+        from .math_brain import MATH_BRAIN_NETWORKS
+        super().__init__(config, head_name, MATH_BRAIN_NETWORKS)
+
+
+class PrimaryHead(SubNetworkHead):
+    def __init__(self, config: SuperConfig, head_name: str = "primary"):
+        from .primary_brain import PRIMARY_BRAIN_NETWORKS
+        super().__init__(config, head_name, PRIMARY_BRAIN_NETWORKS)
+
+
+class AnalyticalHeadDeep(SubNetworkHead):
+    def __init__(self, config: SuperConfig, head_name: str = "analytical"):
+        from .analytical_brain import ANALYTICAL_BRAIN_NETWORKS
+        super().__init__(config, head_name, ANALYTICAL_BRAIN_NETWORKS)
+
+
+class CreativeHeadDeep(SubNetworkHead):
+    def __init__(self, config: SuperConfig, head_name: str = "creative"):
+        from .creative_brain import CREATIVE_BRAIN_NETWORKS
+        super().__init__(config, head_name, CREATIVE_BRAIN_NETWORKS)
+
+
+class StrategicHeadDeep(SubNetworkHead):
+    def __init__(self, config: SuperConfig, head_name: str = "strategic"):
+        from .strategic_brain import STRATEGIC_BRAIN_NETWORKS
+        super().__init__(config, head_name, STRATEGIC_BRAIN_NETWORKS)
+
+
+class KnowledgeHeadDeep(SubNetworkHead):
+    def __init__(self, config: SuperConfig, head_name: str = "knowledge"):
+        from .knowledge_brain import KNOWLEDGE_BRAIN_NETWORKS
+        super().__init__(config, head_name, KNOWLEDGE_BRAIN_NETWORKS)
+
+
+class IntuitiveHeadDeep(SubNetworkHead):
+    def __init__(self, config: SuperConfig, head_name: str = "intuitive"):
+        from .intuitive_brain import INTUITIVE_BRAIN_NETWORKS
+        super().__init__(config, head_name, INTUITIVE_BRAIN_NETWORKS)
+
+
 HEAD_CLASSES = {
-    "primary": SuperHead,
-    "analytical": AnalyticalHead,
-    "creative": CreativeHead,
-    "strategic": StrategicHead,
-    "knowledge": KnowledgeHead,
-    "intuitive": SuperHead,
+    "primary": PrimaryHead,
+    "analytical": AnalyticalHeadDeep,
+    "creative": CreativeHeadDeep,
+    "strategic": StrategicHeadDeep,
+    "knowledge": KnowledgeHeadDeep,
+    "intuitive": IntuitiveHeadDeep,
     "ethical": SuperHead,
     "linguistic": SuperHead,
     "temporal": SuperHead,
     "retrieval": RetrievalAugmentedHead,
     "emotional": EmotionalHead,
     "executive": ExecutiveHead,
+    "mathematical": MathHead,
 }
 
 

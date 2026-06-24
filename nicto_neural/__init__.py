@@ -5,9 +5,72 @@ from .neural.super_config import (
     LARGE_CONFIG as SUPER_LARGE, HUGE_CONFIG, ULTRA_CONFIG, CONFIG_MAP,
 )
 from .neural.super_core import SuperNeuralCore, SuperTransformerBlock, MoELayer, RMSNorm, FlashAttention2, ExpertChoiceMoE, HierarchicalMoE, SSM, DraftModel, QATLinear
+from .neural.advanced_layers import (
+    MultiHeadLatentAttention, EnhancedMoE, MultiScaleRetention,
+    GatedCrossModalFusion, AdaptiveInferenceTransformer, HierarchicalTokenMerger,
+    NeuralTuringMachineController, XNetHybridBlock, HyperConnectionLayer,
+    ProgressiveLayerAggregation, SparseMixtureOfAttention, SpeculativeVerificationHead,
+)
+from .neural.domain_specialists import DomainSpecialist, DomainSpecialistEnsemble
+from .neural.coding_specialists import (
+    ProgrammingNeuralNet, CodeContrastiveLearner, CodePatternDetector,
+    CodeRLAgent, CodeInstructionTuner, DebugAgent, CodeGeneratorNet,
+    CodeReviewer, CodeOptimizer, APIGenerator, TestGenerator,
+    RefactoringNet, TypeInferrer, DependencyAnalyzer, CodeVectorizer,
+    CodeInterpreter, CodeExplainer, SecurityAuditor, PerformanceProfiler, CodeTranslator,
+)
+from .neural.speed_reader import SpeedReader, UltraFastReader, ReadingMetrics, ChunkedProcessor, GatedSSMReader, MultiStreamReader, DeepUnderstandingEngine
+from .neural.math_brain import (
+    MathBrainBase, PureAlgebraNetwork, AnalysisNetwork, GeometryTopologyNetwork,
+    NumberTheoryNetwork, QuantumMechanicsNetwork, RelativityCosmologyNetwork,
+    StatisticalMechanicsNetwork, ParticleFieldTheoryNetwork, MathPhysicsBridgeNetwork,
+    ComputationalMathPhysicsNetwork, MATH_BRAIN_NETWORKS,
+)
+from .neural.primary_brain import (
+    PrimaryBrainBase, GeneralReasoningNetwork, LanguageComprehensionNetwork,
+    ProblemSolvingNetwork, DecisionMakingNetwork, PatternRecognitionNetwork,
+    AbstractionBuilderNetwork, AnalogyEngineNetwork, CommonSenseNetwork,
+    AttentionFilterNetwork, IntegrationHubNetwork, PRIMARY_BRAIN_NETWORKS,
+)
+from .neural.analytical_brain import (
+    AnalyticalBrainBase, LogicalDeductionNetwork, CriticalAnalysisNetwork,
+    SystematicDecompositionNetwork, MathematicalReasoningNetwork, DataDrivenInferenceNetwork,
+    HypothesisTestingNetwork, CausalReasoningNetwork, ComparativeAnalysisNetwork,
+    RootCauseAnalysisNetwork, FormalVerificationNetwork, ANALYTICAL_BRAIN_NETWORKS,
+)
+from .neural.creative_brain import (
+    CreativeBrainBase, IdeaGenerationNetwork, MetaphoricThinkingNetwork,
+    CounterfactualReasoningNetwork, VisualizationEngineNetwork, NarrativeConstructionNetwork,
+    DesignSynthesisNetwork, ImprovisationEngineNetwork, AestheticAppraisalNetwork,
+    HumorDetectionNetwork, InnovationScoutingNetwork, CREATIVE_BRAIN_NETWORKS,
+)
+from .neural.strategic_brain import (
+    StrategicBrainBase, GoalDecompositionNetwork, LongTermPlanningNetwork,
+    ResourceOptimizationNetwork, RiskAssessmentNetwork, GameTheoryNetwork,
+    ContingencyPlanningNetwork, OpportunityDetectionNetwork, CompetitiveAnalysisNetwork,
+    TimelineForecastingNetwork, ExecutionTrackingNetwork, STRATEGIC_BRAIN_NETWORKS,
+)
+from .neural.knowledge_brain import (
+    KnowledgeBrainBase, FactualRetrievalNetwork, ConceptMappingNetwork,
+    ExplanationGenerationNetwork, LearningSynthesisNetwork, CrossDomainTransferNetwork,
+    KnowledgeVerificationNetwork, GapDetectionNetwork, StructuredRecallNetwork,
+    MnemonicEncodingNetwork, EpistemicCalibrationNetwork, KNOWLEDGE_BRAIN_NETWORKS,
+)
+from .neural.intuitive_brain import (
+    IntuitiveBrainBase, RapidPatternMatchNetwork, EmotionalAttunementNetwork,
+    HeuristicEngineNetwork, ImplicitLearningNetwork, GestaltPerceptionNetwork,
+    ValueJudgmentNetwork, SituationalAwarenessNetwork, TrustCalibrationNetwork,
+    SocialIntuitionNetwork, BlinkDecisionEngineNetwork, INTUITIVE_BRAIN_NETWORKS,
+)
+from .learning.paradigms import (
+    SupervisedLearner, UnsupervisedLearner, SemiSupervisedLearner, RLAgent,
+    SelfSupervisedLearner, TransferLearner, FederatedLearner, MetaLearner, LearningController,
+)
 from .neural.heads import (
     SuperHeadEnsemble, SuperHead, AnalyticalHead, CreativeHead,
     KnowledgeHead, StrategicHead, RetrievalAugmentedHead, EmotionalHead, ExecutiveHead,
+    MathHead, SubNetworkHead, PrimaryHead, AnalyticalHeadDeep, CreativeHeadDeep,
+    StrategicHeadDeep, KnowledgeHeadDeep, IntuitiveHeadDeep,
     BRAIN_HEAD_NAMES, HEAD_CLASSES,
 )
 from .neural.reasoning import (
@@ -41,7 +104,7 @@ from .metrics.super_benchmark import SuperBenchmark
 # HyperBridge Imports (optional, may not be available)
 try:
     from .aknow_hyperbridge import AknowHyperBridge, HyperBridgeConfig
-except ImportError:
+except (ImportError, SyntaxError):
     AknowHyperBridge = None
     HyperBridgeConfig = None
 
@@ -79,9 +142,9 @@ try:
 except ImportError:
     nicto_master = None
 
-__version__ = "3.1.0"
+__version__ = "4.0.0"
 __codename__ = "SUPER_NEURAL"
-__codename_full__ = "SUPER_NEURAL_v3.1"
+__codename_full__ = "SUPER_NEURAL_v3.2"
 
 __all__ = [
     "NeuralCore",
@@ -110,6 +173,104 @@ __all__ = [
     "SSM",
     "DraftModel",
     "QATLinear",
+    # Advanced Layers (MLA, Enhanced MoE, 10 Super Networks)
+    "MultiHeadLatentAttention",
+    "EnhancedMoE",
+    "MultiScaleRetention",
+    "GatedCrossModalFusion",
+    "AdaptiveInferenceTransformer",
+    "HierarchicalTokenMerger",
+    "NeuralTuringMachineController",
+    "XNetHybridBlock",
+    "HyperConnectionLayer",
+    "ProgressiveLayerAggregation",
+    "SparseMixtureOfAttention",
+    "SpeculativeVerificationHead",
+    # Domain Specialists
+    "DomainSpecialist",
+    "DomainSpecialistEnsemble",
+    # Coding Specialists (20 networks)
+    "ProgrammingNeuralNet",
+    "CodeContrastiveLearner",
+    "CodePatternDetector",
+    "CodeRLAgent",
+    "CodeInstructionTuner",
+    "DebugAgent",
+    "CodeGeneratorNet",
+    "CodeReviewer",
+    "CodeOptimizer",
+    "APIGenerator",
+    "TestGenerator",
+    "RefactoringNet",
+    "TypeInferrer",
+    "DependencyAnalyzer",
+    "CodeVectorizer",
+    "CodeInterpreter",
+    "CodeExplainer",
+    "SecurityAuditor",
+    "PerformanceProfiler",
+    "CodeTranslator",
+    # Speed Reader
+    "SpeedReader",
+    "UltraFastReader",
+    "ReadingMetrics",
+    "ChunkedProcessor",
+    "GatedSSMReader",
+    "MultiStreamReader",
+    "DeepUnderstandingEngine",
+    # Math Brain (10 MoE+MLA networks)
+    "MathBrainBase",
+    "PureAlgebraNetwork",
+    "AnalysisNetwork",
+    "GeometryTopologyNetwork",
+    "NumberTheoryNetwork",
+    "QuantumMechanicsNetwork",
+    "RelativityCosmologyNetwork",
+    "StatisticalMechanicsNetwork",
+    "ParticleFieldTheoryNetwork",
+    "MathPhysicsBridgeNetwork",
+    "ComputationalMathPhysicsNetwork",
+    "MATH_BRAIN_NETWORKS",
+    # Primary Brain (10 MoE+MLA networks)
+    "PrimaryBrainBase", "GeneralReasoningNetwork", "LanguageComprehensionNetwork",
+    "ProblemSolvingNetwork", "DecisionMakingNetwork", "PatternRecognitionNetwork",
+    "AbstractionBuilderNetwork", "AnalogyEngineNetwork", "CommonSenseNetwork",
+    "AttentionFilterNetwork", "IntegrationHubNetwork", "PRIMARY_BRAIN_NETWORKS",
+    # Analytical Brain (10 MoE+MLA networks)
+    "AnalyticalBrainBase", "LogicalDeductionNetwork", "CriticalAnalysisNetwork",
+    "SystematicDecompositionNetwork", "MathematicalReasoningNetwork", "DataDrivenInferenceNetwork",
+    "HypothesisTestingNetwork", "CausalReasoningNetwork", "ComparativeAnalysisNetwork",
+    "RootCauseAnalysisNetwork", "FormalVerificationNetwork", "ANALYTICAL_BRAIN_NETWORKS",
+    # Creative Brain (10 MoE+MLA networks)
+    "CreativeBrainBase", "IdeaGenerationNetwork", "MetaphoricThinkingNetwork",
+    "CounterfactualReasoningNetwork", "VisualizationEngineNetwork", "NarrativeConstructionNetwork",
+    "DesignSynthesisNetwork", "ImprovisationEngineNetwork", "AestheticAppraisalNetwork",
+    "HumorDetectionNetwork", "InnovationScoutingNetwork", "CREATIVE_BRAIN_NETWORKS",
+    # Strategic Brain (10 MoE+MLA networks)
+    "StrategicBrainBase", "GoalDecompositionNetwork", "LongTermPlanningNetwork",
+    "ResourceOptimizationNetwork", "RiskAssessmentNetwork", "GameTheoryNetwork",
+    "ContingencyPlanningNetwork", "OpportunityDetectionNetwork", "CompetitiveAnalysisNetwork",
+    "TimelineForecastingNetwork", "ExecutionTrackingNetwork", "STRATEGIC_BRAIN_NETWORKS",
+    # Knowledge Brain (10 MoE+MLA networks)
+    "KnowledgeBrainBase", "FactualRetrievalNetwork", "ConceptMappingNetwork",
+    "ExplanationGenerationNetwork", "LearningSynthesisNetwork", "CrossDomainTransferNetwork",
+    "KnowledgeVerificationNetwork", "GapDetectionNetwork", "StructuredRecallNetwork",
+    "MnemonicEncodingNetwork", "EpistemicCalibrationNetwork", "KNOWLEDGE_BRAIN_NETWORKS",
+    # Intuitive Brain (10 MoE+MLA networks)
+    "IntuitiveBrainBase", "RapidPatternMatchNetwork", "EmotionalAttunementNetwork",
+    "HeuristicEngineNetwork", "ImplicitLearningNetwork", "GestaltPerceptionNetwork",
+    "ValueJudgmentNetwork", "SituationalAwarenessNetwork", "TrustCalibrationNetwork",
+    "SocialIntuitionNetwork", "BlinkDecisionEngineNetwork", "INTUITIVE_BRAIN_NETWORKS",
+    # Learning Paradigms
+    "SupervisedLearner",
+    "UnsupervisedLearner",
+    "SemiSupervisedLearner",
+    "RLAgent",
+    "SelfSupervisedLearner",
+    "TransferLearner",
+    "FederatedLearner",
+    "MetaLearner",
+    "LearningController",
     # Super Heads
     "SuperHeadEnsemble",
     "SuperHead",
@@ -120,6 +281,14 @@ __all__ = [
     "RetrievalAugmentedHead",
     "EmotionalHead",
     "ExecutiveHead",
+    "MathHead",
+    "SubNetworkHead",
+    "PrimaryHead",
+    "AnalyticalHeadDeep",
+    "CreativeHeadDeep",
+    "StrategicHeadDeep",
+    "KnowledgeHeadDeep",
+    "IntuitiveHeadDeep",
     "BRAIN_HEAD_NAMES",
     "HEAD_CLASSES",
     # Reasoning
