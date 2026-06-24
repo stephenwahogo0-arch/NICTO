@@ -218,7 +218,7 @@ async def test_reasoning():
         from nicto_x.reasoning.confidence import ConfidenceEstimator
 
         tot = TreeOfThought(max_paths=3, max_depth=3)
-        result = tot.explore("How to optimize a distributed database?", context="Consider consistency, partition tolerance, and latency.")
+        result = asyncio.run(tot.explore("How to optimize a distributed database?", context="Consider consistency, partition tolerance, and latency."))
         total += 1
         assert "best_path" in result
         assert len(result.get("paths", [])) == 3
