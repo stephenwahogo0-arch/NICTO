@@ -55,13 +55,16 @@ class CreativeDataLoader:
                             categories["general"].append(item)
 
         for fname in os.listdir(self.data_dir):
-            if fname.startswith("hf_") and fname.endswith(".jsonl"):
+            if fname.endswith(".jsonl") and fname != "creative_training_pairs.jsonl":
                 fpath = os.path.join(self.data_dir, fname)
-                with open(fpath) as f:
+                with open(fpath, encoding="utf-8") as f:
                     for line in f:
                         if line.strip():
-                            item = json.loads(line)
-                            categories["general"].append(item)
+                            try:
+                                item = json.loads(line)
+                                categories["general"].append(item)
+                            except json.JSONDecodeError:
+                                pass
 
         return categories
 
@@ -71,8 +74,11 @@ class CreativeDataLoader:
             random.shuffle(items)
             n = max(1, batch_size // len(categories))
             for item in items[:n]:
-                text = json.dumps(item)
-                texts.append(text)
+                title = item.get("title", "") if isinstance(item, dict) else ""
+                desc = item.get("description", "") if isinstance(item, dict) else ""
+                name = item.get("name", "") if isinstance(item, dict) else ""
+                text = title or name or desc or json.dumps(item)
+                texts.append(text[:500])
         random.shuffle(texts)
         return texts[:batch_size]
 
