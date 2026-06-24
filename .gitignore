@@ -1,1 +1,67 @@
-﻿# Python__pycache__/*.py[cod]*.egg-info/dist/build/*.egg.eggs/# Virtual environmentsvenv/.venv/env/.env/# Jupyter checkpoints.ipynb_checkpoints/# Kaggle config.kaggle/# OS filesThumbs.db.DS_Store# Node.jsnode_modules/package-lock.json# Rusttarget/# TypeScript build*.tsbuildinfodist/# Large binary/data*.pt*.pth*.bin*.onnxchroma.sqlite3*.sqlite3*.db# Cache/temphuggingface_tokenizers_cache/unsloth_compiled_cache/models/datasets/.nikto_pids.txt# Generated docsreports/WORKSPACE_DEEP_ANALYSIS.md# Compiled objects*.obj*.o*.exe*.dll# Electronpackages/nikto-desktop/electron/packages/nikto-desktop/node_modules/packages/nikto-mobile/
+﻿# Python
+__pycache__/
+*.py[cod]
+*.pyc
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+
+# Kaggle config
+.kaggle/
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Node.js
+node_modules/
+package-lock.json
+
+# Rust
+target/
+
+# TypeScript build
+*.tsbuildinfo
+dist/
+
+# Large binary/data
+*.pt
+*.pth
+*.bin
+*.onnx
+chroma.sqlite3
+*.sqlite3
+*.db
+
+# Cache/temp
+huggingface_tokenizers_cache/
+unsloth_compiled_cache/
+models/
+datasets/
+.nikto_pids.txt
+
+# Generated docs
+reports/
+WORKSPACE_DEEP_ANALYSIS.md
+
+# Compiled objects
+*.obj
+*.o
+*.exe
+*.dll
+
+# Electron
+packages/nikto-desktop/electron/
+packages/nikto-desktop/node_modules/
+packages/nikto-mobile/
