@@ -66,6 +66,10 @@ nul
 NUL
 Nul
 
+# Home dir state
+~/.nikto/
+\.nikto/
+
 # Electron
 packages/nikto-desktop/electron/
 packages/nikto-desktop/node_modules/
