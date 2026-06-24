@@ -1,1 +1,11 @@
+﻿*.safetensors filter=lfs diff=lfs merge=lfs -text
+*.bin filter=lfs diff=lfs merge=lfs -text
+models/coder_foundation/*.safetensors filter=lfs diff=lfs merge=lfs -text
+models/coder_foundation/*.bin filter=lfs diff=lfs merge=lfs -text
+NICTO_MAX_WEIGHTS/*.safetensors filter=lfs diff=lfs merge=lfs -text
+NICTO_MAX_WEIGHTS/*.bin filter=lfs diff=lfs merge=lfs -text
+models/max_potential/*.safetensors filter=lfs diff=lfs merge=lfs -text
+models/max_potential/*.bin filter=lfs diff=lfs merge=lfs -text
+models/**/*.safetensors filter=lfs diff=lfs merge=lfs -text
+models/**/*.bin filter=lfs diff=lfs merge=lfs -text
 *.jsonl filter=lfs diff=lfs merge=lfs -text
