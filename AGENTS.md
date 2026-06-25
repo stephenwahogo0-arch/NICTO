@@ -309,3 +309,25 @@ All 8 Real AI modules implemented, files written, and verified:
 
 ## Repository
 github.com/stephenwahogo0-arch/NICTO
+
+## v7.0.0 Production Fixes (June 2026)
+
+### MetaHead Shape Bug Fixed
+- **File**: `nicto_neural/neural/heads.py:498`
+- **Fix**: Changed `strategies.mean(dim=1, keepdim=True).unsqueeze(-1)` → `strategies.mean(dim=-1, keepdim=True)`
+- **Effect**: Collapses all 8 strategy scores to a scalar before broadcasting against `(B, T, D)` tensor. Test 1 (7-Brain Architecture) now passes.
+
+### Training Loop Fixed (Test 5)
+- **File**: `scripts/test_full_integration.py`
+- **Fix**: Switched from `head_out["fused"][:, :T-1, :].reshape(-1, vocab_size)` to `core_out["logits"][:, :T-1, :].reshape(-1, vocab_size)` — fused shape is `(B, T, d_model)`, not `(B, T, vocab_size)`.
+
+### aknow_nicto_bridge.py Reconstructed
+- **File**: `nicto_neural/aknow_nicto_bridge.py`
+- **Root cause**: A single `#` comment at position 381 (after `Tuple` in `from typing import ... Tuple# Add AKNOW#`) turned the **entire rest of the file** (class definition, 13 methods, main block) into a comment. The file had never been importable since creation — all 10+ importing modules relied on try-except ImportError handling.
+- **Fix**: Extracted the code from inside the comment, rebuilt as 294-line properly formatted Python file.
+- **Result**: File now compiles, parses via AST, and imports cleanly.
+
+### Verification
+- **10/12 integration tests pass** (up from 8/10 before MetaHead + Training Loop fixes)
+- Pre-existing failures: game engine (`generate_game` import), GGUF export (`int.encode` bug) — unrelated to fixes above.
+- `test_aknow_bridge` test passes.
