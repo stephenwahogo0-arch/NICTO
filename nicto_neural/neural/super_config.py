@@ -24,7 +24,7 @@ class SuperConfig:
     use_mixed_precision: bool = False
     gradient_checkpointing: bool = False
     max_batch_size: int = 32
-    n_brain_heads: int = 9
+    n_brain_heads: int = 19
     brain_head_dim: int = 0
     reasoning_paths: int = 6
     reasoning_dim: int = 0
@@ -86,6 +86,21 @@ class SuperConfig:
     speed_reader_chunk_size: int = 512
     speed_reader_streams: int = 4
 
+    # Syncing aliases for super_core.py
+    use_mamba: bool = False
+    use_mod: bool = False
+    expert_choice_capacity: float = 1.25
+    n_experts_per_group: int = 4
+    n_active_groups: int = 1
+    n_active_group_experts: int = 1
+    mod_capacity_factor: float = 0.5
+    sliding_window_size: int = 0
+    use_alibi: bool = False
+    use_qat: bool = False
+    qat_bits: int = 8
+    draft_model_dim: int = 512
+    draft_model_layers: int = 4
+
     # Learning paradigms
     learning_paradigm: str = "auto"  # auto, supervised, unsupervised, semi_supervised, reinforcement, self_supervised
 
@@ -137,7 +152,7 @@ SMALL_CONFIG = SuperConfig(
     n_experts=4,
     n_active_experts=1,
     max_seq_len=2048,
-    n_brain_heads=9,
+    n_brain_heads=19,
 )
 
 MEDIUM_CONFIG = SuperConfig(
@@ -149,7 +164,7 @@ MEDIUM_CONFIG = SuperConfig(
     n_experts=8,
     n_active_experts=2,
     max_seq_len=4096,
-    n_brain_heads=9,
+    n_brain_heads=19,
 )
 
 LARGE_CONFIG = SuperConfig(
@@ -161,7 +176,7 @@ LARGE_CONFIG = SuperConfig(
     n_experts=8,
     n_active_experts=2,
     max_seq_len=8192,
-    n_brain_heads=9,
+    n_brain_heads=19,
 )
 
 HUGE_CONFIG = SuperConfig(
@@ -173,7 +188,7 @@ HUGE_CONFIG = SuperConfig(
     n_experts=16,
     n_active_experts=4,
     max_seq_len=16384,
-    n_brain_heads=9,
+    n_brain_heads=19,
 )
 
 ULTRA_CONFIG = SuperConfig(
@@ -185,7 +200,7 @@ ULTRA_CONFIG = SuperConfig(
     n_experts=32,
     n_active_experts=6,
     max_seq_len=32768,
-    n_brain_heads=9,
+    n_brain_heads=19,
 )
 
 CONFIG_MAP = {

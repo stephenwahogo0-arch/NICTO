@@ -9,6 +9,7 @@ BRAIN_HEAD_NAMES = [
     "primary", "analytical", "creative", "strategic",
     "knowledge", "intuitive", "ethical", "linguistic", "temporal",
     "retrieval", "emotional", "executive", "mathematical",
+    "spatial", "social", "cultural", "physical", "meta", "aesthetic",
 ]
 
 
@@ -369,6 +370,167 @@ class IntuitiveHeadDeep(SubNetworkHead):
         super().__init__(config, head_name, INTUITIVE_BRAIN_NETWORKS)
 
 
+class SpatialHead(SuperHead):
+    """Spatial reasoning — coordinate mapping, navigation, geometry, spatial relationships."""
+    def __init__(self, config: SuperConfig, head_name: str = "spatial"):
+        super().__init__(config, head_name)
+        self.coord_embed = nn.Parameter(torch.randn(1, 3, self.head_dim) * 0.02)
+        self.distance_head = nn.Linear(self.head_dim, 1, bias=False)
+        self.rotation_head = nn.Linear(self.head_dim, 4, bias=False)
+
+    def forward(self, backbone_hidden: torch.Tensor, task_embedding: Optional[torch.Tensor] = None) -> Tuple[torch.Tensor, torch.Tensor]:
+        h = self.cross_attn(backbone_hidden, backbone_hidden)
+        h = self.input_norm(h + self.specialization_bias)
+        if task_embedding is not None: h = h + task_embedding
+        B, T, D = h.shape
+        coords = self.coord_embed.expand(B, -1, -1)
+        spatial_attn = torch.matmul(h, coords.transpose(-2, -1)) / math.sqrt(self.head_dim)
+        spatial_weights = F.softmax(spatial_attn, dim=-1)
+        spatial_context = spatial_weights @ coords
+        distance = torch.sigmoid(self.distance_head(h))
+        rotation = torch.tanh(self.rotation_head(h.mean(dim=1)))
+        h = h + spatial_context * distance
+        residual = h; h = self.task_ffn(h); h = self.ffn_norm(h + residual)
+        confidence = self.confidence_proj(h)
+        out = self.output_proj(h)
+        return out, confidence.squeeze(-1)
+
+
+class SocialHead(SuperHead):
+    """Social cognition — relationship modeling, theory of mind, group dynamics."""
+    def __init__(self, config: SuperConfig, head_name: str = "social"):
+        super().__init__(config, head_name)
+        self.relation_embed = nn.Parameter(torch.randn(1, 6, self.head_dim) * 0.02)
+        self.empathy_head = nn.Linear(self.head_dim, 1, bias=False)
+        self.social_gate = nn.Linear(self.head_dim * 2, self.head_dim, bias=False)
+
+    def forward(self, backbone_hidden: torch.Tensor, task_embedding: Optional[torch.Tensor] = None) -> Tuple[torch.Tensor, torch.Tensor]:
+        h = self.cross_attn(backbone_hidden, backbone_hidden)
+        h = self.input_norm(h + self.specialization_bias)
+        if task_embedding is not None: h = h + task_embedding
+        B = h.shape[0]
+        relations = self.relation_embed.expand(B, -1, -1)
+        relation_scores = torch.matmul(h, relations.transpose(-2, -1)) / math.sqrt(self.head_dim)
+        relation_weights = F.softmax(relation_scores, dim=-1)
+        social_context = relation_weights @ relations
+        empathy = torch.sigmoid(self.empathy_head(h))
+        gate = torch.sigmoid(self.social_gate(torch.cat([h, social_context], dim=-1)))
+        h = h + social_context * gate * empathy
+        residual = h; h = self.task_ffn(h); h = self.ffn_norm(h + residual)
+        confidence = self.confidence_proj(h)
+        out = self.output_proj(h)
+        return out, confidence.squeeze(-1)
+
+
+class CulturalHead(SuperHead):
+    """Cultural context — norms, traditions, cross-cultural understanding."""
+    def __init__(self, config: SuperConfig, head_name: str = "cultural"):
+        super().__init__(config, head_name)
+        self.culture_memory = nn.Parameter(torch.randn(1, 8, self.head_dim) * 0.02)
+        self.culture_gate = nn.Linear(self.head_dim, 1, bias=False)
+        self.norm_head = nn.Linear(self.head_dim, 1, bias=False)
+
+    def forward(self, backbone_hidden: torch.Tensor, task_embedding: Optional[torch.Tensor] = None) -> Tuple[torch.Tensor, torch.Tensor]:
+        h = self.cross_attn(backbone_hidden, backbone_hidden)
+        h = self.input_norm(h + self.specialization_bias)
+        if task_embedding is not None: h = h + task_embedding
+        B, T, D = h.shape
+        culture = self.culture_memory.expand(B, -1, -1)
+        culture_scores = torch.matmul(h, culture.transpose(-2, -1)) / math.sqrt(self.head_dim)
+        culture_weights = F.softmax(culture_scores, dim=-1)
+        culture_context = culture_weights @ culture
+        gate = torch.sigmoid(self.culture_gate(h))
+        norm_signal = torch.sigmoid(self.norm_head(h))
+        h = h + culture_context * gate * norm_signal
+        residual = h; h = self.task_ffn(h); h = self.ffn_norm(h + residual)
+        confidence = self.confidence_proj(h)
+        out = self.output_proj(h)
+        return out, confidence.squeeze(-1)
+
+
+class PhysicalHead(SuperHead):
+    """Physical world understanding — physics, mechanics, causality, simulation."""
+    def __init__(self, config: SuperConfig, head_name: str = "physical"):
+        super().__init__(config, head_name)
+        self.force_embed = nn.Parameter(torch.randn(1, 4, self.head_dim) * 0.02)
+        self.physics_head = nn.Sequential(
+            nn.Linear(self.head_dim, self.head_dim), nn.ReLU(),
+            nn.Linear(self.head_dim, 3),
+        )
+        self.causality_gate = nn.Linear(self.head_dim * 2, 1, bias=False)
+
+    def forward(self, backbone_hidden: torch.Tensor, task_embedding: Optional[torch.Tensor] = None) -> Tuple[torch.Tensor, torch.Tensor]:
+        h = self.cross_attn(backbone_hidden, backbone_hidden)
+        h = self.input_norm(h + self.specialization_bias)
+        if task_embedding is not None: h = h + task_embedding
+        B = h.shape[0]
+        forces = self.force_embed.expand(B, -1, -1)
+        physics_state = torch.tanh(self.physics_head(h.mean(dim=1)))
+        interaction = torch.matmul(h, forces.transpose(-2, -1)) / math.sqrt(self.head_dim)
+        interaction_weights = F.softmax(interaction, dim=-1)
+        physical_context = interaction_weights @ forces
+        gate = torch.sigmoid(self.causality_gate(torch.cat([h, physical_context], dim=-1)))
+        h = h + physical_context * gate
+        residual = h; h = self.task_ffn(h); h = self.ffn_norm(h + residual)
+        confidence = self.confidence_proj(h)
+        out = self.output_proj(h)
+        return out, confidence.squeeze(-1)
+
+
+class MetaHead(SuperHead):
+    """Metacognition — self-reflection, cognitive monitoring, strategy selection."""
+    def __init__(self, config: SuperConfig, head_name: str = "meta"):
+        super().__init__(config, head_name)
+        self.self_model = nn.Sequential(
+            nn.Linear(self.head_dim, self.head_dim), nn.GELU(),
+            nn.Linear(self.head_dim, self.head_dim),
+        )
+        self.strategy_head = nn.Linear(self.head_dim, 8, bias=False)
+        self.reflection_gate = nn.Linear(self.head_dim * 2, self.head_dim, bias=False)
+
+    def forward(self, backbone_hidden: torch.Tensor, task_embedding: Optional[torch.Tensor] = None) -> Tuple[torch.Tensor, torch.Tensor]:
+        h = self.cross_attn(backbone_hidden, backbone_hidden)
+        h = self.input_norm(h + self.specialization_bias)
+        if task_embedding is not None: h = h + task_embedding
+        self_rep = self.self_model(h.mean(dim=1, keepdim=True))
+        strategies = F.softmax(self.strategy_head(self_rep), dim=-1)
+        gate = torch.sigmoid(self.reflection_gate(torch.cat([h, self_rep.expand(-1, h.size(1), -1)], dim=-1)))
+        h = h * strategies.mean(dim=1, keepdim=True).unsqueeze(-1) + gate * self_rep
+        residual = h; h = self.task_ffn(h); h = self.ffn_norm(h + residual)
+        confidence = self.confidence_proj(h)
+        out = self.output_proj(h)
+        return out, confidence.squeeze(-1)
+
+
+class AestheticHead(SuperHead):
+    """Aesthetic judgment — beauty, harmony, proportion, artistic quality."""
+    def __init__(self, config: SuperConfig, head_name: str = "aesthetic"):
+        super().__init__(config, head_name)
+        self.aesthetic_embed = nn.Parameter(torch.randn(1, 5, self.head_dim) * 0.02)
+        self.beauty_score = nn.Sequential(
+            nn.Linear(self.head_dim, 64), nn.ReLU(),
+            nn.Linear(64, 1), nn.Sigmoid(),
+        )
+        self.harmony_head = nn.Linear(self.head_dim, 1, bias=False)
+
+    def forward(self, backbone_hidden: torch.Tensor, task_embedding: Optional[torch.Tensor] = None) -> Tuple[torch.Tensor, torch.Tensor]:
+        h = self.cross_attn(backbone_hidden, backbone_hidden)
+        h = self.input_norm(h + self.specialization_bias)
+        if task_embedding is not None: h = h + task_embedding
+        B = h.shape[0]
+        aesthetics = self.aesthetic_embed.expand(B, -1, -1)
+        aesthetic_scores = torch.matmul(h, aesthetics.transpose(-2, -1)) / math.sqrt(self.head_dim)
+        aesthetic_weights = F.softmax(aesthetic_scores, dim=-1)
+        aesthetic_context = aesthetic_weights @ aesthetics
+        beauty = self.beauty_score(h)
+        harmony = torch.sigmoid(self.harmony_head(h))
+        h = h + aesthetic_context * harmony
+        residual = h; h = self.task_ffn(h); h = self.ffn_norm(h + residual)
+        confidence = self.confidence_proj(h) * beauty.squeeze(-1) * harmony.squeeze(-1)
+        out = self.output_proj(h)
+        return out, confidence.squeeze(-1)
+
+
 HEAD_CLASSES = {
     "primary": PrimaryHead,
     "analytical": AnalyticalHeadDeep,
@@ -383,6 +545,12 @@ HEAD_CLASSES = {
     "emotional": EmotionalHead,
     "executive": ExecutiveHead,
     "mathematical": MathHead,
+    "spatial": SpatialHead,
+    "social": SocialHead,
+    "cultural": CulturalHead,
+    "physical": PhysicalHead,
+    "meta": MetaHead,
+    "aesthetic": AestheticHead,
 }
 
 
