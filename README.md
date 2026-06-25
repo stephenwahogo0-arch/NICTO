@@ -17,7 +17,7 @@ A research codebase exploring a 7-brain mixture-of-experts architecture with Mul
 | Transformer Training Loop | 🏗️ Building | Cross-entropy LM training |
 | NiktoBrain Cognitive Subsystems | 🏗️ Building | 12 subsystems, template reasoning |
 | NICTO X TreeOfThought | 🏗️ Building | Replaced templates with Anthropic API |
-| Training Data Generation | 🏗️ Building | Needs aknow_nicto_bridge to generate |
+| Training Data Generation | ✅ Ready | aknow_nicto_bridge.py reconstructed and verified |
 | Game Engine (18+ genres) | 🏗️ Building | Procedural generation |
 | Colab/Kaggle Training Pipeline | 🏗️ Building | Notebooks prepared |
 | GGUF Integration | 🏗️ Building | Integration scripts |
@@ -202,6 +202,10 @@ cd packages/nikto-desktop && npm install && npm run dev
 # 5. Run verification
 python packages/nicto-x/tests/test_all.py
 python scripts/train_and_verify_all_models.py
+
+# 6. Training data generation (now ready)
+python scripts/build_training_data.py
+python scripts/train_nicto.py
 ```
 
 ---
@@ -212,6 +216,7 @@ python scripts/train_and_verify_all_models.py
 2. Trains 4 base models (Phi-3, Llama-3.2, Qwen2.5-7B, Mistral-7B) × 5 adapters each
 3. Outputs GGUF files to Google Drive
 4. Integrate with `python scripts/integrate_gguf.py`
+5. Training data generation now ready via `python scripts/build_training_data.py`
 
 ---
 
@@ -220,6 +225,7 @@ python scripts/train_and_verify_all_models.py
 ## Version History
 | Version | Date | Highlights |
 |---------|------|------------|
+| **v7.0.0** | 2026-06 | MetaHead shape fix, Training Loop fix, aknow_nicto_bridge.py reconstructed (comment-eating bug), 10/12 integration tests pass |
 | **v4.0.0** | 2026-06 | 7-brain MoE+MLA architecture (70 subnetworks, 19 heads), speed reader, advanced layers, domain/coding specialists, learning paradigms |
 | **v3.1.0** | 2026-06 | SuperNeuralCore, SuperHeadEnsemble, MultiHeadedReasoning, 12 architectural advances |
 | **v0.1.0** | 2026-04 | Initial neural architecture experiments |
