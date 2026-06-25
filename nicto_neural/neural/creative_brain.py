@@ -18,7 +18,7 @@ class CreativeBrainBase(nn.Module):
         self.output_proj = nn.Linear(config.d_model, config.d_model)
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h); h = self.norm_mid(h)
-        moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True))
         return out, conf.squeeze(-1)
 
@@ -31,7 +31,7 @@ class IdeaGenerationNetwork(CreativeBrainBase):
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h)
         n = torch.sigmoid(self.novelty_gate(h)); h = h + n * self.divergent_encoder(h)
-        h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True))
         return out, conf.squeeze(-1)
 
@@ -46,7 +46,7 @@ class MetaphoricThinkingNetwork(CreativeBrainBase):
         h = self.norm_in(x); h = self.mla(h)
         src = self.source_proj(h); tgt = self.target_proj(h)
         h = h + self.blend_ffn(src + tgt)
-        h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True))
         return out, conf.squeeze(-1)
 
@@ -57,7 +57,7 @@ class CounterfactualReasoningNetwork(CreativeBrainBase):
         self.whatif_encoder = nn.Sequential(nn.Linear(config.d_model, config.d_model), nn.GELU(), nn.Linear(config.d_model, config.d_model))
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h) + self.whatif_encoder(h)
-        h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True))
         return out, conf.squeeze(-1)
 
@@ -69,7 +69,7 @@ class VisualizationEngineNetwork(CreativeBrainBase):
         self.viz_ffn = nn.Sequential(nn.Linear(config.d_model, config.d_model), nn.GELU(), nn.Linear(config.d_model, config.d_model))
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h) + self.viz_ffn(self.spatial_encoder(h))
-        h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True))
         return out, conf.squeeze(-1)
 
@@ -80,7 +80,7 @@ class NarrativeConstructionNetwork(CreativeBrainBase):
         self.story_encoder = nn.Sequential(nn.Linear(config.d_model, config.d_model * 2), nn.GELU(), nn.Linear(config.d_model * 2, config.d_model))
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h) + self.story_encoder(h)
-        h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True))
         return out, conf.squeeze(-1)
 
@@ -95,7 +95,7 @@ class DesignSynthesisNetwork(CreativeBrainBase):
         h = self.norm_in(x); h = self.mla(h)
         form = self.form_encoder(h); func = self.function_encoder(h)
         h = h + self.design_ffn(form + func)
-        h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True))
         return out, conf.squeeze(-1)
 
@@ -108,7 +108,7 @@ class ImprovisationEngineNetwork(CreativeBrainBase):
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h)
         s = torch.sigmoid(self.spontaneity_gate(h)); h = h + s * self.recombiner(h)
-        h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True))
         return out, conf.squeeze(-1)
 
@@ -120,7 +120,7 @@ class AestheticAppraisalNetwork(CreativeBrainBase):
         self.appraisal_head = nn.Sequential(nn.Linear(config.d_model, 1), nn.Sigmoid())
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h) + self.style_encoder(h)
-        h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); a = self.appraisal_head(h.mean(dim=1, keepdim=True))
         conf = self.confidence(h.mean(dim=1, keepdim=True)) * a
         return out, conf.squeeze(-1)
@@ -133,7 +133,7 @@ class HumorDetectionNetwork(CreativeBrainBase):
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h)
         inc = torch.sigmoid(self.incongruity_encoder(h)); h = h * inc
-        h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True))
         return out, conf.squeeze(-1)
 
@@ -146,7 +146,7 @@ class InnovationScoutingNetwork(CreativeBrainBase):
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h)
         g = self.gap_encoder(h); h = h + self.innovation_ffn(g)
-        h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True))
         return out, conf.squeeze(-1)
 

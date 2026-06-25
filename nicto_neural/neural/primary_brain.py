@@ -24,7 +24,7 @@ class PrimaryBrainBase(nn.Module):
         h = self.norm_in(x)
         h = self.mla(h)
         h = self.norm_mid(h)
-        moe_out, _ = self.moe(h)
+        moe_out = self.moe(h)
         h = self.norm_out(h + moe_out)
         out = self.output_proj(h)
         conf = self.confidence(h.mean(dim=1, keepdim=True))
@@ -39,7 +39,7 @@ class GeneralReasoningNetwork(PrimaryBrainBase):
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h)
         d = torch.sigmoid(self.depth_gate(h)); h = h + d * self.reasoning_depth(h)
-        h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True))
         return out, conf.squeeze(-1)
 
@@ -52,7 +52,7 @@ class LanguageComprehensionNetwork(PrimaryBrainBase):
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h)
         c = torch.sigmoid(self.context_gate(h)); h = h + c * self.context_encoder(h)
-        h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True))
         return out, conf.squeeze(-1)
 
@@ -67,7 +67,7 @@ class ProblemSolvingNetwork(PrimaryBrainBase):
         h = self.norm_in(x); h = self.mla(h)
         h = self.decomposer(h)
         for _ in range(self.iterations): h = h + self.solver(h)
-        h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True))
         return out, conf.squeeze(-1)
 
@@ -80,7 +80,7 @@ class DecisionMakingNetwork(PrimaryBrainBase):
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h)
         h = h + self.option_encoder(h)
-        h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h)
         dec = torch.sigmoid(self.evaluator(h.mean(dim=1, keepdim=True)))
         conf = self.confidence(h.mean(dim=1, keepdim=True)) * dec
@@ -94,7 +94,7 @@ class PatternRecognitionNetwork(PrimaryBrainBase):
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h)
         h = h + self.pattern_encoder(h)
-        h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True))
         return out, conf.squeeze(-1)
 
@@ -107,7 +107,7 @@ class AbstractionBuilderNetwork(PrimaryBrainBase):
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h)
         g = torch.sigmoid(self.abstract_gate(h)); h = h + g * self.level_encoder(h)
-        h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True))
         return out, conf.squeeze(-1)
 
@@ -122,7 +122,7 @@ class AnalogyEngineNetwork(PrimaryBrainBase):
         h = self.norm_in(x); h = self.mla(h)
         src = self.source_encoder(h); tgt = self.target_encoder(h)
         h = h + self.mapping_ffn(src * tgt)
-        h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True))
         return out, conf.squeeze(-1)
 
@@ -137,7 +137,7 @@ class CommonSenseNetwork(PrimaryBrainBase):
         h = self.norm_in(x); h = self.mla(h)
         g = torch.sigmoid(self.sense_gate(h))
         h = h + g[:, :, :1] * self.physical_encoder(h) + g[:, :, 1:] * self.social_encoder(h)
-        h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True))
         return out, conf.squeeze(-1)
 
@@ -150,7 +150,7 @@ class AttentionFilterNetwork(PrimaryBrainBase):
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h)
         rel = torch.sigmoid(self.relevance_scorer(h)); h = h + rel * self.filter_ffn(h)
-        h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True))
         return out, conf.squeeze(-1)
 
@@ -163,7 +163,7 @@ class IntegrationHubNetwork(PrimaryBrainBase):
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h)
         g = torch.sigmoid(self.integration_gate(h)); h = h + g * self.fusion_encoder(h)
-        h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True))
         return out, conf.squeeze(-1)
 

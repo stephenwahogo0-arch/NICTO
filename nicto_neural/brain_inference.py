@@ -248,7 +248,7 @@ class BrainInferenceEngine:
         n_heads = sum(p.numel() for p in self.heads.parameters()) if self.heads else 0
         total = n_core + n_heads
         return {
-            "version": "5.4.0",
+            "version": "7.0.0",
             "architecture": "7-Brain MoE+MLA",
             "n_heads": 19,
             "n_subnetworks": 70,

@@ -18,7 +18,7 @@ class IntuitiveBrainBase(nn.Module):
         self.output_proj = nn.Linear(config.d_model, config.d_model)
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h); h = self.norm_mid(h)
-        moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True))
         return out, conf.squeeze(-1)
 
@@ -31,7 +31,7 @@ class RapidPatternMatchNetwork(IntuitiveBrainBase):
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h)
         m = torch.sigmoid(self.match_gate(h)); h = h + m * self.prototype_encoder(h)
-        h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True))
         return out, conf.squeeze(-1)
 
@@ -45,7 +45,7 @@ class EmotionalAttunementNetwork(IntuitiveBrainBase):
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h)
         a = self.affect_encoder(h); h = h + self.empathy_ffn(a)
-        h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); aff = torch.sigmoid(self.affect_head(h.mean(dim=1, keepdim=True)))
         conf = self.confidence(h.mean(dim=1, keepdim=True)) * aff.mean(dim=-1, keepdim=True)
         return out, conf.squeeze(-1)
@@ -59,7 +59,7 @@ class HeuristicEngineNetwork(IntuitiveBrainBase):
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h)
         f = torch.sigmoid(self.fast_gate(h)); h = h + f * self.heuristic_encoder(h)
-        h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True))
         return out, conf.squeeze(-1)
 
@@ -72,7 +72,7 @@ class ImplicitLearningNetwork(IntuitiveBrainBase):
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h)
         s = self.subconscious_encoder(h); h = h + self.accumulator(s)
-        h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True))
         return out, conf.squeeze(-1)
 
@@ -84,7 +84,7 @@ class GestaltPerceptionNetwork(IntuitiveBrainBase):
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h)
         h = h + self.whole_encoder(h)
-        h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True))
         return out, conf.squeeze(-1)
 
@@ -97,7 +97,7 @@ class ValueJudgmentNetwork(IntuitiveBrainBase):
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h)
         v = self.value_encoder(h); j = self.judgment_head(v)
-        h = h + j * v; h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = h + j * v; h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True)) * j.mean(dim=1, keepdim=True)
         return out, conf.squeeze(-1)
 
@@ -110,7 +110,7 @@ class SituationalAwarenessNetwork(IntuitiveBrainBase):
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h)
         a = torch.sigmoid(self.awareness_gate(h)); h = h + a * self.context_encoder(h)
-        h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True))
         return out, conf.squeeze(-1)
 
@@ -123,7 +123,7 @@ class TrustCalibrationNetwork(IntuitiveBrainBase):
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h)
         r = self.reliability_encoder(h); t = torch.sigmoid(self.trust_head(r))
-        h = h + t * r; h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = h + t * r; h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True)) * t.mean(dim=1, keepdim=True)
         return out, conf.squeeze(-1)
 
@@ -136,7 +136,7 @@ class SocialIntuitionNetwork(IntuitiveBrainBase):
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h)
         s = self.social_encoder(h); h = h + self.dynamics_ffn(s)
-        h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True))
         return out, conf.squeeze(-1)
 
@@ -149,7 +149,7 @@ class BlinkDecisionEngineNetwork(IntuitiveBrainBase):
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h)
         s = self.thin_slice_encoder(h); b = torch.sigmoid(self.blink_head(s))
-        h = h + b * s; h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = h + b * s; h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True)) * b.mean(dim=1, keepdim=True)
         return out, conf.squeeze(-1)
 

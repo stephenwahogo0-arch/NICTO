@@ -18,7 +18,7 @@ class StrategicBrainBase(nn.Module):
         self.output_proj = nn.Linear(config.d_model, config.d_model)
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h); h = self.norm_mid(h)
-        moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True))
         return out, conf.squeeze(-1)
 
@@ -31,7 +31,7 @@ class GoalDecompositionNetwork(StrategicBrainBase):
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h)
         g = self.goal_encoder(h); h = h + self.subgoal_ffn(g)
-        h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True))
         return out, conf.squeeze(-1)
 
@@ -44,7 +44,7 @@ class LongTermPlanningNetwork(StrategicBrainBase):
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h)
         h = h + self.horizon_encoder(h) + self.sequence_encoder(h)
-        h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True))
         return out, conf.squeeze(-1)
 
@@ -57,7 +57,7 @@ class ResourceOptimizationNetwork(StrategicBrainBase):
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h)
         c = torch.sigmoid(self.cost_encoder(h)); h = h + c * self.allocator(h)
-        h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True))
         return out, conf.squeeze(-1)
 
@@ -72,7 +72,7 @@ class RiskAssessmentNetwork(StrategicBrainBase):
         h = self.norm_in(x); h = self.mla(h)
         r = self.risk_encoder(h)
         p = torch.sigmoid(self.probability_head(r)); i = torch.sigmoid(self.impact_head(r))
-        h = h + r * p * i; h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = h + r * p * i; h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True))
         return out, conf.squeeze(-1)
 
@@ -85,7 +85,7 @@ class GameTheoryNetwork(StrategicBrainBase):
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h)
         p = self.payoff_encoder(h); h = h + self.strategy_ffn(p)
-        h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True))
         return out, conf.squeeze(-1)
 
@@ -98,7 +98,7 @@ class ContingencyPlanningNetwork(StrategicBrainBase):
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h)
         b = torch.sigmoid(self.backup_gate(h)); h = h + b * self.branch_encoder(h)
-        h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True))
         return out, conf.squeeze(-1)
 
@@ -111,7 +111,7 @@ class OpportunityDetectionNetwork(StrategicBrainBase):
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h)
         s = self.signal_encoder(h); o = torch.sigmoid(self.opportunity_head(s))
-        h = h + o * s; h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = h + o * s; h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True))
         return out, conf.squeeze(-1)
 
@@ -124,7 +124,7 @@ class CompetitiveAnalysisNetwork(StrategicBrainBase):
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h)
         adv = self.adversary_encoder(h); h = h + self.advantage_ffn(adv)
-        h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True))
         return out, conf.squeeze(-1)
 
@@ -136,7 +136,7 @@ class TimelineForecastingNetwork(StrategicBrainBase):
         self.schedule_head = nn.Sequential(nn.Linear(config.d_model, config.d_model), nn.GELU(), nn.Linear(config.d_model, 1))
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h) + self.temporal_encoder(h)
-        h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); t = torch.sigmoid(self.schedule_head(h.mean(dim=1, keepdim=True)))
         conf = self.confidence(h.mean(dim=1, keepdim=True)) * t
         return out, conf.squeeze(-1)
@@ -149,7 +149,7 @@ class ExecutionTrackingNetwork(StrategicBrainBase):
         self.progress_head = nn.Linear(config.d_model, 1)
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h)
-        h = h + self.tracker(h); h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = h + self.tracker(h); h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); p = torch.sigmoid(self.progress_head(h.mean(dim=1, keepdim=True)))
         conf = self.confidence(h.mean(dim=1, keepdim=True)) * p
         return out, conf.squeeze(-1)

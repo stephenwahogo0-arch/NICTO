@@ -13,16 +13,19 @@ interface Message {
   timestamp: number;
 }
 
+const WELCOME: Message = {
+  id: "0",
+  role: "system",
+  content:
+    "NICTO v7.0.0 — 7-Brain MoE+MLA Architecture\n"
+    + "19 specialized heads, 70 subnetworks, 1.33B total parameters.\n"
+    + "Ready for creative cognition.",
+  timestamp: Date.now(),
+};
+
 function App() {
   const [view, setView] = useState<View>("chat");
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "0",
-      role: "system",
-      content: "NICTO v5.3.0 — Neural Interactive Cognitive Terminal Operator\nReady for creative cognition.",
-      timestamp: Date.now(),
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([WELCOME]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -68,7 +71,11 @@ function App() {
         id: (Date.now() + 1).toString(),
         role: "assistant",
         content:
-          "_NICTO core offline. Running local fallback._\n\nI'm functioning in standalone mode. The full creative cognition engine requires the Python backend (run `python nikto_cli/main.py daemon`).\n\nIn the meantime, I can help with creative concepts, cinematography knowledge, and visual design ideas.",
+          "_NICTO core offline. Running local fallback._\n\n"
+          + "The full 7-brain MoE+MLA engine requires the Python backend "
+          + "(run `python packages/nikto-app/server.py`).\n\n"
+          + "In standalone mode, I can still help with creative concepts, "
+          + "cinematography knowledge, and visual design ideas.",
         timestamp: Date.now(),
       };
       setMessages((prev) => [...prev, fallback]);
@@ -89,7 +96,7 @@ function App() {
       {
         id: "clear",
         role: "system",
-        content: "NICTO v5.3.0 — Terminal cleared. Ready for new creative session.",
+        content: "NICTO v7.0.0 — Terminal cleared. Ready for new creative session.",
         timestamp: Date.now(),
       },
     ]);
@@ -102,7 +109,7 @@ function App() {
           <div className="logo-icon">N</div>
           <div className="logo-text">
             <span className="logo-title">NICTO</span>
-            <span className="logo-sub">v5.3.0</span>
+            <span className="logo-sub">v7.0.0</span>
           </div>
         </div>
         <nav className="nav">
@@ -129,8 +136,11 @@ function App() {
           </button>
         </nav>
         <div className="sidebar-footer">
-          <div className="status-dot" />
-          <span className="status-text">Creative Cognition</span>
+          <div className="brain-indicator">
+            <div className="status-dot" />
+            <span className="status-text">7-Brain MoE+MLA</span>
+          </div>
+          <div className="head-count">19H &middot; 70S</div>
         </div>
       </aside>
 

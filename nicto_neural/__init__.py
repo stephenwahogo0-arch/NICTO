@@ -149,7 +149,7 @@ try:
 except ImportError:
     nicto_master = None
 
-__version__ = "4.0.0"
+__version__ = "7.0.0"
 __codename__ = "SUPER_NEURAL"
 __codename_full__ = "SUPER_NEURAL_v3.2"
 

@@ -18,7 +18,7 @@ class KnowledgeBrainBase(nn.Module):
         self.output_proj = nn.Linear(config.d_model, config.d_model)
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h); h = self.norm_mid(h)
-        moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True))
         return out, conf.squeeze(-1)
 
@@ -31,7 +31,7 @@ class FactualRetrievalNetwork(KnowledgeBrainBase):
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h)
         r = torch.sigmoid(self.relevance_gate(h)); h = h + r * self.retrieval_encoder(h)
-        h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True))
         return out, conf.squeeze(-1)
 
@@ -44,7 +44,7 @@ class ConceptMappingNetwork(KnowledgeBrainBase):
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h)
         rel = self.relation_encoder(h); h = h + self.graph_ffn(rel)
-        h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True))
         return out, conf.squeeze(-1)
 
@@ -57,7 +57,7 @@ class ExplanationGenerationNetwork(KnowledgeBrainBase):
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h)
         c = self.causal_encoder(h); h = h + self.step_ffn(c)
-        h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True))
         return out, conf.squeeze(-1)
 
@@ -70,7 +70,7 @@ class LearningSynthesisNetwork(KnowledgeBrainBase):
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h)
         g = torch.sigmoid(self.synthesis_gate(h)); h = h + g * self.integrate_encoder(h)
-        h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True))
         return out, conf.squeeze(-1)
 
@@ -85,7 +85,7 @@ class CrossDomainTransferNetwork(KnowledgeBrainBase):
         h = self.norm_in(x); h = self.mla(h)
         a = self.domain_a(h); b = self.domain_b(h)
         h = h + self.transfer_ffn(a + b)
-        h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True))
         return out, conf.squeeze(-1)
 
@@ -98,7 +98,7 @@ class KnowledgeVerificationNetwork(KnowledgeBrainBase):
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h)
         t = self.truth_encoder(h); v = torch.sigmoid(self.verification_head(t))
-        h = h + v * t; h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = h + v * t; h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True)) * v.mean(dim=1, keepdim=True)
         return out, conf.squeeze(-1)
 
@@ -110,7 +110,7 @@ class GapDetectionNetwork(KnowledgeBrainBase):
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h)
         uk = torch.sigmoid(self.unknown_encoder(h)); h = h * (1 - uk)
-        h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True))
         return out, conf.squeeze(-1)
 
@@ -123,7 +123,7 @@ class StructuredRecallNetwork(KnowledgeBrainBase):
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h)
         idx = self.index_encoder(h); h = h + self.recall_ffn(idx)
-        h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True))
         return out, conf.squeeze(-1)
 
@@ -136,7 +136,7 @@ class MnemonicEncodingNetwork(KnowledgeBrainBase):
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h)
         g = torch.sigmoid(self.encoding_gate(h)); h = h + g * self.assoc_encoder(h)
-        h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True))
         return out, conf.squeeze(-1)
 
@@ -149,7 +149,7 @@ class EpistemicCalibrationNetwork(KnowledgeBrainBase):
     def forward(self, x):
         h = self.norm_in(x); h = self.mla(h)
         c = self.certainty_encoder(h); cal = self.calibration_head(c)
-        h = h + cal * c; h = self.norm_mid(h); moe_out, _ = self.moe(h); h = self.norm_out(h + moe_out)
+        h = h + cal * c; h = self.norm_mid(h); moe_out = self.moe(h); h = self.norm_out(h + moe_out)
         out = self.output_proj(h); conf = self.confidence(h.mean(dim=1, keepdim=True)) * cal.mean(dim=1, keepdim=True)
         return out, conf.squeeze(-1)
 

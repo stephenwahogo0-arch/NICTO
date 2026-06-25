@@ -3,34 +3,38 @@ import "./StatusPanel.css";
 
 interface SystemInfo {
   version: string;
+  architecture: string;
+  n_heads: number;
+  n_subnetworks: number;
+  params: number;
+  params_m: number;
   platform: string;
   python: string;
-  torch: string;
   memory_gb: number;
   uptime_hours: number;
   active_skills: number;
   knowledge_bases: number;
-  total_params_m: number;
-  recursive_cycles: number;
-  youtube_fetched: number;
-  selfplay_generated: number;
+  active_heads: string[];
+  initialized: boolean;
   api_connected: boolean;
 }
 
 function defaultInfo(): SystemInfo {
   return {
-    version: "5.3.0",
+    version: "7.0.0",
+    architecture: "7-Brain MoE+MLA",
+    n_heads: 19,
+    n_subnetworks: 70,
+    params: 205470584,
+    params_m: 205.5,
     platform: navigator.platform,
     python: "3.12",
-    torch: "2.x",
     memory_gb: 16,
     uptime_hours: 0,
     active_skills: 100,
     knowledge_bases: 17,
-    total_params_m: 17.2,
-    recursive_cycles: 2,
-    youtube_fetched: 212,
-    selfplay_generated: 165,
+    active_heads: [],
+    initialized: false,
     api_connected: false,
   };
 }
@@ -57,18 +61,31 @@ function StatusPanel() {
 
   const entries = [
     { label: "Version", value: info.version },
+    { label: "Architecture", value: info.architecture },
+    { label: "Brain Heads", value: info.n_heads.toString() },
+    { label: "Subnetworks", value: info.n_subnetworks.toString() },
+    { label: "Total Parameters", value: `${(info.params / 1e6).toFixed(1)}M` },
     { label: "Platform", value: info.platform },
     { label: "Python", value: info.python },
-    { label: "PyTorch", value: info.torch },
     { label: "Memory", value: `${info.memory_gb} GB` },
     { label: "Uptime", value: `${info.uptime_hours.toFixed(1)}h` },
     { label: "Active Skills", value: info.active_skills.toString() },
     { label: "Knowledge Bases", value: info.knowledge_bases.toString() },
-    { label: "Total Parameters", value: `${info.total_params_m}M` },
-    { label: "Recursive Cycles", value: info.recursive_cycles.toString() },
-    { label: "YouTube Fetched", value: info.youtube_fetched.toString() },
-    { label: "Self-Play Generated", value: info.selfplay_generated.toString() },
+    { label: "Engine Status", value: info.initialized ? "Online" : "Standby" },
   ];
+
+  const headCategories = [
+    {
+      group: "7 Brains (70 subnetworks)",
+      heads: ["primary", "analytical", "creative", "strategic", "knowledge", "intuitive", "mathematical"],
+    },
+    {
+      group: "Specialized Single Heads",
+      heads: ["ethical", "linguistic", "temporal", "retrieval", "emotional", "executive", "spatial", "social", "cultural", "physical", "meta", "aesthetic"],
+    },
+  ];
+
+  const nActive = info.active_heads.length;
 
   return (
     <div className="status-view">
@@ -76,7 +93,7 @@ function StatusPanel() {
         <h2>System Status</h2>
         <div className={`api-indicator ${info.api_connected ? "connected" : "offline"}`}>
           <span className="indicator-dot" />
-          {info.api_connected ? "API Connected" : "API Offline"}
+          {info.api_connected ? `${nActive}/19 Heads Active` : "API Offline"}
         </div>
       </div>
 
@@ -90,31 +107,58 @@ function StatusPanel() {
       </div>
 
       <div className="status-notes">
-        <h3>System Notes</h3>
+        <h3>7-Brain MoE+MLA Architecture</h3>
         <ul>
           <li>
-            <strong>Creative Brain:</strong> 17.2M parameter SuperiorCreativeBrain with
-            knowledge graph attention over 5 domains.
+            <strong>Backbone:</strong> SuperNeuralCore with Multi-Head Latent Attention (MLA)
+            -- DeepSeek V3-style compressed KV latent for efficient inference.
           </li>
           <li>
-            <strong>Recursive Learning:</strong> 8-phase loop compounds creative quality
-            each cycle. Current: {info.recursive_cycles} cycles.
+            <strong>MoE:</strong> Enhanced Mixture of Experts with shared experts, fine-grained
+            routing, and load balancing loss.
           </li>
           <li>
-            <strong>Autonomous Data:</strong> NICTO fetches cinematography data via YouTube API
-            ({info.youtube_fetched} videos), generates self-play pairs ({info.selfplay_generated}).
+            <strong>19 Heads:</strong> 7 subnetwork-based brains (10 subnetworks each = 70 total)
+            + 12 specialized single heads for domain-specific cognition.
           </li>
           <li>
-            <strong>Output Heads:</strong> 8 specialized — visual_describe, critique,
-            compose, light, grade, direct, storyboard, innovate.
+            <strong>1.33B Total:</strong> Full-scale architecture reaches 1.33B parameters
+            (102.8M backbone + 1.23B head ensemble). CPU-friendly variant: 205.5M.
           </li>
           <li>
-            <strong>12-Axis Quality:</strong> technical_accuracy, visual_clarity,
-            specificity, novelty, emotional_impact, actionability, genre_alignment,
-            sensorimotor_detail, narrative_coherence, cross_domain_integration,
-            subtext_depth, economy.
+            <strong>Recursive Learning:</strong> 8-phase compounding loop generates self-play
+            data, evaluates on 12 axes, and retrains to compound quality.
           </li>
         </ul>
+      </div>
+
+      <div className="status-notes" style={{ marginTop: "12px" }}>
+        <h3>Head Categories</h3>
+        {headCategories.map(({ group, heads }) => (
+          <div key={group} style={{ marginBottom: "10px" }}>
+            <div style={{ color: "#00ff41", fontSize: "12px", fontFamily: "var(--font-mono)", marginBottom: "6px" }}>
+              {group}
+            </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
+              {heads.map((h) => (
+                <span
+                  key={h}
+                  style={{
+                    background: "#111c11",
+                    border: "1px solid #1a3a1a",
+                    borderRadius: "12px",
+                    padding: "3px 10px",
+                    fontSize: "11px",
+                    fontFamily: "var(--font-mono)",
+                    color: "#7aa87a",
+                  }}
+                >
+                  {h}
+                </span>
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

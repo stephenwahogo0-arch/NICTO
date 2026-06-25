@@ -495,7 +495,7 @@ class MetaHead(SuperHead):
         self_rep = self.self_model(h.mean(dim=1, keepdim=True))
         strategies = F.softmax(self.strategy_head(self_rep), dim=-1)
         gate = torch.sigmoid(self.reflection_gate(torch.cat([h, self_rep.expand(-1, h.size(1), -1)], dim=-1)))
-        h = h * strategies.mean(dim=1, keepdim=True).unsqueeze(-1) + gate * self_rep
+        h = h * strategies.mean(dim=-1, keepdim=True) + gate * self_rep
         residual = h; h = self.task_ffn(h); h = self.ffn_norm(h + residual)
         confidence = self.confidence_proj(h)
         out = self.output_proj(h)
@@ -526,9 +526,9 @@ class AestheticHead(SuperHead):
         harmony = torch.sigmoid(self.harmony_head(h))
         h = h + aesthetic_context * harmony
         residual = h; h = self.task_ffn(h); h = self.ffn_norm(h + residual)
-        confidence = self.confidence_proj(h) * beauty.squeeze(-1) * harmony.squeeze(-1)
+        confidence = self.confidence_proj(h).squeeze(-1) * beauty.view_as(self.confidence_proj(h)).squeeze(-1) * harmony.squeeze(-1)
         out = self.output_proj(h)
-        return out, confidence.squeeze(-1)
+        return out, confidence
 
 
 HEAD_CLASSES = {

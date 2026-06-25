@@ -95,10 +95,23 @@
 
 .sidebar-footer {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  gap: 6px;
   padding: 8px 0;
   border-top: 1px solid var(--border);
+}
+
+.brain-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.head-count {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  letter-spacing: 0.5px;
 }
 
 .status-dot {
