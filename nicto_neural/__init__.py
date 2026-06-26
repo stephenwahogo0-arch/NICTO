@@ -115,6 +115,30 @@ except (ImportError, SyntaxError):
     AknowHyperBridge = None
     HyperBridgeConfig = None
 
+# Intira Browser Module
+try:
+    from .intira_browser import (
+        IntiraBrowser, IntiraTab, BrowserSession,
+        IntiraSearch, ContentExtractor,
+        IntiraAgent, IntiraAPI,
+        IntiraTrainer, TrainingMode, TrainingResult,
+        MasterPipeline, MasterResult, Domain,
+    )
+except ImportError as _ib_import_err:
+    IntiraBrowser = None
+    IntiraTab = None
+    BrowserSession = None
+    IntiraSearch = None
+    ContentExtractor = None
+    IntiraAgent = None
+    IntiraAPI = None
+    IntiraTrainer = None
+    TrainingMode = None
+    TrainingResult = None
+    MasterPipeline = None
+    MasterResult = None
+    Domain = None
+
 # Real AI Module Imports (optional, some may be missing)
 try:
     from .run_nicto import NICTOInference
@@ -345,6 +369,20 @@ __all__ = [
     "MetaLearner",
     "RewardModel",
     "SuperBenchmark",
+    # Intira Browser
+    "IntiraBrowser",
+    "IntiraTab",
+    "BrowserSession",
+    "IntiraSearch",
+    "ContentExtractor",
+    "IntiraAgent",
+    "IntiraAPI",
+    "IntiraTrainer",
+    "TrainingMode",
+    "TrainingResult",
+    "MasterPipeline",
+    "MasterResult",
+    "Domain",
     # HyperBridge
     "AknowHyperBridge",
     "HyperBridgeConfig",

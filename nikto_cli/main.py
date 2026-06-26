@@ -103,6 +103,109 @@ def build(description, output):
 
 
 @cli.command()
+@click.argument("query", nargs=-1)
+@click.option("--engine", "-e", default="duckduckgo", help="Search engine (duckduckgo, bing, brave)")
+@click.option("--count", "-n", default=5, help="Number of results")
+def search(query, engine, count):
+    """Search the web using Intira Browser (Chromium)"""
+    from nicto_neural import IntiraAPI
+    q = " ".join(query)
+    async def _run():
+        api = IntiraAPI(headless=True)
+        try:
+            console.print(f"[bright_green]Intira Browser searching {engine} for:[/bright_green] {q}")
+            result = await api.search(q, count=count, engine=engine)
+            table = Table(title=f"Intira Search Results", border_style=NICTO_THEME["colors"]["border_mid"])
+            table.add_column("#", style="dim")
+            table.add_column("Title", style=NICTO_THEME["colors"]["accent_primary"])
+            table.add_column("URL", style="dim", no_wrap=False)
+            for i, r in enumerate(result["results"]):
+                table.add_row(str(i + 1), r["title"][:60], r["url"][:50])
+            console.print(table)
+        finally:
+            await api.close()
+    asyncio.run(_run())
+
+
+@cli.command()
+@click.argument("topic", nargs=-1)
+@click.option("--count", "-n", default=5, help="Number of web sources to learn from")
+@click.option("--engine", "-e", default="duckduckgo", help="Search engine")
+@click.option("--mode", "-m", default="full", help="Training mode: full, knowledge, memory, skill, truth")
+@click.option("--autonomous", "-a", is_flag=True, help="Autonomous mode: NICTO picks what to learn")
+@click.option("--domains", "-d", default=None, help="Comma-separated domains to train")
+@click.option("--skip", "-s", default=None, help="Comma-separated phases to skip")
+@click.option("--master", "-M", is_flag=True, help="Run full master pipeline")
+def train(topic, count, engine, mode, autonomous, domains, skip, master):
+    """NICTO self-trains by searching the web with Intira Browser"""
+    from nicto_neural import IntiraTrainer, TrainingMode, MasterPipeline, Domain
+    async def _run():
+        if master:
+            console.print("[bold bright_green]NICTO MASTER SELF-IMPROVEMENT PIPELINE[/bold bright_green]")
+            console.print("16 domains | 550B ULTRA model | Multi-phase training")
+            pipeline = MasterPipeline()
+            try:
+                domain_list = None
+                if domains:
+                    names = [d.strip().lower() for d in domains.split(",")]
+                    domain_list = [d for d in Domain if d.value in names]
+                skip_list = skip.split(",") if skip else None
+                result = await pipeline.run_full_pipeline(
+                    domains=domain_list, skip_phases=skip_list
+                )
+                table = Table(title="Master Pipeline Results", border_style=NICTO_THEME["colors"]["border_mid"])
+                table.add_column("Metric", style=NICTO_THEME["colors"]["accent_primary"])
+                table.add_column("Value", style=NICTO_THEME["colors"]["text_primary"])
+                table.add_row("Duration", f"{result.duration_seconds:.1f}s")
+                table.add_row("Domains Trained", str(len(set(result.domains_trained))))
+                table.add_row("Sources", str(result.total_sources))
+                table.add_row("Facts Added", str(result.total_facts))
+                table.add_row("Memories Stored", str(result.total_memories))
+                table.add_row("Lessons Learned", str(result.total_lessons))
+                table.add_row("Truths Registered", str(result.total_truths))
+                table.add_row("Dataset Examples", str(result.dataset_examples))
+                table.add_row("Model Params", f"{result.model_params:,}")
+                table.add_row("Git Committed", str(result.git_committed))
+                table.add_row("Errors", str(len(result.errors)))
+                console.print(table)
+                if result.phases_completed:
+                    console.print("\n[bold]Phases completed:[/bold]")
+                    for p in result.phases_completed:
+                        console.print(f"  [green]+[/green] {p}")
+            finally:
+                await pipeline.close()
+        else:
+            trainer = IntiraTrainer()
+            try:
+                if autonomous:
+                    console.print("[bright_green]IntiraTrainer:[/bright_green] Autonomous learning cycle started")
+                    results = await trainer.autonomous_learning_cycle()
+                else:
+                    q = " ".join(topic)
+                    mode_enum = TrainingMode(mode) if mode in [m.value for m in TrainingMode] else TrainingMode.FULL
+                    console.print(f"[bright_green]IntiraTrainer:[/bright_green] Learning '{q}' from {count} web sources")
+                    result = await trainer.search_and_learn(q, count=count, engine=engine, mode=mode_enum)
+                    results = [result]
+                for r in results:
+                    table = Table(title=f"Training Result: {r.topic}", border_style=NICTO_THEME["colors"]["border_mid"])
+                    table.add_column("Metric", style=NICTO_THEME["colors"]["accent_primary"])
+                    table.add_column("Value", style=NICTO_THEME["colors"]["text_primary"])
+                    table.add_row("Sources", str(r.sources_used))
+                    table.add_row("Facts Added", str(r.facts_added))
+                    table.add_row("Memories Stored", str(r.memories_stored))
+                    table.add_row("Lessons Learned", str(r.lessons_learned))
+                    table.add_row("Truths Registered", str(r.truths_registered))
+                    table.add_row("Concepts Created", str(r.concepts_created))
+                    table.add_row("Duration", f"{r.duration_seconds:.1f}s")
+                    errors = ", ".join(r.errors[:3]) if r.errors else "None"
+                    table.add_row("Errors", str(len(r.errors)))
+                    console.print(table)
+            finally:
+                await trainer.close()
+    asyncio.run(_run())
+
+
+@cli.command()
 @click.argument("target")
 def scan(target):
     """Run security scan on target"""
