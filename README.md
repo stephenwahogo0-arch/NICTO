@@ -10,6 +10,8 @@ A research codebase exploring a 7-brain mixture-of-experts architecture with Mul
 
 | Component | Status | Notes |
 |-----------|--------|-------|
+| **Intira Browser** (Chromium-based) | ✅ Ready | NICTO's private browser: search, fetch, navigate, extract, self-train |
+| **Master Self-Improvement Pipeline** | ✅ Ready | 16-domain training, GitHub push, 550B ULTRA config |
 | 7-Brain MoE+MLA Architecture (70 subnetworks) | 🏗️ Building | 19 heads, forward-pass tested |
 | Advanced Neural Layers (MLA, EnhancedMoE, 10 blocks) | 🏗️ Building | Importable and forward-pass tested |
 | Speed Reader (SSM + multi-stream) | 🏗️ Building | DeepUnderstandingEngine at 5 levels |
@@ -28,17 +30,21 @@ A research codebase exploring a 7-brain mixture-of-experts architecture with Mul
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                        NICTO SYSTEM                          │
-├──────────────────┬──────────────────┬───────────────────────┤
-│   nikto-core     │    nicto-x       │     nicto-game        │
-│   (Brain AI)     │   (Frontier)     │    (Game Engine)      │
-├──────────────────┼──────────────────┼───────────────────────┤
-│   NiktoBrain     │  NictoXOrch      │   GameDirector        │
-│   10 subsystems  │  7 agents        │   11 subsystems       │
-│   4-model API    │  NeuralCore      │   18+ genres          │
-│   Model routing  │  MoE (8 experts) │   Procedural gen      │
-└──────────────────┴──────────────────┴───────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                        NICTO SYSTEM                              │
+├──────────────────┬──────────────────┬───────────────────────────┤
+│   nikto-core     │    nicto-x       │     nicto-game            │
+│   (Brain AI)     │   (Frontier)     │    (Game Engine)          │
+├──────────────────┼──────────────────┼───────────────────────────┤
+│   NiktoBrain     │  NictoXOrch      │   GameDirector            │
+│   10 subsystems  │  7 agents        │   11 subsystems           │
+│   4-model API    │  NeuralCore      │   18+ genres              │
+│   Model routing  │  MoE (8 experts) │   Procedural gen          │
+├──────────────────┴──────────────────┴───────────────────────────┤
+│                    Intira Browser (Chromium)                     │
+│   Search · Fetch · Navigate · Extract · Agent · Self-Train      │
+│   DuckDuckGo/Bing/Brave · 16-domain Master Pipeline             │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ### 4-Model Pipeline
@@ -88,6 +94,14 @@ NICTO/
 │           ├── config/      # 4-model configuration
 │           └── utils/       # API client with X-Model-Id routing
 ├── nicto_neural/            # Training infrastructure, neural modules
+│   ├── intira_browser/      # Intira Browser — NICTO's Chromium browser
+│   │   ├── browser.py       #   Core browser (tabs, nav, JS, sessions)
+│   │   ├── search.py        #   Web search (DuckDuckGo/Bing/Brave)
+│   │   ├── extractor.py     #   Content extraction engine
+│   │   ├── agent.py         #   Autonomous web interaction agent
+│   │   ├── api.py           #   Programmatic API for NICTO brain
+│   │   ├── trainer.py       #   Self-training pipeline
+│   │   └── master_trainer.py #  16-domain master self-improvement
 │   ├── training_data/       # ChatML datasets (361K entries)
 │   ├── train_nicto.py       # Unsloth LoRA training pipeline
 │   ├── build_training_data.py  # ChatML data generation
@@ -136,6 +150,77 @@ NICTO/
 | **Meta-Cognition** | Self-awareness, bias detection, quality assessment | `brain/meta_cognition.py` |
 | **Eagle Eye** | Pattern detection, anomaly/threat scanning | `eagle_eye/enhanced_eye.py` |
 | **Future Engine** | Trend extrapolation, Bayesian prediction | `prediction/future_engine.py` |
+
+---
+
+## Intira Browser — NICTO's Private Chromium Browser
+
+Intira is NICTO's own Chromium-based browser engine. It searches the web, fetches pages, extracts content, navigates autonomously, and self-trains by injecting knowledge into NICTO's brain.
+
+| Component | What it does |
+|-----------|-------------|
+| **IntiraBrowser** | Chromium headless browser: tabs, navigation, JS execution, screenshots, form filling, session persistence |
+| **IntiraSearch** | Web search via DuckDuckGo/Bing/Brave through real Chromium with stealth anti-detection |
+| **ContentExtractor** | Extracts keywords, headings, links, images, summaries from any web page |
+| **IntiraAgent** | Autonomous multi-step browsing: search → navigate → click → fill → extract |
+| **IntiraAPI** | Clean async API for NICTO brain to control the browser programmatically |
+| **IntiraTrainer** | Self-training pipeline: web data → KnowledgeCore facts + LongTermMemory + Learner skills + TruthEngine |
+| **MasterPipeline** | 16-domain self-improvement: searches web across all domains, builds 550B model, pushes to GitHub |
+
+### Data Flow
+
+```
+NICTO brain → IntiraAPI.search("topic")
+                ↓
+         Intira Browser (Chromium headless)
+                ↓
+         DuckDuckGo / Bing / Brave
+                ↓
+         Results shown to user via CLI
+                ↓
+         IntiraTrainer injects into brain:
+           + KnowledgeCore — permanent facts
+           + LongTermMemory — episodic memories
+           + Learner — skills with mastery tracking
+           + TruthEngine — verified claims with source reliability
+                ↓
+         NICTO grows smarter (skills reach MASTER level)
+```
+
+### CLI Usage
+
+```bash
+# Search the web
+python nikto_cli/main.py search "autonomous AI agents" -n 10
+
+# NICTO self-trains from web
+python nikto_cli/main.py train "reinforcement learning" -n 5 -m full
+
+# Autonomous mode: NICTO picks what to learn
+python nikto_cli/main.py train --autonomous
+
+# Full master pipeline (all 16 domains)
+python nikto_cli/main.py train --master
+
+# Specific domains
+python nikto_cli/main.py train --master -d "coding,mathematics,ai_ml,business"
+```
+
+### 550B ULTRA Model Configuration
+
+| Setting | Value |
+|---------|-------|
+| d_model | 8192 |
+| n_layers | 40 |
+| n_experts | 32 (6 active) |
+| d_ff | 32768 |
+| Total params | 1,074,010,259,456 (~1.07T) |
+| Active per token | ~201B |
+| Architecture | MoE + GQA + RoPE + FlashAttention + SSM + Speculative Decoding |
+
+### 16 Training Domains
+
+`coding` · `programming` · `mathematics` · `business` · `science` · `engineering` · `ai_ml` · `cybersecurity` · `data_science` · `cloud_devops` · `game_dev` · `networking` · `databases` · `robotics` · `blockchain` · `quantum`
 
 ---
 
@@ -203,7 +288,12 @@ cd packages/nikto-desktop && npm install && npm run dev
 python packages/nicto-x/tests/test_all.py
 python scripts/train_and_verify_all_models.py
 
-# 6. Training data generation (now ready)
+# 6. Intira Browser — search and self-train
+python nikto_cli/main.py search "quantum computing" -n 5
+python nikto_cli/main.py train "machine learning" -n 3 -m full
+python nikto_cli/main.py train --master -d "coding,ai_ml,mathematics"
+
+# 7. Training data generation (now ready)
 python scripts/build_training_data.py
 python scripts/train_nicto.py
 ```
@@ -225,6 +315,7 @@ python scripts/train_nicto.py
 ## Version History
 | Version | Date | Highlights |
 |---------|------|------------|
+| **v8.0.0** | 2026-06 | **Intira Browser** — NICTO's Chromium browser, IntiraSearch, IntiraAgent, IntiraAPI, IntiraTrainer, MasterPipeline (16-domain self-improvement), 550B ULTRA config, GitHub push |
 | **v7.0.0** | 2026-06 | MetaHead shape fix, Training Loop fix, aknow_nicto_bridge.py reconstructed (comment-eating bug), 10/12 integration tests pass |
 | **v4.0.0** | 2026-06 | 7-brain MoE+MLA architecture (70 subnetworks, 19 heads), speed reader, advanced layers, domain/coding specialists, learning paradigms |
 | **v3.1.0** | 2026-06 | SuperNeuralCore, SuperHeadEnsemble, MultiHeadedReasoning, 12 architectural advances |
