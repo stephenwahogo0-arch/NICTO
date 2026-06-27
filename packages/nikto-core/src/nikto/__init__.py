@@ -49,6 +49,7 @@ from nikto.brain.gods_eye import GodsEye
 from nikto.config.api_keys import NiktoKeyManager
 from nikto.server import app as nikto_app
 from nikto.security.compliance import NiktoComplianceChecker, ComplianceFramework, ComplianceStatus, ComplianceAssessment
+from nikto.virtual_kali import VirtualKaliEngine, KaliTerminal, ToolDatabase, VirtualFileSystem, PackageManager, NetworkSimulator
 
 # CUA (Computer Use Agency) availability flag
 try:
@@ -85,4 +86,5 @@ __all__ = [
     "SCRIPTS",
     "Thought", "MemoryFragment", "Belief", "Goal", "GoalStatus",
     "ThinkingStyle", "EmotionType", "KnowledgeLevel", "EmotionalState", "MoralRule",
+    "VirtualKaliEngine", "KaliTerminal", "ToolDatabase", "VirtualFileSystem", "PackageManager", "NetworkSimulator",
 ]
