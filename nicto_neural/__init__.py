@@ -115,6 +115,36 @@ except (ImportError, SyntaxError):
     AknowHyperBridge = None
     HyperBridgeConfig = None
 
+# IntiraBioNet — Domain-specific neural networks for bio/medicine/biology/chemistry/physics
+try:
+    from .neural.intira_bio_net import (
+        IntiraBioNetBase, BioMedicineNet, ChemistryNet, BiologyNet,
+        PhysicsNet, NeuroscienceNet, PharmacologyNet, GenomicsNet,
+        ImmunologyNet, SystemsBioNet, BiomedInformaticsNet,
+        IntiraBioNetEnsemble, BIO_NET_SPECIALISTS, BIO_NET_REGISTRY,
+    )
+except (ImportError, Exception) as _bio_err:
+    IntiraBioNetBase = None; BioMedicineNet = None; ChemistryNet = None
+    BiologyNet = None; PhysicsNet = None; NeuroscienceNet = None
+    PharmacologyNet = None; GenomicsNet = None; ImmunologyNet = None
+    SystemsBioNet = None; BiomedInformaticsNet = None
+    IntiraBioNetEnsemble = None; BIO_NET_SPECIALISTS = {}; BIO_NET_REGISTRY = {}
+
+# IntiraEngNet — Domain-specific neural networks for engineering/quantum/home science/invention
+try:
+    from .neural.intira_eng_net import (
+        IntiraEngNetBase, EngineeringNet, QuantumNet, HomeScienceNet,
+        InventionNet, MechatronicsNet, MaterialScienceNet, AerospaceNet,
+        EnergySysNet, QuantumEngNet, InnovationNet,
+        IntiraEngNetEnsemble, ENG_NET_SPECIALISTS, ENG_NET_REGISTRY,
+    )
+except (ImportError, Exception) as _eng_err:
+    IntiraEngNetBase = None; EngineeringNet = None; QuantumNet = None
+    HomeScienceNet = None; InventionNet = None; MechatronicsNet = None
+    MaterialScienceNet = None; AerospaceNet = None; EnergySysNet = None
+    QuantumEngNet = None; InnovationNet = None
+    IntiraEngNetEnsemble = None; ENG_NET_SPECIALISTS = {}; ENG_NET_REGISTRY = {}
+
 # Intira Browser Module
 try:
     from .intira_browser import (
@@ -173,9 +203,9 @@ try:
 except ImportError:
     nicto_master = None
 
-__version__ = "7.0.0"
-__codename__ = "SUPER_NEURAL"
-__codename_full__ = "SUPER_NEURAL_v3.2"
+__version__ = "8.1.0"
+__codename__ = "INTRIRA_V3"
+__codename_full__ = "INTRIRA_v3.0_with_HumanContext"
 
 __all__ = [
     "NeuralCore",
@@ -369,6 +399,16 @@ __all__ = [
     "MetaLearner",
     "RewardModel",
     "SuperBenchmark",
+    # IntiraBioNet
+    "IntiraBioNetBase", "BioMedicineNet", "ChemistryNet", "BiologyNet",
+    "PhysicsNet", "NeuroscienceNet", "PharmacologyNet", "GenomicsNet",
+    "ImmunologyNet", "SystemsBioNet", "BiomedInformaticsNet",
+    "IntiraBioNetEnsemble", "BIO_NET_SPECIALISTS", "BIO_NET_REGISTRY",
+    # IntiraEngNet
+    "IntiraEngNetBase", "EngineeringNet", "QuantumNet", "HomeScienceNet",
+    "InventionNet", "MechatronicsNet", "MaterialScienceNet", "AerospaceNet",
+    "EnergySysNet", "QuantumEngNet", "InnovationNet",
+    "IntiraEngNetEnsemble", "ENG_NET_SPECIALISTS", "ENG_NET_REGISTRY",
     # Intira Browser
     "IntiraBrowser",
     "IntiraTab",

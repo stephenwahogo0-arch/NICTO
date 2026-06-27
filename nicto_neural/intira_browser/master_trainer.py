@@ -44,6 +44,15 @@ class Domain(Enum):
     ROBOTICS = "robotics"
     BLOCKCHAIN = "blockchain"
     QUANTUM = "quantum"
+    BIO_MEDICINE = "bio_medicine"
+    BIO_CHEMISTRY = "bio_chemistry"
+    BIO_BIOLOGY = "bio_biology"
+    BIO_PHYSICS = "bio_physics"
+    ENGINEERING_SYS = "engineering_systems"
+    QUANTUM_ENG = "quantum_engineering"
+    HOME_SCIENCE = "home_science"
+    INVENTION = "invention"
+    HUMAN_CONTEXT = "human_context"
 
 
 @dataclass
@@ -178,6 +187,69 @@ DOMAIN_SEARCH_QUERIES = {
         "quantum machine learning",
         "quantum error correction",
         "quantum cryptography",
+    ],
+    Domain.BIO_MEDICINE: [
+        "drug discovery machine learning 2026",
+        "precision medicine genomics",
+        "clinical trial AI",
+        "disease modeling computational biology",
+        "medical imaging deep learning",
+    ],
+    Domain.BIO_CHEMISTRY: [
+        "molecular modeling neural networks",
+        "reaction prediction AI",
+        "computational chemistry 2026",
+        "chemical property prediction",
+        "spectroscopy machine learning",
+    ],
+    Domain.BIO_BIOLOGY: [
+        "genetics machine learning",
+        "proteomics computational biology",
+        "cellular pathway analysis",
+        "evolutionary biology AI",
+        "systems biology modeling",
+    ],
+    Domain.BIO_PHYSICS: [
+        "biophysics simulation",
+        "quantum biology research",
+        "statistical mechanics biology",
+        "molecular dynamics AI",
+        "protein folding deep learning",
+    ],
+    Domain.ENGINEERING_SYS: [
+        "systems engineering best practices",
+        "mechatronics robotics AI",
+        "control systems machine learning",
+        "embedded systems 2026",
+        "engineering design automation",
+    ],
+    Domain.QUANTUM_ENG: [
+        "quantum hardware engineering",
+        "quantum sensing technology",
+        "quantum metrology advances",
+        "superconducting qubits 2026",
+        "quantum error correction hardware",
+    ],
+    Domain.HOME_SCIENCE: [
+        "smart home AI automation 2026",
+        "domestic energy optimization",
+        "sustainable housing technology",
+        "home robotics assistance",
+        "intelligent building systems",
+    ],
+    Domain.INVENTION: [
+        "innovation methodology TRIZ",
+        "patent analysis AI",
+        "design thinking frameworks",
+        "creative problem solving techniques",
+        "technology invention process",
+    ],
+    Domain.HUMAN_CONTEXT: [
+        "human emotion recognition AI",
+        "pragmatic language understanding",
+        "theory of mind artificial intelligence",
+        "discourse analysis computational",
+        "social intelligence AI systems",
     ],
 }
 

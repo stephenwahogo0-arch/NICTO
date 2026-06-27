@@ -10,3 +10,8 @@ from nikto.brain.learner import NiktoLearner
 from nikto.brain.goals import NiktoGoalSystem
 from nikto.brain.teacher import NiktoTeacher
 from nikto.brain.repair import NiktoSelfRepair
+from nikto.brain.human_context import (
+    NiktoHumanContextEngine, UserProfile, SpeechAct, PolitenessLevel,
+    EmotionalDimension, CommunicationStyle, DiscourseState,
+    PragmaticInference, TheoryOfMindState, ContextSummary,
+)

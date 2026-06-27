@@ -1,6 +1,9 @@
 """NICTO Omega Game Engine — AI-native game creation platform.
 
 Build complete games from natural language descriptions.
+Includes UE5-class advanced subsystems: Virtual Geometry (Nanite),
+Global Illumination (Lumen), Blueprint Scripting, MetaHuman,
+PCG, VFX (Niagara), Chaos Physics, World Partition, Asset Library.
 """
 
 from nicto_game.core.director import GameDirector
@@ -22,6 +25,19 @@ from nicto_game.optimization.engine import OptimizationEngine
 from nicto_game.export.engine import ExportEngine
 from nicto_game.agents.base import GameAgent, AgentCoordinator
 from nicto_game.agents.planner import PlannerAgent, ArchitectAgent, QAAgent
+from nicto_game.advanced import (
+    NiktoEngine, GameSession, GameState, GamePerformance,
+    VirtualGeometryEngine, VirtualMesh,
+    GlobalIllumination, LightProbe, LightType,
+    BlueprintEngine, BlueprintScript, BlueprintNode, NodeDataType,
+    MetaHumanGenerator, MetaHuman, Gender, Ethnicity,
+    PCGEngine, PCGContext, PCGRule, PCGSpawnPoint, PCGRegion,
+    VFXSystem, ParticleEffect, Particle, SpawnMode, ParticleShape,
+    ChaosPhysics, ChaosSolver, PhysObject, FractureChunk, BodyType,
+    ShapeType, ConstraintType, FractureGeometry,
+    WorldPartition, Chunk, ChunkState, HLOD, StreamingVolume,
+    AssetLibrary, Asset, SurfacePreset, AssetPack, AssetType, AssetStyle,
+)
 
 __all__ = [
     "GameDirector", "GameConfig", "GameGenre", "GamePlatform",
@@ -34,4 +50,15 @@ __all__ = [
     "TextureGenerator", "AssetFactory",
     "TestingEngine", "OptimizationEngine", "ExportEngine",
     "GameAgent", "AgentCoordinator", "PlannerAgent", "ArchitectAgent", "QAAgent",
+    "NiktoEngine", "GameSession", "GameState", "GamePerformance",
+    "VirtualGeometryEngine", "VirtualMesh",
+    "GlobalIllumination", "LightProbe", "LightType",
+    "BlueprintEngine", "BlueprintScript", "BlueprintNode", "NodeDataType",
+    "MetaHumanGenerator", "MetaHuman", "Gender", "Ethnicity",
+    "PCGEngine", "PCGContext", "PCGRule", "PCGSpawnPoint", "PCGRegion",
+    "VFXSystem", "ParticleEffect", "Particle", "SpawnMode", "ParticleShape",
+    "ChaosPhysics", "ChaosSolver", "PhysObject", "FractureChunk", "BodyType",
+    "ShapeType", "ConstraintType", "FractureGeometry",
+    "WorldPartition", "Chunk", "ChunkState", "HLOD", "StreamingVolume",
+    "AssetLibrary", "Asset", "SurfacePreset", "AssetPack", "AssetType", "AssetStyle",
 ]

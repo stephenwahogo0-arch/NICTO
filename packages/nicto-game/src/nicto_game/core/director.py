@@ -19,6 +19,10 @@ from nicto_game.optimization.engine import OptimizationEngine
 from nicto_game.export.engine import ExportEngine
 from nicto_game.agents.base import AgentCoordinator
 from nicto_game.agents.planner import PlannerAgent, ArchitectAgent, QAAgent
+from nicto_game.advanced import (
+    NiktoEngine, GameState, AssetType, BodyType, ShapeType,
+    PCGRegion, SpawnMode,
+)
 
 logger = logging.getLogger("nicto.game")
 
@@ -38,6 +42,7 @@ class GameDirector:
         self.optimization = OptimizationEngine()
         self.export = ExportEngine()
         self.coordinator = AgentCoordinator()
+        self.nikto_engine = NiktoEngine()
         self._games_built = 0
         self._build_history: list[dict[str, Any]] = []
 
@@ -185,6 +190,24 @@ class GameDirector:
         self._games_built += 1
         self._build_history.append(result)
         return result
+
+    def build_advanced_world(self, name: str = "AdvancedGame", seed: int = 0) -> dict:
+        """Build an advanced UE5-class world using NiktoEngine subsystems."""
+        self.nikto_engine.initialize()
+        session = self.nikto_engine.new_game(name=name, seed=seed)
+        self.nikto_engine.spawn_character("Hero")
+        for i in range(3):
+            self.nikto_engine.spawn_character(f"NPC_{i}")
+        dungeon = self.nikto_engine.generate_dungeon(rooms=8)
+        return {
+            "name": session.name,
+            "state": session.state.value,
+            "subsystems": list(self.nikto_engine._subsystems.keys()),
+            "dungeon_rooms": len(dungeon),
+            "world_chunks": self.nikto_engine.world_partition.get_stats()["total_chunks"],
+            "assets_loaded": self.nikto_engine.asset_library.get_stats()["total_assets"],
+            "physics_bodies": len(self.nikto_engine.chaos_physics.solver.bodies),
+        }
 
     async def build_from_prompt(self, prompt: str) -> dict[str, Any]:
         """Design + build from a single natural language prompt."""

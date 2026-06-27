@@ -25,9 +25,81 @@ class WorldGenerator:
             return self._generate_dungeon(w, h, config)
         elif config.genre in (GameGenre.OPEN_WORLD, GameGenre.SURVIVAL,
                                GameGenre.RPG, GameGenre.SANDBOX):
+            rustle = self.rng.random()
+            if "cave" in config.description.lower() or "underground" in config.description.lower():
+                return self._generate_cellular_cave(w, h, config)
+            elif "erosion" in config.description.lower() or "natural" in config.description.lower():
+                return self._generate_eroded_terrain(w, h, config)
             return self._generate_open_world(w, h, config)
+        elif config.genre in (GameGenre.HORROR, GameGenre.STEALTH):
+            if self.rng.random() < 0.5:
+                return self._generate_cellular_cave(w, h, config)
+            return self._generate_dungeon(w, h, config)
         else:
             return self._generate_rooms(w, h, config)
+
+    def _generate_cellular_cave(self, w: int, h: int, config: GameConfig) -> GameMap:
+        """Generate caves using cellular automata for organic cave systems."""
+        fill_prob = 0.45
+        grid = [[TileType.WALL if self.rng.random() < fill_prob else TileType.EMPTY for _ in range(w)] for _ in range(h)]
+        for _ in range(4):
+            new_grid = [row[:] for row in grid]
+            for y in range(1, h-1):
+                for x in range(1, w-1):
+                    wall_count = sum(1 for dy in (-1,0,1) for dx in (-1,0,1) if grid[y+dy][x+dx] == TileType.WALL)
+                    if wall_count >= 5:
+                        new_grid[y][x] = TileType.WALL
+                    else:
+                        new_grid[y][x] = TileType.EMPTY
+            grid = new_grid
+        for y in range(h):
+            grid[y][0] = grid[y][w-1] = TileType.WALL
+        for x in range(w):
+            grid[0][x] = grid[h-1][x] = TileType.WALL
+        gm = GameMap(width=w, height=h, tiles=[[t.value for t in row] for row in grid])
+        self._place_features(gm, config)
+        return gm
+
+    def _generate_eroded_terrain(self, w: int, h: int, config: GameConfig) -> GameMap:
+        """Generate terrain with simulated erosion for realistic landscapes."""
+        heightmap = [[0.0 for _ in range(w)] for _ in range(h)]
+        for octave in range(3):
+            freq = 0.03 * (2 ** octave)
+            amp = 0.5 / (2 ** octave)
+            for y in range(h):
+                for x in range(w):
+                    nx, ny = x * freq, y * freq
+                    h_val = (math.sin(nx * 2.3 + ny * 1.7) * math.cos(ny * 1.9 - nx * 2.1) + 1) / 2
+                    heightmap[y][x] += h_val * amp
+        for y in range(h):
+            for x in range(w):
+                heightmap[y][x] = max(0, min(1, heightmap[y][x]))
+
+        for _ in range(3):
+            for y in range(1, h-1):
+                for x in range(1, w-1):
+                    total = sum(heightmap[dy+y][dx+x] for dy in (-1,0,1) for dx in (-1,0,1))
+                    heightmap[y][x] = total / 9.0
+
+        grid = [[TileType.WALL for _ in range(w)] for _ in range(h)]
+        for y in range(h):
+            for x in range(w):
+                h_val = heightmap[y][x]
+                if h_val < 0.3:
+                    grid[y][x] = TileType.WATER
+                elif h_val < 0.5:
+                    grid[y][x] = TileType.EMPTY
+                elif h_val < 0.7:
+                    grid[y][x] = TileType.EMPTY
+                else:
+                    grid[y][x] = TileType.WALL
+        for y in range(h):
+            grid[y][0] = grid[y][w-1] = TileType.WALL
+        for x in range(w):
+            grid[0][x] = grid[h-1][x] = TileType.WALL
+        gm = GameMap(width=w, height=h, tiles=[[t.value for t in row] for row in grid])
+        self._place_features(gm, config)
+        return gm
 
     def _generate_maze(self, w: int, h: int, config: GameConfig) -> GameMap:
         grid = [[TileType.WALL] * w for _ in range(h)]

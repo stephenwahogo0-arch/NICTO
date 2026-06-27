@@ -28,6 +28,7 @@ from nikto.business.zero_capital_engine import NiktoZeroCapitalEngine
 from nikto.eagle_eye.enhanced_eye import NiktoEagleEye
 from nikto.prediction.future_engine import NiktoFutureEngine
 from nikto.brain.meta_cognition import NiktoMetaCognition
+from nikto.brain.human_context import NiktoHumanContextEngine
 from nikto.config.api_keys import NiktoKeyManager
 from nicto_game import GameDirector
 
@@ -66,6 +67,7 @@ class NiktoBrain:
         self.future_engine = NiktoFutureEngine(self)
         self.scanner = NiktoScanner()
         self.meta_cognition = NiktoMetaCognition()
+        self.human_context = NiktoHumanContextEngine()
         self.api_keys = NiktoKeyManager()
         self.nicto_x = NictoXOrchestrator() if NictoXOrchestrator else None
         self.game_engine = GameDirector()
@@ -185,6 +187,11 @@ class NiktoBrain:
             context["_auth"] = info
 
         understanding = self.language.understand(input_text)
+        human_ctx = self.human_context.understand(
+            input_text,
+            context.get("user_id", "default"),
+            context,
+        )
         thought = self.reasoner.think(
             input_text,
             ThinkingStyle(context.get("thinking_style", "analytical")),
@@ -199,6 +206,19 @@ class NiktoBrain:
             self.emotion.update(input_text, 0.3, EmotionType.SADNESS)
         else:
             self.emotion.update(input_text, 0.1, EmotionType.NEUTRAL)
+
+        human_emotions = human_ctx.get("emotions", [])
+        if human_emotions:
+            dominant_human = max(human_emotions, key=lambda e: e.get("intensity", 0) if isinstance(e, dict) else e[1])
+            if isinstance(dominant_human, dict):
+                self.memory.store(
+                    content=f"User emotional state: {dominant_human.get('dimension', 'unknown')} ({dominant_human.get('intensity', 0):.2f})",
+                    tags=["human_context", "emotion", dominant_human.get("dimension", "unknown")],
+                    importance=0.4,
+                )
+
+        if self.human_context.should_respond_with_empathy(context.get("user_id", "default")):
+            self.emotion.update(input_text, 0.15, EmotionType.TRUST)
 
         entity_tags = [e.get("word", str(e)) if isinstance(e, dict) else str(e) for e in understanding.get("entities", [])]
         memory_id = self.memory.store(
@@ -238,6 +258,7 @@ class NiktoBrain:
         return {
             "input": input_text,
             "understanding": understanding,
+            "human_context": human_ctx,
             "thought": thought.to_dict(),
             "moral_assessment": moral_check,
             "truth_check": truth_check,
@@ -392,6 +413,7 @@ class NiktoBrain:
             "eagle_eye": self.eagle_eye.save(),
             "future_engine": self.future_engine.save(),
             "meta_cognition": self.meta_cognition.save(),
+            "human_context": self.human_context.save(),
             "game_engine": {
                 "games_built": self.game_engine._games_built,
                 "build_history": getattr(self.game_engine, '_build_history', []),
@@ -428,6 +450,7 @@ class NiktoBrain:
         self.eagle_eye.load(data.get("eagle_eye", {}))
         self.future_engine.load(data.get("future_engine", {}))
         self.meta_cognition.load(data.get("meta_cognition", {}))
+        self.human_context.load(data.get("human_context", {}))
         game_engine_data = data.get("game_engine", {})
         self.game_engine._games_built = game_engine_data.get("games_built", 0)
         if hasattr(self.game_engine, '_build_history'):
@@ -475,6 +498,11 @@ class NiktoBrain:
                 "bias_detection": self.meta_cognition.bias_detection_enabled,
                 "self_reflection": self.meta_cognition.self_reflection_enabled,
             },
+            "human_context": {
+                "users_tracked": len(self.human_context.users),
+                "total_discourse_turns": sum(ds.turn_count for ds in self.human_context.discourse_states.values()),
+                "empathy_ready": any(self.human_context.should_respond_with_empathy(uid) for uid in self.human_context.users),
+            },
             "consciousness": {
                 "awake": self.is_awake,
                 "cycles": self.cycle_count,
@@ -499,6 +527,10 @@ class NiktoBrain:
             "eagle_watching": self.eagle_eye.is_watching,
             "predictions": len(self.future_engine.prediction_log._predictions),
             "game_engine": self.game_engine.get_status(),
+            "human_context": {
+                "users": len(self.human_context.users),
+                "turns": sum(ds.turn_count for ds in self.human_context.discourse_states.values()),
+            },
         }
 
     async def build_game_from_prompt(self, prompt: str) -> dict:
